@@ -1,25 +1,32 @@
 #!/usr/bin/env bash
+#
+# repoman - Npm based monorepo management script
+#
+# by KDesp73
+
 set -e
 
 ACTION=$1
 STEP=$2
 
 VALID_ACTIONS=(build dev start stop help) 
-# NOTE: "mobile" is removed since the development has't started
 VALID_STEPS=(web server) 
 
 PID_FILE="/tmp/p2p-chat-pids.txt"
+LOG_DIR="./logs"
+
+mkdir -p "$LOG_DIR"
 
 usage() {
     cat << EOF
-Usage: $0 [dev|build|start|stop|help] [web|mobile|server]
+Usage: $0 [dev|build|start|stop|help] [web|server]
 
 Examples:
   $0 dev          # start all apps in dev mode
   $0 dev web      # start only web in dev mode
   $0 build        # build all apps
   $0 build server # build only server
-  $0 stop         # stop all running dev processes
+  $0 stop         # stop all running dev/start processes
 EOF
     exit 1
 }
@@ -37,14 +44,36 @@ lognexec() {
 run_workspace() {
     local name=$1
     echo "Running $ACTION for $name..."
-    (
-        cd "apps/$name" || exit 1
-        lognexec npm install
-        lognexec npm run "$ACTION"
-    ) &
+
+    cd "apps/$name" || exit 1
+    lognexec npm install
 
     if [[ "$ACTION" == "dev" || "$ACTION" == "start" ]]; then
-        echo $! >> "$PID_FILE"
+        # Start in background with nohup in its own process group
+        nohup setsid npm run "$ACTION" > "../../logs/$name.log" 2>&1 &
+        local pid=$!
+        echo $pid >> "$PID_FILE"
+        echo "$name started with PID $pid"
+    else
+        npm run "$ACTION"
+    fi
+}
+
+stop_processes() {
+    if [[ -f "$PID_FILE" ]]; then
+        echo "Stopping processes..."
+        while read -r pid; do
+            if ps -p "$pid" > /dev/null 2>&1; then
+                # Kill process group, fallback to single PID
+                kill -TERM -"$pid" 2>/dev/null || kill -TERM "$pid" 2>/dev/null
+                echo "Stopped PID $pid"
+            else
+                echo "PID $pid is not running"
+            fi
+        done < "$PID_FILE"
+        rm -f "$PID_FILE"
+    else
+        echo "No running processes found."
     fi
 }
 
@@ -54,7 +83,7 @@ main() {
         exit 1
     fi
 
-    if [[ -n "$ACTION" && ! " ${VALID_ACTIONS[@]} " =~ " $ACTION " ]]; then
+    if [[ ! " ${VALID_ACTIONS[@]} " =~ " $ACTION " ]]; then
         error "invalid action '$ACTION'"
         usage
     fi
@@ -66,7 +95,6 @@ main() {
 
     if [[ "$ACTION" == "help" ]]; then
         usage
-        exit 1
     fi
 
     if [[ "$ACTION" == "dev" || "$ACTION" == "start" ]]; then
@@ -74,21 +102,9 @@ main() {
     fi
 
     if [[ "$ACTION" == "stop" ]]; then
-        if [[ -f "$PID_FILE" ]]; then
-            echo "Stopping processes..."
-            while read -r pid; do
-                if ps -p "$pid" > /dev/null 2>&1; then
-                    kill "$pid"
-                    echo "Stopped PID $pid"
-                fi
-            done < "$PID_FILE"
-            rm -f "$PID_FILE"
-        else
-            echo "No running processes found."
-        fi
+        stop_processes
         exit 0
     fi
-
 
     if [[ -z "$STEP" ]]; then
         for ws in "${VALID_STEPS[@]}"; do
@@ -98,8 +114,8 @@ main() {
         run_workspace "$STEP"
     fi
 
-    if [[ "$ACTION" == "dev" ]]; then
-        echo "All apps started. PIDs saved in $PID_FILE"
+    if [[ "$ACTION" == "dev" || "$ACTION" == "start" ]]; then
+        echo "PIDs saved in $PID_FILE"
         wait
     else
         echo "All apps built successfully."
