@@ -9,7 +9,7 @@ set -e
 ACTION=$1
 STEP=$2
 
-VALID_ACTIONS=(build dev start stop help) 
+VALID_ACTIONS=(build dev start stop help format) 
 VALID_STEPS=(web server) 
 
 PID_FILE="/tmp/p2p-chat-pids.txt"
@@ -19,7 +19,7 @@ mkdir -p "$LOG_DIR"
 
 usage() {
     cat << EOF
-Usage: $0 [dev|build|start|stop|help] [web|server]
+Usage: $0 [dev|build|start|stop|help|format] [web|server]
 
 Examples:
   $0 dev          # start all apps in dev mode
@@ -27,6 +27,7 @@ Examples:
   $0 build        # build all apps
   $0 build server # build only server
   $0 stop         # stop all running dev/start processes
+  $0 format       # run Prettier on all files
 EOF
     exit 1
 }
@@ -49,7 +50,7 @@ run_workspace() {
     lognexec npm install
 
     if [[ "$ACTION" == "dev" || "$ACTION" == "start" ]]; then
-        # Start in background with nohup in its own process group
+        # Start in background in its own process group
         nohup setsid npm run "$ACTION" > "../../logs/$name.log" 2>&1 &
         local pid=$!
         echo $pid >> "$PID_FILE"
@@ -64,7 +65,6 @@ stop_processes() {
         echo "Stopping processes..."
         while read -r pid; do
             if ps -p "$pid" > /dev/null 2>&1; then
-                # Kill process group, fallback to single PID
                 kill -TERM -"$pid" 2>/dev/null || kill -TERM "$pid" 2>/dev/null
                 echo "Stopped PID $pid"
             else
@@ -74,6 +74,15 @@ stop_processes() {
         rm -f "$PID_FILE"
     else
         echo "No running processes found."
+    fi
+}
+
+if_command() {
+    local command=$1
+    shift
+    if [[ "$ACTION" == "$command" ]]; then
+        "$@"
+        return 0
     fi
 }
 
@@ -93,18 +102,12 @@ main() {
         usage
     fi
 
-    if [[ "$ACTION" == "help" ]]; then
-        usage
-    fi
+    if_command "help" usage
+    if_command "format" npm run format && exit 0
+    if_command "stop" stop_processes && exit 0
 
-    if [[ "$ACTION" == "dev" || "$ACTION" == "start" ]]; then
-        > "$PID_FILE"
-    fi
-
-    if [[ "$ACTION" == "stop" ]]; then
-        stop_processes
-        exit 0
-    fi
+    if_command "dev" > "$PID_FILE"
+    if_command "start" > "$PID_FILE"
 
     if [[ -z "$STEP" ]]; then
         for ws in "${VALID_STEPS[@]}"; do
@@ -115,10 +118,10 @@ main() {
     fi
 
     if [[ "$ACTION" == "dev" || "$ACTION" == "start" ]]; then
-        echo "PIDs saved in $PID_FILE"
+        echo "All apps started. PIDs saved in $PID_FILE"
         wait
     else
-        echo "All apps built successfully."
+        echo "Action '$ACTION' completed successfully."
     fi
 }
 
