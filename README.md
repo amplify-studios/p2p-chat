@@ -1,7 +1,5 @@
 # p2p-chat monorepo
 
-> TODO: Symlink `packages/core` to `apps/web` and `apps/mobile`
-
 ## Structure
 
 ```

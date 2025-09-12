@@ -29,13 +29,18 @@ error() {
     echo "Error: $msg" 1>&2
 }
 
+lognexec() {
+    echo "$@"
+    "$@"
+}
+
 run_workspace() {
     local name=$1
     echo "Running $ACTION for $name..."
     (
         cd "apps/$name" || exit 1
-        npm install
-        npm run "$ACTION"
+        lognexec npm install
+        lognexec npm run "$ACTION"
     ) &
 
     if [[ "$ACTION" == "dev" || "$ACTION" == "start" ]]; then
