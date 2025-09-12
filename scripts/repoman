@@ -77,15 +77,6 @@ stop_processes() {
     fi
 }
 
-if_command() {
-    local command=$1
-    shift
-    if [[ "$ACTION" == "$command" ]]; then
-        "$@"
-        return 0
-    fi
-}
-
 main() {
     if [[ -z "$ACTION" ]]; then
         error "specify action"
@@ -102,13 +93,20 @@ main() {
         usage
     fi
 
-    if_command "help" usage
-    if_command "format" npm run format && exit 0
-    if_command "stop" stop_processes && exit 0
+    # Handle actions
+    if [[ "$ACTION" == "help" ]]; then
+        usage
+    elif [[ "$ACTION" == "format" ]]; then
+        npm run format
+        exit 0
+    elif [[ "$ACTION" == "stop" ]]; then
+        stop_processes
+        exit 0
+    elif [[ "$ACTION" == "dev" || "$ACTION" == "start" ]]; then
+        > "$PID_FILE" # clear PID file
+    fi
 
-    if_command "dev" > "$PID_FILE"
-    if_command "start" > "$PID_FILE"
-
+    # Run workspaces
     if [[ -z "$STEP" ]]; then
         for ws in "${VALID_STEPS[@]}"; do
             run_workspace "$ws"
