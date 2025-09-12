@@ -1,5 +1,9 @@
 # p2p-chat monorepo
 
+> TODO: Symlink `packages/core` to `apps/web` and `apps/mobile`
+
+## Structure
+
 ```
 /p2p-chat
   /apps
@@ -10,4 +14,5 @@
     /core         # shared business logic (encryption, signaling utils, models)
 ```
 
-> TODO: Symlink `packages/core` to `apps/web` and `apps/mobile`
+> Each `apps/*` directory should contain its own `package.json` file with at least the dev and build and run scripts defined
+
