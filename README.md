@@ -14,5 +14,5 @@
     /core         # shared business logic (encryption, signaling utils, models)
 ```
 
-> Each `apps/*` directory should contain its own `package.json` file with at least the dev and build and run scripts defined
+> Each `apps/*` directory should contain its own `package.json` file with at least the dev, build and start scripts defined
 

@@ -4,7 +4,7 @@ set -e
 ACTION=$1
 STEP=$2
 
-VALID_ACTIONS=(build dev stop help) 
+VALID_ACTIONS=(build dev start stop help) 
 # NOTE: "mobile" is removed since the development has't started
 VALID_STEPS=(web server) 
 
@@ -12,7 +12,7 @@ PID_FILE="/tmp/p2p-chat-pids.txt"
 
 usage() {
     cat << EOF
-Usage: $0 [dev|build|stop|help] [web|mobile|server]
+Usage: $0 [dev|build|start|stop|help] [web|mobile|server]
 
 Examples:
   $0 dev          # start all apps in dev mode
@@ -38,7 +38,7 @@ run_workspace() {
         npm run "$ACTION"
     ) &
 
-    if [[ "$ACTION" == "dev" ]]; then
+    if [[ "$ACTION" == "dev" || "$ACTION" == "run" ]]; then
         echo $! >> "$PID_FILE"
     fi
 }
@@ -64,7 +64,7 @@ main() {
         exit 1
     fi
 
-    if [[ "$ACTION" == "dev" ]]; then
+    if [[ "$ACTION" == "dev" || "$ACTION" == "run" ]]; then
         > "$PID_FILE"
     fi
 
