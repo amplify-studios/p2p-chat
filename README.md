@@ -9,3 +9,5 @@
   /packages
     /core         # shared business logic (encryption, signaling utils, models)
 ```
+
+> TODO: Symlink `packages/core` to `apps/web` and `apps/mobile`
