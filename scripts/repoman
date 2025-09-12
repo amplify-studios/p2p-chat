@@ -38,7 +38,7 @@ run_workspace() {
         npm run "$ACTION"
     ) &
 
-    if [[ "$ACTION" == "dev" || "$ACTION" == "run" ]]; then
+    if [[ "$ACTION" == "dev" || "$ACTION" == "start" ]]; then
         echo $! >> "$PID_FILE"
     fi
 }
@@ -64,7 +64,7 @@ main() {
         exit 1
     fi
 
-    if [[ "$ACTION" == "dev" || "$ACTION" == "run" ]]; then
+    if [[ "$ACTION" == "dev" || "$ACTION" == "start" ]]; then
         > "$PID_FILE"
     fi
 
