@@ -2,11 +2,10 @@
 
 import { Chat, Message } from '@/components/local/Chat';
 import { useRef, useState } from 'react';
-import { add } from '@chat/core';
+import { MessageType } from '@chat/core';
+import { addMessage } from '@/lib/storage';
 
 export default function Home() {
-  const c = add(2, 4);
-  console.log(c);
   const [messages, setMessages] = useState<Message[]>([]);
   const msgId = useRef(0);
 
@@ -17,6 +16,7 @@ export default function Home() {
 
   const sendMessage = (text: string) => {
     logMessage(text, 'me');
+    addMessage()
   };
 
   return <Chat messages={messages} onSend={sendMessage} />;
