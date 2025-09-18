@@ -3,9 +3,11 @@
 import { Chat, Message } from '@/components/local/Chat';
 import { useRef, useState } from 'react';
 import { add } from '@chat/core';
+import { getRandomBytes } from '@chat/crypto';
 
 export default function Home() {
   const c = add(2, 4);
+  console.log(getRandomBytes);
   console.log(c);
   const [messages, setMessages] = useState<Message[]>([]);
   const msgId = useRef(0);
@@ -16,7 +18,7 @@ export default function Home() {
   };
 
   const sendMessage = (text: string) => {
-    logMessage(text, 'me');
+    logMessage(text, 'other');
   };
 
   return <Chat messages={messages} onSend={sendMessage} />;
