@@ -1,7 +1,7 @@
 import { MessageType, CredentialsType } from '@chat/core';
 import { openDB, DBSchema, IDBPDatabase } from 'idb';
 
-interface MyDB extends DBSchema {
+export interface MyDB extends DBSchema {
   messages: {
     key: string;
     value: MessageType;
@@ -19,19 +19,9 @@ export function getDB() {
     dbPromise = openDB<MyDB>('my-database', 1, {
       upgrade(db) {
         db.createObjectStore('messages', { keyPath: 'text' });
+        db.createObjectStore('credentials', { keyPath: 'text' });
       },
     });
   }
   return dbPromise;
 }
-
-export async function addMessage(message: MessageType) {
-  const db = await getDB();
-  await db.put('messages', message);
-}
-
-export async function getMessages() {
-  const db = await getDB();
-  return db.getAll('messages');
-}
-

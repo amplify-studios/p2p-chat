@@ -2,12 +2,18 @@
 
 import { Chat, Message } from '@/components/local/Chat';
 import { useRef, useState } from 'react';
-import { MessageType } from '@chat/core';
-import { addMessage } from '@/lib/storage';
+import { useDB } from '@/hooks/useDB';
+import { Button } from '@/components/ui/button';
+import Loading from '@/components/local/Loading';
 
 export default function Home() {
   const [messages, setMessages] = useState<Message[]>([]);
   const msgId = useRef(0);
+  const db = useDB();
+  
+  if(!db) {
+    return <Loading />;
+  }
 
   const logMessage = (text: string, sender: 'me' | 'other') => {
     msgId.current += 1;
@@ -16,8 +22,24 @@ export default function Home() {
 
   const sendMessage = (text: string) => {
     logMessage(text, 'me');
-    addMessage()
+    db?.put("messages", {
+      roomId: "room",
+      senderId: "me",
+      message: Buffer.from(text, "hex")
+    });
   };
 
-  return <Chat messages={messages} onSend={sendMessage} />;
+  const printMessages = async () => {
+    const messages = await db?.getAll("messages");
+    console.log(messages); 
+  };
+
+  return (<>
+    <Chat messages={messages} onSend={sendMessage} />
+    <Button
+      onClick={printMessages}
+    >
+    Messages
+    </Button>
+  </>);
 }
