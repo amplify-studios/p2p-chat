@@ -3,8 +3,7 @@
 import { ReactNode, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Plus, Settings } from 'lucide-react';
-import { RoomType } from '@chat/core';
-import { useDB } from '@/hooks/useDB';
+import { useRooms } from '@/hooks/useRooms';
 import Loading from './Loading';
 
 interface SidebarProps {
@@ -12,22 +11,8 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ children }: SidebarProps) {
-  const [rooms, setRooms] = useState<RoomType[]>([]);
-  const [active, setActive] = useState<string>('');
-  const db = useDB();
-
-  useEffect(() => {
-    if (!db) return;
-
-    const fetchRooms = async () => {
-      const allRooms = await db.getAll('rooms');
-      setRooms(allRooms);
-    };
-
-    fetchRooms();
-  }, [db]);
-
-  if (!db) return <Loading />;
+  const { rooms, activeRoomId } = useRooms();
+  if(!rooms) return <Loading />;
 
   return (
     <div className="flex h-screen">
@@ -44,7 +29,7 @@ export default function Sidebar({ children }: SidebarProps) {
                   <Link
                     href={room.roomId ? `/chat?id=${room.roomId}` : '#'}
                     className={`flex items-center gap-2 p-2 rounded hover:bg-gray-700 ${
-                      room.roomId === active ? 'bg-gray-700 font-semibold' : ''
+                      room.roomId === activeRoomId ? 'bg-gray-700 font-semibold' : ''
                     }`}
                   >
                     {room.name}
