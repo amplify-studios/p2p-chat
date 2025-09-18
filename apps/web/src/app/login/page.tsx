@@ -8,7 +8,6 @@ import PasswordField from "@/components/local/PasswordField";
 import { useDB } from "@/hooks/useDB";
 import Loading from "@/components/local/Loading";
 import { generateUUID } from "@chat/crypto";
-import { CredentialsType } from "@chat/core";
 
 export default function Login() {
   const [username, setUsername] = useState("");

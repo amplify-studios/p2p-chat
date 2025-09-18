@@ -5,11 +5,13 @@ import { useRef, useState } from 'react';
 import { useDB } from '@/hooks/useDB';
 import { Button } from '@/components/ui/button';
 import Loading from '@/components/local/Loading';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function Home() {
   const [messages, setMessages] = useState<Message[]>([]);
   const msgId = useRef(0);
   const db = useDB();
+  const user = useAuth(true);
   
   if(!db) {
     return <Loading />;
