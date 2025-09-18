@@ -1,14 +1,14 @@
-"use client";
+'use client';
 
-import { useState, useRef, useEffect } from "react";
-import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { useState, useRef, useEffect } from 'react';
+import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
 export interface Message {
   id: number;
   text: string;
-  sender: "me" | "other";
+  sender: 'me' | 'other';
 }
 
 interface ChatProps {
@@ -18,19 +18,19 @@ interface ChatProps {
 }
 
 export function Chat({ messages, onSend, isTyping = false }: ChatProps) {
-  const [input, setInput] = useState("");
+  const [input, setInput] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const sendMessage = () => {
     if (!input.trim()) return;
     onSend(input);
-    setInput("");
+    setInput('');
   };
 
   useEffect(() => {
     scrollRef.current?.scrollTo({
       top: scrollRef.current.scrollHeight,
-      behavior: "smooth",
+      behavior: 'smooth',
     });
   }, [messages, isTyping]);
 
@@ -47,13 +47,13 @@ export function Chat({ messages, onSend, isTyping = false }: ChatProps) {
         {messages.map((msg) => (
           <div
             key={msg.id}
-            className={`flex ${msg.sender === "me" ? "justify-end" : "justify-start"}`}
+            className={`flex ${msg.sender === 'me' ? 'justify-end' : 'justify-start'}`}
           >
             <div
               className={`px-3 py-2 max-w-[70%] ${
-                msg.sender === "me"
-                  ? "bg-blue-500 text-white rounded-t-lg rounded-l-lg rounded-br-none"
-                  : "bg-gray-200 dark:bg-gray-700 text-black dark:text-white rounded-t-lg rounded-r-lg rounded-bl-none"
+                msg.sender === 'me'
+                  ? 'bg-blue-500 text-white rounded-t-lg rounded-l-lg rounded-br-none'
+                  : 'bg-gray-200 dark:bg-gray-700 text-black dark:text-white rounded-t-lg rounded-r-lg rounded-bl-none'
               }`}
             >
               {msg.text}
@@ -76,7 +76,7 @@ export function Chat({ messages, onSend, isTyping = false }: ChatProps) {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === "Enter") sendMessage();
+            if (e.key === 'Enter') sendMessage();
           }}
         />
         <Button onClick={sendMessage}>Send</Button>

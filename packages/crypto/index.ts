@@ -1,1 +1,1 @@
-console.log("crypto");
+console.log('crypto');

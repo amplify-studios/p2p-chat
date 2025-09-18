@@ -8,7 +8,7 @@
 - **ECDH**, instead of RSA for forward secrecy.
 - **HMAC** hashing
 
-## Operations 
+## Operations
 
 1. User Connection
 2. Send/Receive Message
@@ -55,7 +55,7 @@
 - After verification, the key is cached and used for future sessions.
 - Pros: Simple, works without any servers.
 - Cons: User must verify manually, vulnerable to MitM on first connection if verification isn’t done.
-> Example: Signal shows a key fingerprint that you can verify with a contact in person.
+  > Example: Signal shows a key fingerprint that you can verify with a contact in person.
 
 2. Web of Trust
 
@@ -64,7 +64,7 @@
 - Can scale in a P2P network if peers maintain a graph of trusted signatures.
 - Pros: Fully decentralized, more flexible than TOFU.
 - Cons: Complex to manage, trust decisions can be tricky.
-> Example: PGP uses this model.
+  > Example: PGP uses this model.
 
 #### Registration
 
@@ -74,12 +74,12 @@
 - Their public key acts as their identity.
 - Other users authenticate them via TOFU (trust on first use) or Web of Trust.
 - Pros:
-    - No central server.
-    - No email/password needed.
-    - Fully decentralized.
+  - No central server.
+  - No email/password needed.
+  - Fully decentralized.
 - Cons:
-    - Harder to recover your identity if you lose your keys.
-    - Usernames or metadata are not centrally controlled, so discoverability is limited.
+  - Harder to recover your identity if you lose your keys.
+  - Usernames or metadata are not centrally controlled, so discoverability is limited.
 
 2. Optional Nicknames / Local Registration
 
@@ -87,10 +87,10 @@
 - Name is only stored on their device or optionally shared with peers.
 - The “registration” is just a local mapping of name → public key.
 - Pros:
-    - Simple, user-friendly.
-    - Still decentralized.
+  - Simple, user-friendly.
+  - Still decentralized.
 - Cons:
-    - Names can collide or be spoofed.
+  - Names can collide or be spoofed.
 
 ##### Process
 
@@ -98,4 +98,3 @@
 2. We generate an ID
 3. We generate ECDH key-pair
 4. We register with the Signaling Server
-
