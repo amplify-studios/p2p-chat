@@ -81,8 +81,8 @@ stop_processes() {
 }
 
 main() {
-    if [[ -z "$ACTION" ]]; then
     trap "echo 'Stopping processes...' stop_processes; exit" SIGINT
+    if [[ -z "$ACTION" ]]; then
         error "specify action"
         exit 1
     fi
