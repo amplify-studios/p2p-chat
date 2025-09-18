@@ -9,11 +9,13 @@ set -e
 ACTION=$1
 STEP=$2
 
-VALID_ACTIONS=(build dev start stop help format) 
-VALID_STEPS=(web server) 
+VALID_ACTIONS=(build dev start stop help format)
+VALID_STEPS=(web server)
 
 PID_FILE="/tmp/p2p-chat-pids.txt"
 LOG_DIR="./logs"
+
+CWD=$(pwd)
 
 mkdir -p "$LOG_DIR"
 
@@ -46,6 +48,7 @@ run_workspace() {
     local name=$1
     echo "Running $ACTION for $name..."
 
+    cd "$CWD" || exit 1
     cd "apps/$name" || exit 1
     lognexec npm install
 
@@ -79,6 +82,7 @@ stop_processes() {
 
 main() {
     if [[ -z "$ACTION" ]]; then
+    trap "echo 'Stopping processes...' stop_processes; exit" SIGINT
         error "specify action"
         exit 1
     fi
