@@ -8,6 +8,7 @@ import PasswordField from "@/components/local/PasswordField";
 import { useDB } from "@/hooks/useDB";
 import Loading from "@/components/local/Loading";
 import { generateUUID } from "@chat/crypto";
+import { CredentialsType } from "@chat/core";
 
 export default function Login() {
   const [username, setUsername] = useState("");
@@ -19,14 +20,16 @@ export default function Login() {
   if(!db) return <Loading />;
 
   const handleLogin = async () => {
-    const id = generateUUID(); // TODO: check if there is one saved
-    // db.put("credentials", {
-    //   id: id,
-    //   public: Buffer.from("", "hex"),
-    //   private: Buffer.from("", "hex"),
-    //   username: username
-    // });
-    sessionStorage.setItem(id, password);
+    setError("");
+    await db.put("credentials", {
+      userId: sessionStorage.getItem(username) ?? generateUUID(),
+      public: "dsada",
+      private: "dasda",
+      username
+    });
+
+    sessionStorage.setItem(username, password);
+    router.push("/");
   };
 
   return (

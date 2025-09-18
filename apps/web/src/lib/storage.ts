@@ -3,7 +3,7 @@ import { openDB, DBSchema, IDBPDatabase } from 'idb';
 
 export interface MyDB extends DBSchema {
   messages: {
-    key: string;
+    key: number;
     value: MessageType;
   },
   credentials: {
@@ -16,10 +16,10 @@ let dbPromise: Promise<IDBPDatabase<MyDB>> | null = null;
 
 export function getDB() {
   if (!dbPromise) {
-    dbPromise = openDB<MyDB>('my-database', 1, {
+    dbPromise = openDB<MyDB>('my-database', 2, {
       upgrade(db) {
-        db.createObjectStore('messages', { keyPath: 'text' });
-        db.createObjectStore('credentials', { keyPath: 'text' });
+        db.createObjectStore('messages', { autoIncrement: true });
+        db.createObjectStore('credentials', { keyPath: "userId" });
       },
     });
   }

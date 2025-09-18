@@ -22,10 +22,10 @@ export default function Home() {
 
   const sendMessage = (text: string) => {
     logMessage(text, 'me');
-    db?.put("messages", {
+    db.put("messages", {
       roomId: "room",
       senderId: "me",
-      message: Buffer.from(text, "hex")
+      message: text
     });
   };
 
