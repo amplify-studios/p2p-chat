@@ -13,9 +13,17 @@ export default function ChatPage() {
   const db = useDB();
   const user = useAuth(true);
   const searchParams = useSearchParams();
-  const roomId = searchParams?.get('id') ?? 'default-room';
+  const roomId = searchParams?.get('id');
 
-  if(!db) {
+  if (!roomId) {
+    return (
+      <h1 className="flex text-2xl items-center justify-center min-h-screen bg-gray-50">
+        No room found
+      </h1>
+    );
+  }
+
+  if (!db) {
     return <Loading />;
   }
 
@@ -26,14 +34,12 @@ export default function ChatPage() {
 
   const sendMessage = (text: string) => {
     logMessage(text, 'me');
-    db.put("messages", {
-      roomId: "room",
+    db.put('messages', {
+      roomId: 'room',
       senderId: user?.userId as string,
-      message: text
+      message: text,
     });
   };
 
-  return (
-    <Chat title={roomId} messages={messages} onSend={sendMessage} />
-  );
+  return <Chat title={roomId} messages={messages} onSend={sendMessage} />;
 }

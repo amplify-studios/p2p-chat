@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import type { MyDB } from "@/lib/storage";
-import { getDB } from "@/lib/storage";
-import { IDBPDatabase } from "idb";
+import { useEffect, useState } from 'react';
+import type { MyDB } from '@/lib/storage';
+import { getDB } from '@/lib/storage';
+import { IDBPDatabase } from 'idb';
 
 export function useDB() {
   const [db, setDb] = useState<IDBPDatabase<MyDB> | null>(null);
@@ -23,4 +23,3 @@ export function useDB() {
 
   return db;
 }
-

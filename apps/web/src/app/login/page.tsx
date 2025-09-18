@@ -1,36 +1,36 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import PasswordField from "@/components/local/PasswordField";
-import { useDB } from "@/hooks/useDB";
-import Loading from "@/components/local/Loading";
-import { generateUUID } from "@chat/crypto";
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import PasswordField from '@/components/local/PasswordField';
+import { useDB } from '@/hooks/useDB';
+import Loading from '@/components/local/Loading';
+import { generateUUID } from '@chat/crypto';
 
 export default function Login() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
   const router = useRouter();
 
   const db = useDB();
-  if(!db) return <Loading />;
+  if (!db) return <Loading />;
 
   const handleLogin = async () => {
-    setError("");
-    await db.put("credentials", {
+    setError('');
+    await db.put('credentials', {
       userId: sessionStorage.getItem(username) ?? generateUUID(),
-      public: "dsada",
-      private: "dasda",
-      username
+      public: 'dsada',
+      private: 'dasda',
+      username,
     });
 
     // TODO: register to the signaling server
 
     sessionStorage.setItem(username, password);
-    router.push("/");
+    router.push('/');
   };
 
   return (
@@ -64,4 +64,3 @@ export default function Login() {
     </div>
   );
 }
-

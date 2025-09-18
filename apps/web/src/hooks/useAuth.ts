@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useDB } from "@/hooks/useDB";
-import { CredentialsType } from "@chat/core";
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useDB } from '@/hooks/useDB';
+import { CredentialsType } from '@chat/core';
 
 export function useAuth(redirectIfNoUser: boolean = true) {
   const [user, setUser] = useState<CredentialsType | null>(null);
@@ -16,11 +16,11 @@ export function useAuth(redirectIfNoUser: boolean = true) {
     let cancelled = false;
 
     (async () => {
-      const users = await db.getAll("credentials");
+      const users = await db.getAll('credentials');
       if (cancelled) return;
 
       if (!users || users.length === 0) {
-        if (redirectIfNoUser) router.push("/login");
+        if (redirectIfNoUser) router.push('/login');
         setUser(null);
         return;
       }
@@ -36,4 +36,3 @@ export function useAuth(redirectIfNoUser: boolean = true) {
 
   return user;
 }
-
