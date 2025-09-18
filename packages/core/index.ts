@@ -1,1 +1,1 @@
-export type { MessageType, CredentialsType } from "./storage";
+export type * from "./storage";

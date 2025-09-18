@@ -12,12 +12,13 @@ export interface Message {
 }
 
 interface ChatProps {
+  title?: string;
   messages: Message[];
   onSend: (msg: string) => void;
   isTyping?: boolean;
 }
 
-export function Chat({ messages, onSend, isTyping = false }: ChatProps) {
+export function Chat({ title, messages, onSend, isTyping = false }: ChatProps) {
   const [input, setInput] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -37,7 +38,7 @@ export function Chat({ messages, onSend, isTyping = false }: ChatProps) {
   return (
     <Card className="w-full max-w-md h-[500px] flex flex-col">
       <CardHeader>
-        <h2 className="text-lg font-bold">Chat</h2>
+        <h2 className="text-lg font-bold">{title}</h2>
       </CardHeader>
 
       <CardContent

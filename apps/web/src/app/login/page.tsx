@@ -27,6 +27,8 @@ export default function Login() {
       username
     });
 
+    // TODO: register to the signaling server
+
     sessionStorage.setItem(username, password);
     router.push("/");
   };

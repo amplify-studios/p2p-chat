@@ -8,6 +8,6 @@ export default function Home() {
   if(!user) return <Loading />;
 
   return (
-    <h1>Logged in as {user?.username}</h1>
+    <h1>Settings</h1>
   );
 }
