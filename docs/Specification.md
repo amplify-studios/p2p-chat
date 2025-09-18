@@ -41,10 +41,7 @@
 
 ### 3. Local Storage
 
-- We have a different "table" for each conversation
-- We store each encrypted message along with its encrypted AES key
-- We store the user's credentials
-- We store our credentials
+All sensitive information stored in the IndexedDB is encrypted using the password provided by the user
 
 ### 4. Authentication
 
@@ -94,7 +91,7 @@
 
 ##### Process
 
-1. User provides a username
+1. User provides a username and password
 2. We generate an ID
 3. We generate ECDH key-pair
 4. We register with the Signaling Server
