@@ -5,3 +5,15 @@ export function generateUUID(): string {
     return v.toString(16);
   });
 }
+
+export function randomBase58Id(length: number = 16): string {
+  const alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+  const array = new Uint8Array(length);
+  crypto.getRandomValues(array);
+
+  let id = "";
+  for (let i = 0; i < length; i++) {
+    id += alphabet[array[i] % alphabet.length];
+  }
+  return id;
+}
