@@ -1,2 +1,16 @@
+"use client";
+
+import hmacSign from "./HASH";
+
 export { createECDHkey } from "./ECDH";
-console.log('crypto');
+
+export function HmacUsage() {
+    const sharedKey = "secret-key";
+    const message = "Hello World!";
+    const hex = hmacSign(sharedKey, message);
+
+    console.log("Message: " + message);
+    console.log("HMAC: " + hex);
+}
+
+HmacUsage();
