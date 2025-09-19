@@ -5,7 +5,7 @@ import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card'
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { EllipsisVertical, Option } from 'lucide-react';
+import { EllipsisVertical, Option, User } from 'lucide-react';
 
 export interface Message {
   id: number;
@@ -41,7 +41,10 @@ export function Chat({ title, messages, onSend, href, isTyping = false }: ChatPr
   return (
     <Card className="w-full flex-1 flex flex-col">
       <CardHeader className="flex justify-between items-center">
+        <div className='flex row gap-2'>
+        <User />
         <h2 className="text-lg font-bold">{title}</h2>
+        </div>
         <Link href={href}>
           <EllipsisVertical />
         </Link>
