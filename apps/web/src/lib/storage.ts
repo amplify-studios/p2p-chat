@@ -31,4 +31,21 @@ export function getDB() {
   return dbPromise;
 }
 
-// TODO: backup / restore data
+export async function backupDB() {
+  const db = await getDB();
+  const backup: Record<string, any[]> = {};
+
+  const stores = ['messages', 'credentials', 'rooms'];
+  for (const storeName of stores) {
+    backup[storeName] = await db.getAll(storeName as 'messages' | 'credentials' | 'rooms');
+  }
+
+  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'p2p-chat-backup.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
