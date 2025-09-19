@@ -73,8 +73,8 @@ export default function Sidebar({ children }: SidebarProps) {
               href={`/chat?id=${room.roomId}`}
               className={`flex-shrink-0 px-3 py-2 rounded whitespace-nowrap ${
                 room.roomId === activeRoomId
-                  ? 'bg-secondary font-semibold text-black'
-                  : 'text-black hover:bg-secondary'
+                  ? 'bg-secondary font-semibold'
+                  : 'hover:bg-secondary'
               }`}
             >
               {room.name}
@@ -83,14 +83,14 @@ export default function Sidebar({ children }: SidebarProps) {
 
           <Link
             href="/new"
-            className="flex-shrink-0 px-3 py-2 rounded text-black hover:bg-secondary flex items-center gap-1"
+            className="flex-shrink-0 px-3 py-2 rounded hover:bg-secondary flex items-center gap-1"
           >
             <Plus size={16} />
           </Link>
 
           <Link
             href="/settings"
-            className="flex-shrink-0 px-3 py-2 rounded text-black hover:bg-secondary flex items-center ml-auto"
+            className="flex-shrink-0 px-3 py-2 rounded hover:bg-secondary flex items-center ml-auto"
           >
             <Settings size={16} />
           </Link>

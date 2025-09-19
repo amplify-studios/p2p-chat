@@ -52,7 +52,7 @@ export default function NewRoom() {
 
     await db.put('rooms', room);
 
-    // NOTE: Let Sidebar know rooms have changed
+    // Notify Sidebar about the update
     localStorage.setItem("rooms_updated", Date.now().toString());
     window.dispatchEvent(new StorageEvent("storage", { key: "rooms_updated" }));
 
@@ -65,11 +65,13 @@ export default function NewRoom() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-4">
-      <div className="bg-white p-8 rounded shadow-md w-full max-w-md">
-        <h1 className="text-2xl font-bold mb-6 text-center">Create New Room</h1>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
+      <div className="bg-card p-8 rounded-lg shadow-md w-full max-w-md">
+        <h1 className="text-2xl font-bold mb-6 text-center text-foreground">
+          Create New Room
+        </h1>
 
-        {error && <p className="text-red-600 mb-4">{error}</p>}
+        {error && <p className="text-destructive mb-4">{error}</p>}
 
         <Input
           type="text"
