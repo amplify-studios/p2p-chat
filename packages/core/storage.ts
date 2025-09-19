@@ -2,6 +2,7 @@ export interface MessageType {
   roomId: string;
   senderId: string;
   message: string; // FIXME: Should be bytes
+  timestamp: number;
 }
 
 export interface CredentialsType {

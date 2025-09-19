@@ -48,6 +48,7 @@ export default function ChatPage() {
       roomId,
       senderId: user?.userId as string,
       message: text,
+      timestamp: Date.now()
     });
   };
 
