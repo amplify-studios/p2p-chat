@@ -1,12 +1,16 @@
-# Specification v1
+# Specification v1.1
 
-> 18-09-2025
+> 19-09-2025
+
+---
 
 ## Encryption
 
-- **AES-256-GCM** for encrypting messages.
-- **ECDH**, instead of RSA for forward secrecy.
-- **HMAC** hashing
+- AES-256-GCM for encrypting messages.
+- ECDH (Elliptic-Curve Diffie–Hellman) for deriving shared secrets between peers.
+- HKDF (key derivation) to turn shared secrets into symmetric keys.
+
+---
 
 ## Operations
 
@@ -14,86 +18,54 @@
 2. Send/Receive Message
 3. Local Storage
 4. Authentication
+5. Registration 
 
 ### 1. User Connection
 
-1. User provides other user's ID
-2. Signaling server handles the transaction
-3. We save the other user's credentials
+1. User provides the other user’s ID (public key or fingerprint).
+2. A signaling server is used only for exchanging connection data (similar to WebRTC).
+3. Each peer stores the other’s public key + fingerprint for authentication.
 
 ### 2. Send/Receive Message
 
 #### Send
 
-1. We generate an AES key (It's the key computed from the ECDH)
-2. We generate a hash for the message
-3. The message gets encrypted by AES
-5. We send the message along with the hash (HMAC)
-6. We display the message
+1. Generate an ephemeral ECDH key pair.
+2. Perform ECDH with the recipient’s long-term public key to derive a shared secret.
+3. Run the shared secret through HKDF → get an AES-256-GCM session key.
+4. Encrypt the message with AES-256-GCM (random 96-bit IV per message).
+5. Send:
+    - Ciphertext
+    - Nonce/IV
+    - Ephemeral public key (so recipient can derive the same shared secret)
 
 #### Receive
 
-1. We decrypt the AES key with our private ECDH key.
-2. We decrypt the message with the AES key
-3. We verify that it's intact using the hash
-4. We display the message
+1. Use the sender’s ephemeral public key + your own private key to perform ECDH.
+2. Run the shared secret through HKDF → get the AES-256-GCM session key.
+3. Decrypt the ciphertext with AES-256-GCM.
+4. If authentication passes, display the message.
 
 ### 3. Local Storage
 
-- We have a different "table" for each conversation
-- We store each encrypted message along with its encrypted AES key
-- We store the user's credentials
-- We store our credentials
+All sensitive data stored in IndexedDB is encrypted with a key derived from the user’s password.
+
+Password → strong KDF (e.g., Argon2 or scrypt) → local encryption key.
 
 ### 4. Authentication
 
-1. Manual Key Verification (“Trust on First Use” / TOFU)
+1. Manual Key Verification (TOFU – Trust on First Use)
+   - On first connection, peers exchange public keys.
+   - Users verify fingerprints out-of-band (QR code, phone call, in person).
+   - Once verified, keys are cached and used for future sessions.
 
-- When two peers first connect, they exchange public keys.
-- Each user verifies the key fingerprint out-of-band (e.g., QR code, phone call, in person).
-- After verification, the key is cached and used for future sessions.
-- Pros: Simple, works without any servers.
-- Cons: User must verify manually, vulnerable to MitM on first connection if verification isn’t done.
-  > Example: Signal shows a key fingerprint that you can verify with a contact in person.
+### 5. Registration
 
-2. Web of Trust
+1. No central registration.
+    - Each user generates an ECDH key pair on first launch.
+    - Their public key = identity.
+    - Authentication via TOFU or Web of Trust.
 
-- Peers sign each other’s public keys.
-- If a key is signed by someone you already trust, it can be accepted.
-- Can scale in a P2P network if peers maintain a graph of trusted signatures.
-- Pros: Fully decentralized, more flexible than TOFU.
-- Cons: Complex to manage, trust decisions can be tricky.
-  > Example: PGP uses this model.
-
-#### Registration
-
-1. No Registration (Anonymous / Key-based)
-
-- Each user generates a key pair on first launch (ECDH).
-- Their public key acts as their identity.
-- Other users authenticate them via TOFU (trust on first use) or Web of Trust.
-- Pros:
-  - No central server.
-  - No email/password needed.
-  - Fully decentralized.
-- Cons:
-  - Harder to recover your identity if you lose your keys.
-  - Usernames or metadata are not centrally controlled, so discoverability is limited.
-
-2. Optional Nicknames / Local Registration
-
-- You can let users pick a display name locally.
-- Name is only stored on their device or optionally shared with peers.
-- The “registration” is just a local mapping of name → public key.
-- Pros:
-  - Simple, user-friendly.
-  - Still decentralized.
-- Cons:
-  - Names can collide or be spoofed.
-
-##### Process
-
-1. User provides a username
-2. We generate an ID
-3. We generate ECDH key-pair
-4. We register with the Signaling Server
+2. Optional nicknames (local only).
+    - Users may assign display names mapped to public keys.
+    - Names are not globally unique or enforced.

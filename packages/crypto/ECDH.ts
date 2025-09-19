@@ -1,18 +1,20 @@
-import crypto from "crypto"
+import crypto from 'crypto';
 
 export function createECDHkey(): crypto.ECDH {
-  const user: crypto.ECDH = crypto.createECDH('secp256k1')
-  user.generateKeys()
-  return user
+  const user: crypto.ECDH = crypto.createECDH('secp256k1');
+  user.generateKeys();
+  return user;
 }
 
 export function computeSecret(user_ECDH: crypto.ECDH, otherPublicKey: string): Buffer {
-  return user_ECDH.computeSecret(Buffer.from(otherPublicKey, "hex"))
+  return user_ECDH.computeSecret(Buffer.from(otherPublicKey, 'hex'));
 }
 
 export function secretMatch(user_secret: Buffer, other_secret: Buffer): boolean {
-  return user_secret.equals(other_secret)
+  return user_secret.equals(other_secret);
 }
+
+export function encryptMessage(otherPublicKey: string, message: string): string {}
 
 // // 1. Each party generates their ECDH key pair
 // const alice = crypto.createECDH('secp256k1'); // Bitcoin's curve

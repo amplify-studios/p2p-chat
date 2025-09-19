@@ -4,6 +4,8 @@ import { useState, useRef, useEffect } from 'react';
 import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import Link from 'next/link';
+import { EllipsisVertical, Option, User } from 'lucide-react';
 
 export interface Message {
   id: number;
@@ -12,12 +14,14 @@ export interface Message {
 }
 
 interface ChatProps {
+  title?: string;
   messages: Message[];
   onSend: (msg: string) => void;
+  href: string;
   isTyping?: boolean;
 }
 
-export function Chat({ messages, onSend, isTyping = false }: ChatProps) {
+export function Chat({ title, messages, onSend, href, isTyping = false }: ChatProps) {
   const [input, setInput] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -35,15 +39,22 @@ export function Chat({ messages, onSend, isTyping = false }: ChatProps) {
   }, [messages, isTyping]);
 
   return (
-    <Card className="w-full max-w-md h-[500px] flex flex-col">
-      <CardHeader>
-        <h2 className="text-lg font-bold">Chat</h2>
+    <Card className="w-full flex-1 flex flex-col">
+      <CardHeader className="flex justify-between items-center">
+        <div className='flex row gap-2'>
+        <User />
+        <h2 className="text-lg font-bold">{title}</h2>
+        </div>
+        <Link href={href}>
+          <EllipsisVertical />
+        </Link>
       </CardHeader>
 
       <CardContent
         ref={scrollRef}
         className="flex-1 overflow-y-auto space-y-2 p-2 bg-gray-50 dark:bg-gray-900"
       >
+        {(messages.length == 0) ? (<>Start the conversation!</>) : <></>}
         {messages.map((msg) => (
           <div
             key={msg.id}
@@ -52,7 +63,7 @@ export function Chat({ messages, onSend, isTyping = false }: ChatProps) {
             <div
               className={`px-3 py-2 max-w-[70%] ${
                 msg.sender === 'me'
-                  ? 'bg-blue-500 text-white rounded-t-lg rounded-l-lg rounded-br-none'
+                  ? 'bg-primary text-white rounded-t-lg rounded-l-lg rounded-br-none'
                   : 'bg-gray-200 dark:bg-gray-700 text-black dark:text-white rounded-t-lg rounded-r-lg rounded-bl-none'
               }`}
             >
