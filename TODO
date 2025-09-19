@@ -1,11 +1,11 @@
-TODO: AES-256-GCM crypto methods
 TODO: Key derivation crypto methods
-TODO: ECDH crypto methods
 TODO: Signaling server
-TODO: IndexedDB
 TODO: Sending messages
 TODO: Receiving messages
 TODO: Backup/Restore data
 TODO: Group chats
 TODO: Chat sync
 TODO: Chat invite (link + qr)
+DONE: IndexedDB
+DONE: ECDH crypto methods
+DONE: AES-256-GCM crypto methods
