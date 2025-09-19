@@ -8,15 +8,12 @@ import { useAuth } from '@/hooks/useAuth';
 import { useSearchParams } from 'next/navigation';
 import { useRooms } from '@/hooks/useRooms';
 
-export default function ChatPage() {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const msgId = useRef(0);
+export default function ChatOptionsPage() {
   const db = useDB();
   const user = useAuth(true);
+  const { rooms } = useRooms();
   const searchParams = useSearchParams();
   const roomId = searchParams?.get('id');
-
-  const { rooms } = useRooms();
 
   if (!db || !rooms) return <Loading />;
 
@@ -37,29 +34,7 @@ export default function ChatPage() {
     );
   }
 
-  const logMessage = (text: string, sender: 'me' | 'other') => {
-    msgId.current += 1;
-    setMessages((prev) => [...prev, { id: msgId.current, text, sender }]);
-  };
-
-  const sendMessage = (text: string) => {
-    logMessage(text, 'me');
-    db.put('messages', {
-      roomId,
-      senderId: user?.userId as string,
-      message: text,
-      timestamp: Date.now()
-    });
-  };
-
   return (
-    <div className="flex flex-col h-full min-h-screen">
-      <Chat 
-        title={room.name} 
-        messages={messages} 
-        href={`/options?id=${room.roomId}`}
-        onSend={sendMessage} 
-      />
-    </div>
+    <h1>Options for chat: {roomId}</h1>
   );
 }

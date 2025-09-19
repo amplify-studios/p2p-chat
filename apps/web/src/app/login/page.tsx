@@ -37,13 +37,15 @@ export default function Login() {
       return;
     }
 
-    const id = user ? user.userId : generateBase58Id(8);
-    await db.put("credentials", {
-      userId: id,
-      public: new Uint8Array(),
-      private: new Uint8Array(),
-      username,
-    });
+    if(!user) {
+      const id = generateBase58Id(8);
+      await db.put("credentials", {
+        userId: id,
+        public: new Uint8Array(), // TODO: Generate public/private keys
+        private: new Uint8Array(),
+        username,
+      });
+    }
 
     // TODO: register to the signaling server
     sessionStorage.setItem(username, password);

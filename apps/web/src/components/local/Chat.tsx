@@ -4,6 +4,8 @@ import { useState, useRef, useEffect } from 'react';
 import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import Link from 'next/link';
+import { EllipsisVertical, Option } from 'lucide-react';
 
 export interface Message {
   id: number;
@@ -15,10 +17,11 @@ interface ChatProps {
   title?: string;
   messages: Message[];
   onSend: (msg: string) => void;
+  href: string;
   isTyping?: boolean;
 }
 
-export function Chat({ title, messages, onSend, isTyping = false }: ChatProps) {
+export function Chat({ title, messages, onSend, href, isTyping = false }: ChatProps) {
   const [input, setInput] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -36,9 +39,12 @@ export function Chat({ title, messages, onSend, isTyping = false }: ChatProps) {
   }, [messages, isTyping]);
 
   return (
-    <Card className="w-full max-w-md h-[500px] flex flex-col">
-      <CardHeader>
+    <Card className="w-full flex-1 flex flex-col">
+      <CardHeader className="flex justify-between items-center">
         <h2 className="text-lg font-bold">{title}</h2>
+        <Link href={href}>
+          <EllipsisVertical />
+        </Link>
       </CardHeader>
 
       <CardContent
