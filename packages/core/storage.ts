@@ -6,8 +6,8 @@ export interface MessageType {
 
 export interface CredentialsType {
   userId: string;
-  public: string; // FIXME: Should be bytes
-  private: string; // FIXME: Should be bytes
+  public: Uint8Array
+  private: Uint8Array
   username: string;
 }
 

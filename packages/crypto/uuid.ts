@@ -6,7 +6,7 @@ export function generateUUID(): string {
   });
 }
 
-export function randomBase58Id(length: number = 16): string {
+export function generateBase58Id(length: number = 16): string {
   const alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
   const array = new Uint8Array(length);
   crypto.getRandomValues(array);

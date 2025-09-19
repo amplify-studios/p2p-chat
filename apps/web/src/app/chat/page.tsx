@@ -28,8 +28,8 @@ export default function ChatPage() {
     );
   }
 
-  const roomExists = rooms.some((room) => room.roomId === roomId);
-  if (!roomExists) {
+  const room = rooms.find((room) => room.roomId === roomId);
+  if (!room) {
     return (
       <h1 className="flex text-2xl items-center justify-center min-h-screen bg-gray-50">
         Room not found
@@ -45,11 +45,11 @@ export default function ChatPage() {
   const sendMessage = (text: string) => {
     logMessage(text, 'me');
     db.put('messages', {
-      roomId, // use the actual roomId from URL
+      roomId,
       senderId: user?.userId as string,
       message: text,
     });
   };
 
-  return <Chat title={roomId} messages={messages} onSend={sendMessage} />;
+  return <Chat title={room.name} messages={messages} onSend={sendMessage} />;
 }
