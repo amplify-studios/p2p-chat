@@ -12,20 +12,19 @@ interface SidebarProps {
 
 export default function Sidebar({ children }: SidebarProps) {
   const { rooms, activeRoomId } = useRooms();
-
   if (!rooms) return <Loading />;
 
   return (
-    <div className="flex h-screen">
+    <div className="flex flex-col md:flex-row md:h-screen">
       {/* Desktop Sidebar */}
-      <aside className="hidden md:flex flex-shrink-0 w-64 lg:w-1/5 border-r border-secondary flex-col">
+      <aside className="hidden md:flex flex-shrink-0 w-64 lg:w-1/5  border-r border-secondary flex-col">
         <div className="p-6 text-2xl font-bold border-b border-secondary">
           <Link href="/">P2P Chat</Link>
         </div>
 
-        <nav className="flex-1 p-4 overflow-y-auto flex flex-col">
-          <ul className="flex-1 space-y-2">
-            {rooms.map(room => (
+        <nav className="p-4 overflow-y-auto flex-1">
+          <ul className="space-y-2">
+            {rooms.map((room) => (
               <li key={room.roomId}>
                 <Link
                   href={`/chat?id=${room.roomId}`}
@@ -41,36 +40,38 @@ export default function Sidebar({ children }: SidebarProps) {
             <li>
               <Link
                 href="/new"
-                className="flex items-center gap-2 p-2 rounded hover:bg-secondary mt-2"
+                className="flex items-center gap-2 p-2 rounded hover:bg-secondary"
               >
                 <Plus size={20} />
                 <span>New Room</span>
               </Link>
             </li>
-          </ul>
 
-          <div className="mt-auto">
-            <Link
-              href="/settings"
-              className="flex items-center gap-2 p-2 rounded hover:bg-secondary"
-            >
-              <Settings size={20} />
-              <span>Settings</span>
-            </Link>
-          </div>
+            <li>
+              <Link
+                href="/settings"
+                className="flex items-center gap-2 p-2 rounded hover:bg-secondary"
+              >
+                <Settings size={20} />
+                <span>Settings</span>
+              </Link>
+            </li>
+          </ul>
         </nav>
       </aside>
 
-      {/* Main content */}
+      {/* Main Content */}
       <main className="flex-1 flex flex-col bg-background overflow-auto">
         {/* Mobile Top Scroll Nav */}
-        <nav className="md:hidden flex overflow-x-auto p-2 gap-2 border-b border-secondary">
-          {rooms.map(room => (
+        <nav className="md:hidden flex overflow-x-auto gap-2 p-2 border-b border-secondary  sticky top-0 z-10">
+          {rooms.map((room) => (
             <Link
               key={room.roomId}
               href={`/chat?id=${room.roomId}`}
-              className={`flex-shrink-0 px-3 py-2 rounded hover:bg-secondary whitespace-nowrap ${
-                room.roomId === activeRoomId ? 'bg-secondary font-semibold' : ''
+              className={`flex-shrink-0 px-3 py-2 rounded whitespace-nowrap ${
+                room.roomId === activeRoomId
+                  ? 'bg-secondary font-semibold'
+                  : ' text-black hover:bg-secondary'
               }`}
             >
               {room.name}
@@ -79,20 +80,19 @@ export default function Sidebar({ children }: SidebarProps) {
 
           <Link
             href="/new"
-            className="flex-shrink-0 px-3 py-2 rounded hover:bg-secondary flex items-center gap-1"
+            className="flex-shrink-0 px-3 py-2 rounded  text-black hover:bg-secondary flex items-center gap-1"
           >
             <Plus size={16} />
           </Link>
 
           <Link
             href="/settings"
-            className="flex-shrink-0 px-3 py-2 rounded hover:bg-secondary flex items-center gap-1"
+            className="flex-shrink-0 px-3 py-2 rounded text-black hover:bg-secondary flex items-center gap-1"
           >
             <Settings size={16} />
           </Link>
         </nav>
 
-        {/* Actual content */}
         <div className="flex-1 overflow-auto">
           {children}
         </div>
