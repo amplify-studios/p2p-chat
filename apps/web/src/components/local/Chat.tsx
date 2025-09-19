@@ -51,6 +51,7 @@ export function Chat({ title, messages, onSend, href, isTyping = false }: ChatPr
         ref={scrollRef}
         className="flex-1 overflow-y-auto space-y-2 p-2 bg-gray-50 dark:bg-gray-900"
       >
+        {(messages.length == 0) ? (<>Start the conversation!</>) : <></>}
         {messages.map((msg) => (
           <div
             key={msg.id}

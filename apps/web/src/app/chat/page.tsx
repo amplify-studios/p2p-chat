@@ -1,7 +1,7 @@
 'use client';
 
 import { Chat, Message } from '@/components/local/Chat';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useDB } from '@/hooks/useDB';
 import Loading from '@/components/local/Loading';
 import { useAuth } from '@/hooks/useAuth';
@@ -15,6 +15,30 @@ export default function ChatPage() {
   const user = useAuth(true);
   const searchParams = useSearchParams();
   const roomId = searchParams?.get('id');
+
+  useEffect(() => {
+    if (!db || !roomId || !user?.userId) return;
+    setMessages([]);
+
+    const fetchMessages = async () => {
+      const allMessages = await db.getAll("messages");
+      if (!allMessages) return;
+
+      const filtered = allMessages.filter((msg) => msg.roomId === roomId);
+
+      filtered.forEach((msg) => {
+        const sender = msg.senderId === user.userId ? "me" : "other";
+        msgId.current += 1;
+        // TODO: here the message would be decrypted first
+        setMessages((prev) => [
+          ...prev,
+          { id: msgId.current, text: msg.message, sender },
+        ]);
+      });
+    };
+
+    fetchMessages();
+  }, [db, roomId, user?.userId]);
 
   const { rooms } = useRooms();
 
