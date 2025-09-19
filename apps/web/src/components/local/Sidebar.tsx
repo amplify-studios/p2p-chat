@@ -12,66 +12,48 @@ interface SidebarProps {
 
 export default function Sidebar({ children }: SidebarProps) {
   const { rooms, activeRoomId } = useRooms();
-  // TODO: sort rooms by most recent message
-
   if (!rooms) return <Loading />;
 
   return (
-    <div className="flex h-screen">
+    <div className="flex flex-col md:flex-row h-screen">
       {/* Sidebar */}
-      <aside className="w-64 flex flex-col justify-between">
-        {/* Logo / App Title */}
-        <div>
-          <div className="p-6 text-2xl font-bold border-b border-secondary">
-            <Link href="/">P2P Chat</Link>
-          </div>
+      <aside className="bg-background flex-shrink-0 w-full md:w-64 lg:w-1/5 flex flex-col md:flex-col border-b md:border-b-0 md:border-r border-secondary">
+        {/* Mobile Horizontal Scroll */}
+        <nav className="flex overflow-x-auto md:flex-col md:overflow-y-auto p-2 gap-2 items-center">
+          {rooms.map((room) => (
+            <Link
+              key={room.roomId}
+              href={`/chat?id=${room.roomId}`}
+              className={`flex-shrink-0 px-3 py-2 rounded hover:bg-secondary whitespace-nowrap ${
+                room.roomId === activeRoomId ? 'bg-secondary font-semibold' : ''
+              }`}
+            >
+              {room.name}
+            </Link>
+          ))}
 
-          {/* Rooms List */}
-          <nav className="p-4 overflow-y-auto max-h-[calc(100vh-100px)]">
-            <ul className="space-y-2">
-              {rooms.map((room) => (
-                <li key={room.roomId}>
-                  <Link
-                    href={`/chat?id=${room.roomId}`}
-                    className={`flex items-center gap-2 p-2 rounded hover:bg-secondary${
-                      room.roomId === activeRoomId
-                        ? 'bg-secondary font-semibold'
-                        : ''
-                    }`}
-                  >
-                    {room.name}
-                  </Link>
-                </li>
-              ))}
+          {/* New Room */}
+          <Link
+            href="/new"
+            className="flex-shrink-0 px-3 py-2 rounded hover:bg-secondary flex items-center gap-1"
+          >
+            <Plus size={16} />
+            <span className="hidden md:inline">New</span>
+          </Link>
 
-              {/* New Room */}
-              <li>
-                <Link
-                  href="/new"
-                  className="flex items-center gap-2 p-2 rounded hover:bg-secondary"
-                >
-                  <Plus size={20} />
-                  <span>New Room</span>
-                </Link>
-              </li>
-            </ul>
-          </nav>
-        </div>
-
-        {/* Settings at Bottom */}
-        <div className="p-4 border-t border-secondary">
+          {/* Settings */}
           <Link
             href="/settings"
-            className="flex items-center gap-2 p-2 hover:bg-secondary rounded"
+            className="flex-shrink-0 px-3 py-2 rounded hover:bg-secondary flex items-center gap-1"
           >
-            <Settings size={20} />
-            <span>Settings</span>
+            <Settings size={16} />
+            <span className="hidden md:inline">Settings</span>
           </Link>
-        </div>
+        </nav>
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 bg-background overflow-auto">{children}</main>
+      <main className="flex-1 overflow-auto bg-background">{children}</main>
     </div>
   );
 }
