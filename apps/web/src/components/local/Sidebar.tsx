@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode, useEffect, useState } from 'react';
+import { ReactNode } from 'react';
 import Link from 'next/link';
 import { Plus, Settings } from 'lucide-react';
 import { useRooms } from '@/hooks/useRooms';
@@ -14,15 +14,15 @@ export default function Sidebar({ children }: SidebarProps) {
   const { rooms, activeRoomId } = useRooms();
   // TODO: sort rooms by most recent message
 
-  if(!rooms) return <Loading />;
+  if (!rooms) return <Loading />;
 
   return (
     <div className="flex h-screen">
       {/* Sidebar */}
-      <aside className="w-64 bg-gray-800 text-white flex flex-col justify-between">
+      <aside className="w-64 flex flex-col justify-between">
         {/* Logo / App Title */}
         <div>
-          <div className="p-6 text-2xl font-bold border-b border-gray-700">
+          <div className="p-6 text-2xl font-bold border-b border-secondary">
             <Link href="/">P2P Chat</Link>
           </div>
 
@@ -33,8 +33,10 @@ export default function Sidebar({ children }: SidebarProps) {
                 <li key={room.roomId}>
                   <Link
                     href={`/chat?id=${room.roomId}`}
-                    className={`flex items-center gap-2 p-2 rounded hover:bg-gray-700 ${
-                      room.roomId === activeRoomId ? 'bg-gray-700 font-semibold' : ''
+                    className={`flex items-center gap-2 p-2 rounded hover:bg-secondary${
+                      room.roomId === activeRoomId
+                        ? 'bg-secondary font-semibold'
+                        : ''
                     }`}
                   >
                     {room.name}
@@ -46,7 +48,7 @@ export default function Sidebar({ children }: SidebarProps) {
               <li>
                 <Link
                   href="/new"
-                  className="flex items-center gap-2 p-2 rounded hover:bg-gray-700"
+                  className="flex items-center gap-2 p-2 rounded hover:bg-secondary"
                 >
                   <Plus size={20} />
                   <span>New Room</span>
@@ -57,10 +59,10 @@ export default function Sidebar({ children }: SidebarProps) {
         </div>
 
         {/* Settings at Bottom */}
-        <div className="p-4 border-t border-gray-700">
+        <div className="p-4 border-t border-secondary">
           <Link
             href="/settings"
-            className="flex items-center gap-2 p-2 hover:bg-gray-700 rounded"
+            className="flex items-center gap-2 p-2 hover:bg-secondary rounded"
           >
             <Settings size={20} />
             <span>Settings</span>
@@ -69,7 +71,7 @@ export default function Sidebar({ children }: SidebarProps) {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 bg-gray-50 overflow-auto">{children}</main>
+      <main className="flex-1 bg-background overflow-auto">{children}</main>
     </div>
   );
 }

@@ -60,7 +60,7 @@ export function Chat({ title, messages, onSend, href, isTyping = false }: ChatPr
             <div
               className={`px-3 py-2 max-w-[70%] ${
                 msg.sender === 'me'
-                  ? 'bg-blue-500 text-white rounded-t-lg rounded-l-lg rounded-br-none'
+                  ? 'bg-primary text-white rounded-t-lg rounded-l-lg rounded-br-none'
                   : 'bg-gray-200 dark:bg-gray-700 text-black dark:text-white rounded-t-lg rounded-r-lg rounded-bl-none'
               }`}
             >
