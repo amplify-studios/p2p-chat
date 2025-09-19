@@ -31,14 +31,24 @@ export function getDB() {
   return dbPromise;
 }
 
+
+type Backup = {
+  messages: MessageType[];
+  credentials: CredentialsType[];
+  rooms: RoomType[];
+};
+
 export async function backupDB() {
   const db = await getDB();
-  const backup: Record<string, any[]> = {};
+  const backup: Backup = {
+    messages: [],
+    credentials: [],
+    rooms: [],
+  };
 
-  const stores = ['messages', 'credentials', 'rooms'];
-  for (const storeName of stores) {
-    backup[storeName] = await db.getAll(storeName as 'messages' | 'credentials' | 'rooms');
-  }
+  backup.messages = await db.getAll('messages');
+  backup.credentials = await db.getAll('credentials');
+  backup.rooms = await db.getAll('rooms');
 
   const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
