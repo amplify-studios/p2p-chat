@@ -6,38 +6,38 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useDB } from '@/hooks/useDB';
 import Loading from '@/components/local/Loading';
-import { generateUUID } from '@chat/crypto';
-import { RoomType } from '@chat/core';
+import { generateBase58Id } from '@chat/crypto';
+import { CredentialsType, RoomType } from '@chat/core';
 import { useAuth } from '@/hooks/useAuth';
 
 export default function NewRoom() {
   const user = useAuth(true);
-
   const db = useDB();
   const router = useRouter();
 
   const [name, setName] = useState('');
   const [type, setType] = useState<'single' | 'group'>('single');
-  const [keys, setKeys] = useState<string[]>([]);
+  const [keys, setKeys] = useState<CredentialsType[]>([]);
   const [otherUserId, setOtherUserId] = useState('');
   const [error, setError] = useState('');
 
   if (!db) return <Loading />;
 
+  const validate = () => {
+    if (!name.trim()) return 'Room name is required';
+    if (type === 'single' && !otherUserId.trim()) return 'User ID is required for single chat';
+    return '';
+  };
+
   const handleCreateRoom = async () => {
+    const validationError = validate();
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
     setError('');
 
-    if (!name) {
-      setError('Room name is required');
-      return;
-    }
-
-    if (type === 'single' && !otherUserId) {
-      setError('User ID is required for single chat');
-      return;
-    }
-
-    const roomId = generateUUID();
+    const roomId = generateBase58Id();
     const room: RoomType = {
       roomId,
       name,
@@ -46,10 +46,21 @@ export default function NewRoom() {
     };
 
     if (type === 'single') {
-      room.keys.push(otherUserId);
+      // TODO: exchange credentials with the signaling server
+      // room.keys.push(...);
     }
 
     await db.put('rooms', room);
+
+    // NOTE: Let Sidebar know rooms have changed
+    localStorage.setItem("rooms_updated", Date.now().toString());
+    window.dispatchEvent(new StorageEvent("storage", { key: "rooms_updated" }));
+
+    // Reset form
+    setName('');
+    setOtherUserId('');
+    setType('single');
+
     router.push(`/chat?id=${roomId}`);
   };
 

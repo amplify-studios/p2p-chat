@@ -12,22 +12,27 @@ interface SidebarProps {
 
 export default function Sidebar({ children }: SidebarProps) {
   const { rooms, activeRoomId } = useRooms();
+  // TODO: sort rooms by most recent message
+
   if(!rooms) return <Loading />;
 
   return (
     <div className="flex h-screen">
+      {/* Sidebar */}
       <aside className="w-64 bg-gray-800 text-white flex flex-col justify-between">
+        {/* Logo / App Title */}
         <div>
           <div className="p-6 text-2xl font-bold border-b border-gray-700">
-            <Link href={'/'}>P2P Chat</Link>
+            <Link href="/">P2P Chat</Link>
           </div>
 
+          {/* Rooms List */}
           <nav className="p-4 overflow-y-auto max-h-[calc(100vh-100px)]">
             <ul className="space-y-2">
               {rooms.map((room) => (
                 <li key={room.roomId}>
                   <Link
-                    href={room.roomId ? `/chat?id=${room.roomId}` : '#'}
+                    href={`/chat?id=${room.roomId}`}
                     className={`flex items-center gap-2 p-2 rounded hover:bg-gray-700 ${
                       room.roomId === activeRoomId ? 'bg-gray-700 font-semibold' : ''
                     }`}
@@ -36,24 +41,34 @@ export default function Sidebar({ children }: SidebarProps) {
                   </Link>
                 </li>
               ))}
+
+              {/* New Room */}
               <li>
-                <Link href="/new" className="flex items-center gap-2 p-2 rounded hover:bg-gray-700">
+                <Link
+                  href="/new"
+                  className="flex items-center gap-2 p-2 rounded hover:bg-gray-700"
+                >
                   <Plus size={20} />
-                  <span>New Room</span> {/* optional text, can remove if just icon */}
+                  <span>New Room</span>
                 </Link>
               </li>
             </ul>
           </nav>
         </div>
 
+        {/* Settings at Bottom */}
         <div className="p-4 border-t border-gray-700">
-          <Link href="/settings" className="flex items-center gap-2 p-2 hover:bg-gray-700 rounded">
+          <Link
+            href="/settings"
+            className="flex items-center gap-2 p-2 hover:bg-gray-700 rounded"
+          >
             <Settings size={20} />
-            Settings
+            <span>Settings</span>
           </Link>
         </div>
       </aside>
 
+      {/* Main Content */}
       <main className="flex-1 bg-gray-50 overflow-auto">{children}</main>
     </div>
   );

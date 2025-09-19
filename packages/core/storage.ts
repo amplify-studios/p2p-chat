@@ -15,5 +15,5 @@ export interface RoomType {
   roomId: string;
   name: string;
   type: 'single' | 'group';
-  keys: string[]; // FIXME: Should be bytes
+  keys: CredentialsType[];
 }
