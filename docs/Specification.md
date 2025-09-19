@@ -25,11 +25,10 @@
 
 #### Send
 
-1. We generate an AES key
+1. We generate an AES key (It's the key computed from the ECDH)
 2. We generate a hash for the message
 3. The message gets encrypted by AES
-4. We encrypt the AES key with the ECDH public key of the other user
-5. We send the message along with the encrypted AES key and the hash (HMAC)
+5. We send the message along with the hash (HMAC)
 6. We display the message
 
 #### Receive

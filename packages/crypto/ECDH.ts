@@ -14,10 +14,6 @@ export function secretMatch(user_secret: Buffer, other_secret: Buffer): boolean 
   return user_secret.equals(other_secret)
 }
 
-export function encryptMessage(otherPublicKey: string, message: string): string {
-
-}
-
 // // 1. Each party generates their ECDH key pair
 // const alice = crypto.createECDH('secp256k1'); // Bitcoin's curve
 // alice.generateKeys();

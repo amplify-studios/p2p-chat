@@ -1,2 +1,3 @@
-export { createECDHkey } from "./ECDH";
+export * from "./ECDH";
+export * from "./AES";
 console.log('crypto');
