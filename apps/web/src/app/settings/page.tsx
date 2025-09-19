@@ -39,7 +39,7 @@ export default function SettingsPage() {
 
       <div className="flex items-center justify-between">
         <span className="font-medium">Backup Database</span>
-        <Button variant={"secondary"} onClick={handleBackup} disabled={loading}>
+        <Button size="sm" variant={"outline"} onClick={handleBackup} disabled={loading}>
           {loading ? 'Backing up...' : 'Backup'}
         </Button>
       </div>
