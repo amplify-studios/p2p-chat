@@ -6,7 +6,7 @@
 
 ## Encryption
 
-- AES-256-GCM for encrypting messages (provides confidentiality + integrity).
+- AES-256-GCM for encrypting messages.
 - ECDH (Elliptic-Curve Diffie–Hellman) for deriving shared secrets between peers.
 - HKDF (key derivation) to turn shared secrets into symmetric keys.
 
