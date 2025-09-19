@@ -1,25 +1,11 @@
 'use client';
 
-import { Chat, Message } from '@/components/local/Chat';
-import { useRef, useState } from 'react';
-import { add } from '@chat/core';
-import { getRandomBytes } from '@chat/crypto';
+import Loading from '@/components/local/Loading';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function Home() {
-  const c = add(2, 4);
-  console.log(getRandomBytes);
-  console.log(c);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const msgId = useRef(0);
+  const user = useAuth(true);
+  if (!user) return <Loading />;
 
-  const logMessage = (text: string, sender: 'me' | 'other') => {
-    msgId.current += 1;
-    setMessages((prev) => [...prev, { id: msgId.current, text, sender }]);
-  };
-
-  const sendMessage = (text: string) => {
-    logMessage(text, 'other');
-  };
-
-  return <Chat messages={messages} onSend={sendMessage} />;
+  return <h1>Logged in as {user?.username}</h1>;
 }

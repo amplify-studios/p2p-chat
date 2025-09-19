@@ -1,0 +1,15 @@
+TODO: Key derivation crypto methods
+TODO: Signaling server
+TODO: Sending messages
+TODO: Receiving messages
+TODO: Group chats
+TODO: Chat sync
+TODO: Chat invite (link + qr)
+TODO: Block user
+TODO: Delete connection
+TODO: Delete chat
+TODO: Restore data
+DONE: IndexedDB
+DONE: ECDH crypto methods
+DONE: AES-256-GCM crypto methods
+DONE: Backup data

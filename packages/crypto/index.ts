@@ -2,6 +2,8 @@
 
 import hmacSign from "./HASH";
 
+export * from './uuid';
+
 export { createECDHkey } from "./ECDH";
 
 export function HmacUsage() {
@@ -14,3 +16,4 @@ export function HmacUsage() {
 }
 
 HmacUsage();
+

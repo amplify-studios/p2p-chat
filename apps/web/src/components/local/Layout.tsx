@@ -1,0 +1,24 @@
+'use client';
+
+import { usePathname } from 'next/navigation';
+import { ReactNode } from 'react';
+import Sidebar from './Sidebar';
+import { ThemeProvider } from 'next-themes';
+
+export default function Layout({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
+
+  if (pathname === '/login') return children;
+
+  return (
+    <ThemeProvider 
+      attribute="class" 
+      defaultTheme="light" 
+      enableSystem
+    >
+      <Sidebar>
+        {children}
+      </Sidebar>
+    </ThemeProvider>
+  );
+}
