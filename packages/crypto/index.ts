@@ -7,7 +7,7 @@ export * from './uuid';
 export { createECDHkey } from "./ECDH";
 
 export function HmacUsage() {
-    const sharedKey = "secret-key";
+    const sharedKey = "shared-key";
     const message = "Hello World!";
     const hex = hmacSign(sharedKey, message);
 
