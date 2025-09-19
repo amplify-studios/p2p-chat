@@ -10,7 +10,6 @@
 - ECDH (Elliptic-Curve Diffie–Hellman) for deriving shared secrets between peers.
 - HKDF (key derivation) to turn shared secrets into symmetric keys.
 
-
 ---
 
 ## Operations
@@ -21,14 +20,11 @@
 4. Authentication
 5. Registration 
 
-
 ### 1. User Connection
 
 1. User provides the other user’s ID (public key or fingerprint).
 2. A signaling server is used only for exchanging connection data (similar to WebRTC).
 3. Each peer stores the other’s public key + fingerprint for authentication.
-
-
 
 ### 2. Send/Receive Message
 
@@ -43,7 +39,6 @@
     - Nonce/IV
     - Ephemeral public key (so recipient can derive the same shared secret)
 
-
 #### Receive
 
 1. Use the sender’s ephemeral public key + your own private key to perform ECDH.
@@ -51,15 +46,11 @@
 3. Decrypt the ciphertext with AES-256-GCM.
 4. If authentication passes, display the message.
 
-
-
 ### 3. Local Storage
 
 All sensitive data stored in IndexedDB is encrypted with a key derived from the user’s password.
 
 Password → strong KDF (e.g., Argon2 or scrypt) → local encryption key.
-
-
 
 ### 4. Authentication
 
@@ -68,15 +59,12 @@ Password → strong KDF (e.g., Argon2 or scrypt) → local encryption key.
    - Users verify fingerprints out-of-band (QR code, phone call, in person).
    - Once verified, keys are cached and used for future sessions.
 
-
-
 ### 5. Registration
 
 1. No central registration.
     - Each user generates an ECDH key pair on first launch.
     - Their public key = identity.
     - Authentication via TOFU or Web of Trust.
-
 
 2. Optional nicknames (local only).
     - Users may assign display names mapped to public keys.
