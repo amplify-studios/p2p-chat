@@ -46,28 +46,31 @@ export default function Sidebar({ children }: SidebarProps) {
                 name='New Room'
                 href='/new'
                 icon={<Plus size={20} />}
+                type='default'
               />
             </li>
           </ul>
 
-          {/* Settings at Bottom */}
           <div className="mt-auto">
             <SidebarItem 
               name='Invites'
               href='/invites'
               icon={<MessageSquareDot size={20} />}
+              type='default'
             />
 
             <SidebarItem 
               name='Peers'
               href='/peers'
               icon={<Users size={20} />}
+              type='default'
             />
 
             <SidebarItem 
               name='Settings'
               href='/settings'
               icon={<Settings size={20} />}
+              type='default'
             />
           </div>
         </nav>
@@ -98,12 +101,23 @@ export default function Sidebar({ children }: SidebarProps) {
             <Plus size={16} />
           </Link>
 
-          <Link
-            href="/settings"
-            className="flex-shrink-0 px-3 py-2 rounded hover:bg-secondary flex items-center ml-auto"
-          >
-            <Settings size={16} />
-          </Link>
+          <div className='flex row ml-auto'>
+            <SidebarItem
+              href='/invites'
+              type='small'
+              icon={<MessageSquareDot size={16} />}
+            />
+            <SidebarItem
+              href='/peers'
+              type='small'
+              icon={<Users size={16} />}
+            />
+            <SidebarItem
+              href='/settings'
+              type='small'
+              icon={<Settings size={16} />}
+            />
+          </div>
         </nav>
 
         <div className="flex-1 overflow-auto">
