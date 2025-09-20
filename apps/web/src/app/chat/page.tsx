@@ -42,7 +42,6 @@ export default function ChatPage() {
 
   if (!db || !rooms || !user) return <Loading />;
   if (!roomId) return <EmptyState msg='No room selected' />
-
   if (!room) return <EmptyState msg='Room not found' />
 
   const logMessage = (text: string, sender: 'me' | 'other') => {

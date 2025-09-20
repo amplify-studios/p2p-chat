@@ -1,5 +1,4 @@
 TODO: Key derivation crypto methods
-TODO: Signaling server
 TODO: Sending messages
 TODO: Receiving messages
 TODO: Group chats
@@ -9,7 +8,14 @@ TODO: Block user
 TODO: Delete connection
 TODO: Delete chat
 TODO: Restore data
+TODO: Sending invites
+TODO: Receiving invites
+TODO: Notifications system
+TODO: Room options
+TODO: Online peers page
 DONE: IndexedDB
 DONE: ECDH crypto methods
 DONE: AES-256-GCM crypto methods
 DONE: Backup data
+DONE: Erase Data
+DONE: Signaling server
