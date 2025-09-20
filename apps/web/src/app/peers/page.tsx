@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { getSignalingClient } from "@/lib/signalingClient";
 import type { PeerInfo } from "@chat/sockets";
+import EmptyState from "@/components/local/EmptyState";
 
 
 export default function Peers() {
@@ -41,7 +42,7 @@ export default function Peers() {
   }, []);
 
   console.log(peers);
-  if (!peers.length) return <p>No peers online</p>;
+  if (!peers.length) return <EmptyState msg="No peers online" />;
 
   return (
     <ul>

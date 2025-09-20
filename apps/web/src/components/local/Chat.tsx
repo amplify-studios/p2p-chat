@@ -5,7 +5,8 @@ import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card'
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { EllipsisVertical, Option, User } from 'lucide-react';
+import { EllipsisVertical, Option, Send, User } from 'lucide-react';
+import EmptyState from './EmptyState';
 
 export interface Message {
   id: number;
@@ -54,7 +55,7 @@ export function Chat({ title, messages, onSend, href, isTyping = false }: ChatPr
         ref={scrollRef}
         className="flex-1 overflow-y-auto space-y-2 p-2 bg-gray-50 dark:bg-gray-900"
       >
-        {(messages.length == 0) ? (<>Start the conversation!</>) : <></>}
+        {(messages.length == 0) ? (<EmptyState msg="Start the conversation!" />) : <></>}
         {messages.map((msg) => (
           <div
             key={msg.id}
@@ -90,7 +91,7 @@ export function Chat({ title, messages, onSend, href, isTyping = false }: ChatPr
             if (e.key === 'Enter') sendMessage();
           }}
         />
-        <Button onClick={sendMessage}>Send</Button>
+        <Button onClick={sendMessage}><Send /></Button>
       </CardFooter>
     </Card>
   );

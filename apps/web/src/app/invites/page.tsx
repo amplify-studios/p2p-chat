@@ -2,16 +2,13 @@
 
 import { useInvites } from "@/hooks/useInvites";
 import { Button } from "@/components/ui/button";
+import EmptyState from "@/components/local/EmptyState";
 
 export default function Invites() {
   const { invites: currentInvites, acceptInvite, declineInvite } = useInvites();
 
   if (!currentInvites.length) {
-    return (
-      <div className="p-6 text-center text-gray-500">
-        No pending invites
-      </div>
-    );
+    return <EmptyState msg="No pending invites" />
   }
 
   return (
