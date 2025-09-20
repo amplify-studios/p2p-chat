@@ -1,7 +1,10 @@
-import CryptoJS from "crypto-js";
+import crypto from "crypto";
 
 export default function hmacSign(sharedKey: string, message: string):string {
-    return CryptoJS.HmacSHA256(message, sharedKey).toString(CryptoJS.enc.Hex);
+    return crypto
+        .createHmac('sha256', sharedKey)
+        .update(message)
+        .digest('hex');
 }
 
 export function hmacVerify(sharedKey: string, message: string, hashToVerify:string):boolean {
