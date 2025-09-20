@@ -40,6 +40,7 @@ wss.on("connection", (ws) => {
       case "roomInvite": {
         const target = clients.get(data.target);
         if (target) {
+          console.log(`Room invite from ${clientId}`)
           target.ws.send(JSON.stringify({
             type: "roomInvite",
             from: clientId,
@@ -65,6 +66,7 @@ wss.on("connection", (ws) => {
       }
 
       case "getPeers": {
+        console.log(getPeerList());
         ws.send(JSON.stringify({
           type: "peers",
           peers: getPeerList()

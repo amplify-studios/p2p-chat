@@ -1,7 +1,15 @@
+import { InviteType, RoomType } from "@chat/core";
+
 export type PeerInfo = {
   id: string;
   nickname: string;
   pubkey: string | null;
+};
+
+export type InvitePayload = {
+  room: RoomType | InviteType;
+  from: string;
+  nickname: string;
 };
 
 type SignalHandler = (msg: any) => void;
@@ -24,7 +32,6 @@ export class SignalingClient {
       this.ws = new WebSocket(url);
 
       this.ws.onopen = () => {
-        // Register on the signaling server
         this.send({
           type: "join",
           id: this.id,
@@ -34,9 +41,7 @@ export class SignalingClient {
         resolve();
       };
 
-      this.ws.onerror = (err) => {
-        reject(err);
-      };
+      this.ws.onerror = (err) => reject(err);
 
       this.ws.onmessage = (event) => {
         try {
@@ -59,6 +64,11 @@ export class SignalingClient {
     this.handlers[type] = this.handlers[type].filter((h) => h !== handler);
   }
 
+  private dispatch(type: string, msg: any) {
+    const handlers = this.handlers[type] || [];
+    for (const h of handlers) h(msg);
+  }
+
   sendOffer(target: string, offer: RTCSessionDescriptionInit) {
     this.send({ type: "offer", target, payload: offer });
   }
@@ -75,6 +85,18 @@ export class SignalingClient {
     this.send({ type: "getPeers" });
   }
 
+  sendRoomInvite(target: string, payload: InvitePayload) {
+    this.send({ type: "roomInvite", target, payload });
+  }
+
+  onRoomInvite(handler: (invite: InvitePayload) => void) {
+    this.on("roomInvite", (msg) => handler(msg.payload));
+  }
+
+  offRoomInvite(handler: (invite: InvitePayload) => void) {
+    this.off("roomInvite", handler as SignalHandler);
+  }
+
   private send(msg: any) {
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify(msg));
@@ -82,10 +104,4 @@ export class SignalingClient {
       console.warn("WebSocket not connected, dropping message:", msg);
     }
   }
-
-  private dispatch(type: string, msg: any) {
-    const handlers = this.handlers[type] || [];
-    for (const h of handlers) h(msg);
-  }
 }
-

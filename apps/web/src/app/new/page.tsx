@@ -10,6 +10,7 @@ import { generateBase58Id } from '@chat/crypto';
 import { CredentialsType, RoomType } from '@chat/core';
 import { useAuth } from '@/hooks/useAuth';
 import { getSignalingClient } from '@/lib/signalingClient';
+import { InvitePayload } from '@chat/sockets';
 
 export default function NewRoom() {
   const user = useAuth(true);
@@ -46,8 +47,9 @@ export default function NewRoom() {
       keys: keys.length > 0 ? keys : [],
     };
 
+    const signalingClient = await getSignalingClient();
+
     if (type === 'single') {
-      const signalingClient = await getSignalingClient();
       const myId = user.userId;
       const myPubkey = user.public;
       if (!myPubkey) {
@@ -55,59 +57,19 @@ export default function NewRoom() {
         return;
       }
 
-      const pc = new RTCPeerConnection();
-      const channel = pc.createDataChannel('chat');
-
-      channel.onopen = () => console.log('Data channel open!');
-      channel.onmessage = (e) => console.log('Message from peer:', e.data);
-
-      pc.onicecandidate = (event) => {
-        if (event.candidate) {
-          signalingClient.sendCandidate(otherUserId, event.candidate);
-        }
+      // Send room invite using the helper
+      const invite: InvitePayload = {
+        room,
+        from: myId,
+        nickname: user.username || myId,
       };
-
-      // Listen for signaling messages
-      signalingClient.on('offer', async (msg) => {
-        if (msg.from !== otherUserId) return;
-
-        await pc.setRemoteDescription(new RTCSessionDescription(msg.payload));
-        const answer = await pc.createAnswer();
-        await pc.setLocalDescription(answer);
-
-        signalingClient.sendAnswer(msg.from, answer);
-      });
-
-      signalingClient.on('answer', async (msg) => {
-        if (msg.from !== otherUserId) return;
-
-        await pc.setRemoteDescription(new RTCSessionDescription(msg.payload));
-      });
-
-      signalingClient.on('candidate', async (msg) => {
-        if (msg.from !== otherUserId) return;
-
-        try {
-          await pc.addIceCandidate(new RTCIceCandidate(msg.payload));
-        } catch (err) {
-          console.error('Error adding ICE candidate:', err);
-        }
-      });
-
-      // Create and send offer
-      const offer = await pc.createOffer();
-      await pc.setLocalDescription(offer);
-      signalingClient.sendOffer(otherUserId, offer);
-
-      // Store your own credentials in the room
-      // room.keys.push({
-      //   userId: myId,
-      //   public: myPubkey,
-      // });
+      signalingClient.sendRoomInvite(otherUserId, invite);
     }
 
+    // Save the room locally
     await db.put('rooms', room);
 
+    // Trigger a storage event for other tabs if needed
     localStorage.setItem('rooms_updated', Date.now().toString());
     window.dispatchEvent(new StorageEvent('storage', { key: 'rooms_updated' }));
 
@@ -169,7 +131,7 @@ export default function NewRoom() {
         )}
 
         <Button onClick={handleCreateRoom} className="w-full">
-          Create Room
+          Send Invite 
         </Button>
       </div>
     </div>
