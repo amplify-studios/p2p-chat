@@ -5,7 +5,7 @@ import { RoomType } from '@chat/core';
 import { useDB } from '@/hooks/useDB';
 import { useSearchParams } from 'next/navigation';
 
-export function useRooms(trigger?: any) {
+export function useRooms() {
   const db = useDB();
   const searchParams = useSearchParams();
   const activeRoomId = searchParams?.get('id') ?? '';
@@ -26,7 +26,7 @@ export function useRooms(trigger?: any) {
     window.addEventListener('storage', handler);
 
     return () => window.removeEventListener('storage', handler);
-  }, [db, trigger]);
+  }, [db]);
 
   return { rooms, activeRoomId };
 }

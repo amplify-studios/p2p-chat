@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Plus, Settings } from 'lucide-react';
 import { useRooms } from '@/hooks/useRooms';
 import Loading from './Loading';
+import { ThemeProvider } from 'next-themes';
 
 interface SidebarProps {
   children: ReactNode;
@@ -96,7 +97,9 @@ export default function Sidebar({ children }: SidebarProps) {
           </Link>
         </nav>
 
-        <div className="flex-1 overflow-auto">{children}</div>
+        <div className="flex-1 overflow-auto">
+          {children}
+          </div>
       </main>
     </div>
   );

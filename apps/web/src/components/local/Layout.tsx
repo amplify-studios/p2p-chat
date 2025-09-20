@@ -11,14 +11,8 @@ export default function Layout({ children }: { children: ReactNode }) {
   if (pathname === '/login') return children;
 
   return (
-    <ThemeProvider 
-      attribute="class" 
-      defaultTheme="light" 
-      enableSystem
-    >
-      <Sidebar>
-        {children}
-      </Sidebar>
-    </ThemeProvider>
+    <Sidebar>
+      {children}
+    </Sidebar>
   );
 }
