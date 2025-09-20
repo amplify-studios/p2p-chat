@@ -33,7 +33,7 @@ wss.on("connection", (ws) => {
           message: "Joined signaling server successfully"
         }));
 
-        // broadcastPeerList();
+        broadcastPeerList();
         break;
       }
 
@@ -66,7 +66,6 @@ wss.on("connection", (ws) => {
       }
 
       case "peers": {
-        console.log(getPeerList());
         ws.send(JSON.stringify({
           type: "peers",
           peers: getPeerList()

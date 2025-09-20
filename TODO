@@ -12,10 +12,10 @@ TODO: Sending invites
 TODO: Receiving invites
 TODO: Notifications system
 TODO: Room options
-TODO: Online peers page
 DONE: IndexedDB
 DONE: ECDH crypto methods
 DONE: AES-256-GCM crypto methods
 DONE: Backup data
 DONE: Erase Data
 DONE: Signaling server
+DONE: Online peers page
