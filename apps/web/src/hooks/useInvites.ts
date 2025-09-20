@@ -33,7 +33,6 @@ export function useInvites() {
 
       client.on("roomInvite", handleRoomInvite);
 
-      // Fetch existing invites from DB on mount
       const storedInvites = await db.getAll("invites");
       if (storedInvites) {
         setInvites(storedInvites.map((i: any) => ({ from: i.from, room: i.room })));
