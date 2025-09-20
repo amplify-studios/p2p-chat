@@ -7,6 +7,7 @@ import { useRooms } from '@/hooks/useRooms';
 import Loading from './Loading';
 import { useInvites } from '@/hooks/useInvites';
 import SidebarItem from './SidebarItem';
+import useClient from '@/hooks/useClient';
 
 interface SidebarProps {
   children: ReactNode;
@@ -15,6 +16,7 @@ interface SidebarProps {
 export default function Sidebar({ children }: SidebarProps) {
   const { rooms, activeRoomId } = useRooms();
   if (!rooms) return <Loading />;
+  const { client } = useClient(); // NOTE: used to set status to online immediately
 
   return (
     <div className="flex flex-col md:flex-row md:h-screen">
