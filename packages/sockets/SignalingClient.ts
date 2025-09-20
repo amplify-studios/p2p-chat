@@ -1,18 +1,6 @@
-import { InviteType, RoomType } from "@chat/core";
+import { InviteMessage } from "./signaling";
 
-export type PeerInfo = {
-  id: string;
-  nickname: string;
-  pubkey: string | null;
-};
-
-export type InvitePayload = {
-  room: RoomType | InviteType;
-  from: string;
-  nickname: string;
-};
-
-type SignalHandler = (msg: any) => void;
+export type SignalHandler = (msg: any) => void;
 
 export class SignalingClient {
   private ws: WebSocket | null = null;
@@ -46,6 +34,7 @@ export class SignalingClient {
       this.ws.onmessage = (event) => {
         try {
           const msg = JSON.parse(event.data);
+          console.log(msg);
           this.dispatch(msg.type, msg);
         } catch (e) {
           console.error("Invalid signaling message", event.data);
@@ -82,19 +71,19 @@ export class SignalingClient {
   }
 
   requestPeers() {
-    this.send({ type: "getPeers" });
+    this.send({ type: "peers" });
   }
 
-  sendRoomInvite(target: string, payload: InvitePayload) {
-    this.send({ type: "roomInvite", target, payload });
+  sendRoomInvite(target: string, payload: InviteMessage) {
+    this.send({ type: "invite", target, payload });
   }
 
-  onRoomInvite(handler: (invite: InvitePayload) => void) {
-    this.on("roomInvite", (msg) => handler(msg.payload));
+  onRoomInvite(handler: (invite: InviteMessage) => void) {
+    this.on("invite", (msg) => handler(msg.payload));
   }
 
-  offRoomInvite(handler: (invite: InvitePayload) => void) {
-    this.off("roomInvite", handler as SignalHandler);
+  offRoomInvite(handler: (invite: InviteMessage) => void) {
+    this.off("invite", handler as SignalHandler);
   }
 
   private send(msg: any) {

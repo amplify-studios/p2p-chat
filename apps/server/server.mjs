@@ -33,16 +33,16 @@ wss.on("connection", (ws) => {
           message: "Joined signaling server successfully"
         }));
 
-        broadcastPeerList();
+        // broadcastPeerList();
         break;
       }
 
-      case "roomInvite": {
+      case "invite": {
         const target = clients.get(data.target);
         if (target) {
           console.log(`Room invite from ${clientId}`)
           target.ws.send(JSON.stringify({
-            type: "roomInvite",
+            type: "invite",
             from: clientId,
             room: data.room
           }));
@@ -65,7 +65,7 @@ wss.on("connection", (ws) => {
         break;
       }
 
-      case "getPeers": {
+      case "peers": {
         console.log(getPeerList());
         ws.send(JSON.stringify({
           type: "peers",
