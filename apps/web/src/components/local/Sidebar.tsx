@@ -6,6 +6,7 @@ import { MessageSquareDot, Plus, Settings, Users } from 'lucide-react';
 import { useRooms } from '@/hooks/useRooms';
 import Loading from './Loading';
 import { useInvites } from '@/hooks/useInvites';
+import SidebarItem from './SidebarItem';
 
 interface SidebarProps {
   children: ReactNode;
@@ -41,41 +42,33 @@ export default function Sidebar({ children }: SidebarProps) {
             ))}
 
             <li>
-              <Link
-                href="/new"
-                className="flex items-center gap-2 p-2 rounded hover:bg-secondary"
-              >
-                <Plus size={20} />
-                <span>New Room</span>
-              </Link>
+              <SidebarItem 
+                name='New Room'
+                href='/new'
+                icon={<Plus size={20} />}
+              />
             </li>
           </ul>
 
           {/* Settings at Bottom */}
           <div className="mt-auto">
-            <Link
-              href="/invites"
-              className="flex items-center gap-2 p-2 rounded hover:bg-secondary"
-            >
-              <MessageSquareDot size={20} />
-              <span>Invites</span>
-            </Link>
+            <SidebarItem 
+              name='Invites'
+              href='/invites'
+              icon={<MessageSquareDot size={20} />}
+            />
 
-            <Link
-              href="/peers"
-              className="flex items-center gap-2 p-2 rounded hover:bg-secondary"
-            >
-              <Users size={20} />
-              <span>Peers</span>
-            </Link>
+            <SidebarItem 
+              name='Peers'
+              href='/peers'
+              icon={<Users size={20} />}
+            />
 
-            <Link
-              href="/settings"
-              className="flex items-center gap-2 p-2 rounded hover:bg-secondary"
-            >
-              <Settings size={20} />
-              <span>Settings</span>
-            </Link>
+            <SidebarItem 
+              name='Settings'
+              href='/settings'
+              icon={<Settings size={20} />}
+            />
           </div>
         </nav>
       </aside>
