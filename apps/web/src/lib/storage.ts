@@ -1,4 +1,4 @@
-import { MessageType, CredentialsType, RoomType } from '@chat/core';
+import { MessageType, CredentialsType, RoomType, InviteType } from '@chat/core';
 import { openDB, DBSchema, IDBPDatabase } from 'idb';
 
 export interface MyDB extends DBSchema {
@@ -14,17 +14,22 @@ export interface MyDB extends DBSchema {
     key: string;
     value: RoomType;
   };
+  invites: {
+    key: string;
+    value: InviteType;
+  }
 }
 
 let dbPromise: Promise<IDBPDatabase<MyDB>> | null = null;
 
 export function getDB() {
   if (!dbPromise) {
-    dbPromise = openDB<MyDB>('my-database', 3, {
+    dbPromise = openDB<MyDB>('my-database', 4, {
       upgrade(db) {
         db.createObjectStore('messages', { autoIncrement: true });
         db.createObjectStore('credentials', { keyPath: 'userId' });
         db.createObjectStore('rooms', { keyPath: 'roomId' });
+        db.createObjectStore('invites', { keyPath: 'inviteId' });
       },
     });
   }
@@ -36,6 +41,7 @@ type Backup = {
   messages: MessageType[];
   credentials: CredentialsType[];
   rooms: RoomType[];
+  invites: InviteType[];
 };
 
 export async function backupDB() {
@@ -44,11 +50,13 @@ export async function backupDB() {
     messages: [],
     credentials: [],
     rooms: [],
+    invites: [],
   };
 
   backup.messages = await db.getAll('messages');
   backup.credentials = await db.getAll('credentials');
   backup.rooms = await db.getAll('rooms');
+  backup.invites = await db.getAll('invites');
 
   const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
@@ -63,11 +71,12 @@ export async function backupDB() {
 export async function eraseDB() {
   const db = await getDB();
 
-  const tx = db.transaction(['messages', 'credentials', 'rooms'], 'readwrite');
+  const tx = db.transaction(['messages', 'credentials', 'rooms', 'invites'], 'readwrite');
   await Promise.all([
     tx.objectStore('messages').clear(),
     tx.objectStore('credentials').clear(),
     tx.objectStore('rooms').clear(),
+    tx.objectStore('invites').clear(),
   ]);
 
   await tx.done;

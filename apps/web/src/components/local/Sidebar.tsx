@@ -2,10 +2,10 @@
 
 import { ReactNode } from 'react';
 import Link from 'next/link';
-import { Plus, Settings } from 'lucide-react';
+import { MessageSquareDot, Plus, Settings, Users } from 'lucide-react';
 import { useRooms } from '@/hooks/useRooms';
 import Loading from './Loading';
-import { ThemeProvider } from 'next-themes';
+import { useInvites } from '@/hooks/useInvites';
 
 interface SidebarProps {
   children: ReactNode;
@@ -53,6 +53,22 @@ export default function Sidebar({ children }: SidebarProps) {
 
           {/* Settings at Bottom */}
           <div className="mt-auto">
+            <Link
+              href="/invites"
+              className="flex items-center gap-2 p-2 rounded hover:bg-secondary"
+            >
+              <MessageSquareDot size={20} />
+              <span>Invites</span>
+            </Link>
+
+            <Link
+              href="/peers"
+              className="flex items-center gap-2 p-2 rounded hover:bg-secondary"
+            >
+              <Users size={20} />
+              <span>Peers</span>
+            </Link>
+
             <Link
               href="/settings"
               className="flex items-center gap-2 p-2 rounded hover:bg-secondary"

@@ -18,3 +18,10 @@ export interface RoomType {
   type: 'single' | 'group';
   keys: CredentialsType[];
 }
+
+export interface InviteType {
+  inviteId: string;
+  name: string;
+  type: 'single' | 'group';
+  keys: CredentialsType[];
+}

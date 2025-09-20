@@ -1,4 +1,4 @@
-type PeerInfo = {
+export type PeerInfo = {
   id: string;
   nickname: string;
   pubkey: string | null;
@@ -48,8 +48,6 @@ export class SignalingClient {
       };
     });
   }
-
-  // --- Public API ---
 
   on(type: string, handler: SignalHandler) {
     if (!this.handlers[type]) this.handlers[type] = [];

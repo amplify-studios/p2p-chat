@@ -47,7 +47,7 @@ export default function NewRoom() {
     };
 
     if (type === 'single') {
-      const signalingClient = getSignalingClient();
+      const signalingClient = await getSignalingClient();
       const myId = user.userId;
       const myPubkey = user.public;
       if (!myPubkey) {
