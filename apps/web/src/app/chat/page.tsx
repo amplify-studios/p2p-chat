@@ -104,10 +104,29 @@ export default function ChatPage() {
 
   }, [room, db]);
 
-    if (!db || !rooms || !user) return <Loading />;
-    if (!roomId) return <EmptyState msg='No room selected' />
+  useEffect(() => {
+    if (!db || !roomId) return;
 
-    if (!room) return <EmptyState msg='Room not found' />
+    (async () => {
+      const allMessages = await db.getAll('messages');
+      const roomMessages = allMessages
+        .filter((m) => m.roomId === roomId)
+        .sort((a, b) => a.timestamp - b.timestamp)
+        .map((m, idx) => ({
+          id: idx + 1,
+          text: m.message,
+          sender: m.senderId === user?.userId ? 'me' : 'other' as "me" | "other",
+        }));
+
+      msgId.current = roomMessages.length;
+      setMessages(roomMessages);
+    })();
+  }, [db, roomId, user]);
+
+  if (!db || !rooms || !user) return <Loading />;
+  if (!roomId) return <EmptyState msg='No room selected' />
+
+  if (!room) return <EmptyState msg='Room not found' />
 
   const logMessage = (text: string, sender: 'me' | 'other') => {
     msgId.current += 1;
