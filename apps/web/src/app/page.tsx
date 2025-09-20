@@ -7,5 +7,5 @@ export default function Home() {
   const user = useAuth(true);
   if (!user) return <Loading />;
 
-  return <h1>Logged in as {user?.username}</h1>;
+  return <h1>Logged in as {user.username} ({user.userId})</h1>;
 }

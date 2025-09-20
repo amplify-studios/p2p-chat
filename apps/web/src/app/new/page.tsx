@@ -9,6 +9,7 @@ import Loading from '@/components/local/Loading';
 import { generateBase58Id } from '@chat/crypto';
 import { CredentialsType, RoomType } from '@chat/core';
 import { useAuth } from '@/hooks/useAuth';
+import { getSignalingClient } from '@/lib/signalingClient';
 
 export default function NewRoom() {
   const user = useAuth(true);
@@ -21,7 +22,7 @@ export default function NewRoom() {
   const [otherUserId, setOtherUserId] = useState('');
   const [error, setError] = useState('');
 
-  if (!db) return <Loading />;
+  if (!user || !db) return <Loading />;
 
   const validate = () => {
     if (!name.trim()) return 'Room name is required';
@@ -46,17 +47,70 @@ export default function NewRoom() {
     };
 
     if (type === 'single') {
-      // TODO: exchange credentials with the signaling server
-      // room.keys.push(...);
+      const signalingClient = getSignalingClient();
+      const myId = user.userId;
+      const myPubkey = user.public;
+      if (!myPubkey) {
+        setError('Your public key is missing, cannot create room');
+        return;
+      }
+
+      const pc = new RTCPeerConnection();
+      const channel = pc.createDataChannel('chat');
+
+      channel.onopen = () => console.log('Data channel open!');
+      channel.onmessage = (e) => console.log('Message from peer:', e.data);
+
+      pc.onicecandidate = (event) => {
+        if (event.candidate) {
+          signalingClient.sendCandidate(otherUserId, event.candidate);
+        }
+      };
+
+      // Listen for signaling messages
+      signalingClient.on('offer', async (msg) => {
+        if (msg.from !== otherUserId) return;
+
+        await pc.setRemoteDescription(new RTCSessionDescription(msg.payload));
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
+
+        signalingClient.sendAnswer(msg.from, answer);
+      });
+
+      signalingClient.on('answer', async (msg) => {
+        if (msg.from !== otherUserId) return;
+
+        await pc.setRemoteDescription(new RTCSessionDescription(msg.payload));
+      });
+
+      signalingClient.on('candidate', async (msg) => {
+        if (msg.from !== otherUserId) return;
+
+        try {
+          await pc.addIceCandidate(new RTCIceCandidate(msg.payload));
+        } catch (err) {
+          console.error('Error adding ICE candidate:', err);
+        }
+      });
+
+      // Create and send offer
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+      signalingClient.sendOffer(otherUserId, offer);
+
+      // Store your own credentials in the room
+      // room.keys.push({
+      //   userId: myId,
+      //   public: myPubkey,
+      // });
     }
 
     await db.put('rooms', room);
 
-    // Notify Sidebar about the update
-    localStorage.setItem("rooms_updated", Date.now().toString());
-    window.dispatchEvent(new StorageEvent("storage", { key: "rooms_updated" }));
+    localStorage.setItem('rooms_updated', Date.now().toString());
+    window.dispatchEvent(new StorageEvent('storage', { key: 'rooms_updated' }));
 
-    // Reset form
     setName('');
     setOtherUserId('');
     setType('single');

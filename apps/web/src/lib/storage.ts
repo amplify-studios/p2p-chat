@@ -59,3 +59,16 @@ export async function backupDB() {
   a.click();
   URL.revokeObjectURL(url);
 }
+
+export async function eraseDB() {
+  const db = await getDB();
+
+  const tx = db.transaction(['messages', 'credentials', 'rooms'], 'readwrite');
+  await Promise.all([
+    tx.objectStore('messages').clear(),
+    tx.objectStore('credentials').clear(),
+    tx.objectStore('rooms').clear(),
+  ]);
+
+  await tx.done;
+}

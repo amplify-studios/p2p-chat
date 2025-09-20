@@ -1,8 +1,9 @@
-// "use client";
+"use client";
+
 import hmacSign from "./HASH";
+
 export * from './uuid';
-export * from "./ECDH";
-export * from "./AES";
+
 export { createECDHkey } from "./ECDH";
 
 export function HmacUsage() {
@@ -14,5 +15,5 @@ export function HmacUsage() {
     console.log("HMAC: " + hex);
 }
 
-// HmacUsage();
+HmacUsage();
 

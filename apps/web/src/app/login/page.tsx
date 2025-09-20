@@ -7,8 +7,10 @@ import { Button } from '@/components/ui/button';
 import PasswordField from '@/components/local/PasswordField';
 import { useDB } from '@/hooks/useDB';
 import Loading from '@/components/local/Loading';
-import { generateBase58Id } from '@chat/crypto';
+import { createECDHkey, generateBase58Id } from '@chat/crypto';
 import { useAuth } from '@/hooks/useAuth';
+import { createSignalingClient, initSignalingClient } from '@/lib/signalingClient';
+import { SignalingClient } from '@chat/sockets';
 
 const validateForm = (username: string, password: string): string | null => {
   if (!username.trim()) return "Provide a username";
@@ -27,7 +29,6 @@ export default function Login() {
   const db = useDB();
   if (!db) return <Loading />;
 
-
   const handleLogin = async () => {
     setError("");
 
@@ -37,27 +38,37 @@ export default function Login() {
       return;
     }
 
-    if(!user) {
+    if (!user) {
       const id = generateBase58Id(8);
+      const keys = createECDHkey();
       await db.put("credentials", {
         userId: id,
-        public: new Uint8Array(), // TODO: Generate public/private keys
-        private: new Uint8Array(),
+        public: keys.getPublicKey(),
+        private: keys.getPrivateKey(),
         username,
       });
+      const client = new SignalingClient(
+        id,
+        username,
+        keys.getPublicKey().toString()
+      );
+      initSignalingClient(client); // Only instance of the class
+
+      await client.connect("ws://localhost:8080");
     }
 
-    // TODO: register to the signaling server
     sessionStorage.setItem(username, password);
     router.push("/");
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
-      <div className="bg-white p-8 rounded shadow-md w-full max-w-sm">
-        <h1 className="text-2xl font-bold mb-6 text-center">Login</h1>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-background">
+      <div className="bg-card p-8 rounded-lg shadow-md w-full max-w-sm">
+        <h1 className="text-2xl font-bold mb-6 text-center text-foreground">
+          Login
+        </h1>
 
-        {error && <p className="text-red-600 mb-4">{error}</p>}
+        {error && <p className="text-destructive mb-4">{error}</p>}
 
         <Input
           type="text"

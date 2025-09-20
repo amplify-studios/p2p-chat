@@ -8,7 +8,7 @@ export interface MessageType {
 export interface CredentialsType {
   userId: string;
   public: Uint8Array
-  private: Uint8Array
+  private?: Uint8Array
   username: string;
 }
 

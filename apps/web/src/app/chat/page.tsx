@@ -7,6 +7,7 @@ import Loading from '@/components/local/Loading';
 import { useAuth } from '@/hooks/useAuth';
 import { useSearchParams } from 'next/navigation';
 import { useRooms } from '@/hooks/useRooms';
+import { getSignalingClient } from '@/lib/signalingClient';
 
 export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -15,51 +16,96 @@ export default function ChatPage() {
   const user = useAuth(true);
   const searchParams = useSearchParams();
   const roomId = searchParams?.get('id');
+  // Refs for peer connection and data channel
+  const pcRef = useRef<RTCPeerConnection | null>(null);
+  const channelRef = useRef<RTCDataChannel | null>(null);
 
+  const { rooms } = useRooms();
+  const room = rooms.find((r) => r.roomId === roomId);
+
+  // Initialize peer connection and signaling
   useEffect(() => {
-    if (!db || !roomId || !user?.userId) return;
-    setMessages([]);
+    if(!db) return;
+    if(!roomId) return;
+    if(!room || room.type !== 'single') return;
+    if(!room.keys.at(0)?.userId) return;
 
-    const fetchMessages = async () => {
-      const allMessages = await db.getAll("messages");
-      if (!allMessages) return;
+    const peerId = room.keys.at(0)?.userId as string;
+    const signalingClient = getSignalingClient();
 
-      const filtered = allMessages.filter((msg) => msg.roomId === roomId);
+    const pc = new RTCPeerConnection();
+    pcRef.current = pc;
 
-      filtered.forEach((msg) => {
-        const sender = msg.senderId === user.userId ? "me" : "other";
-        msgId.current += 1;
-        // TODO: here the message would be decrypted first
-        setMessages((prev) => [
-          ...prev,
-          { id: msgId.current, text: msg.message, sender },
-        ]);
+    const channel = pc.createDataChannel('chat');
+    channelRef.current = channel;
+
+    channel.onopen = () => console.log('Data channel open!');
+    channel.onmessage = (e) => {
+      const text = e.data;
+      msgId.current += 1;
+      setMessages((prev) => [...prev, { id: msgId.current, text, sender: 'other' }]);
+      // Save to DB
+      db.put('messages', {
+        roomId,
+        senderId: peerId,
+        message: text,
+        timestamp: Date.now()
       });
     };
 
-    fetchMessages();
-  }, [db, roomId, user?.userId]);
+    pc.onicecandidate = (event) => {
+      if (event.candidate) {
+        signalingClient.sendCandidate(peerId, event.candidate);
+      }
+    };
 
-  const { rooms } = useRooms();
+    // Listen for signaling messages
+    const handleOffer = async (msg: any) => {
+      if (msg.from !== peerId) return;
+      await pc.setRemoteDescription(new RTCSessionDescription(msg.payload));
+      const answer = await pc.createAnswer();
+      await pc.setLocalDescription(answer);
+      signalingClient.sendAnswer(peerId, answer);
+    };
 
-  if (!db || !rooms) return <Loading />;
+    const handleAnswer = async (msg: any) => {
+      if (msg.from !== peerId) return;
+      await pc.setRemoteDescription(new RTCSessionDescription(msg.payload));
+    };
 
-  if (!roomId) {
-    return (
-      <h1 className="flex text-2xl items-center justify-center min-h-screen bg-gray-50">
-        No room selected
-      </h1>
-    );
-  }
+    const handleCandidate = async (msg: any) => {
+      if (msg.from !== peerId) return;
+      try {
+        await pc.addIceCandidate(new RTCIceCandidate(msg.payload));
+      } catch (err) {
+        console.error('Error adding ICE candidate:', err);
+      }
+    };
 
-  const room = rooms.find((room) => room.roomId === roomId);
-  if (!room) {
-    return (
-      <h1 className="flex text-2xl items-center justify-center min-h-screen bg-gray-50">
-        Room not found
-      </h1>
-    );
-  }
+    signalingClient.on('offer', handleOffer);
+    signalingClient.on('answer', handleAnswer);
+    signalingClient.on('candidate', handleCandidate);
+
+    // Create and send offer if we are the initiator
+    const init = async () => {
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+      signalingClient.sendOffer(peerId, offer);
+    };
+    init();
+
+    return () => {
+      pc.close();
+      signalingClient.off?.('offer', handleOffer);
+      signalingClient.off?.('answer', handleAnswer);
+      signalingClient.off?.('candidate', handleCandidate);
+    };
+  }, [room, db]);
+
+    if (!db || !rooms || !user) return <Loading />;
+    if (!roomId) return <h1 className="flex text-2xl items-center justify-center min-h-screen bg-gray-50">No room selected</h1>;
+
+    if (!room) return <h1 className="flex text-2xl items-center justify-center min-h-screen bg-gray-50">Room not found</h1>;
 
   const logMessage = (text: string, sender: 'me' | 'other') => {
     msgId.current += 1;
@@ -68,9 +114,16 @@ export default function ChatPage() {
 
   const sendMessage = (text: string) => {
     logMessage(text, 'me');
+
+    // Send via data channel if available
+    if (channelRef.current && channelRef.current.readyState === 'open') {
+      channelRef.current.send(text);
+    }
+
+    // Save locally
     db.put('messages', {
       roomId,
-      senderId: user?.userId as string,
+      senderId: user.userId,
       message: text,
       timestamp: Date.now()
     });
@@ -78,11 +131,11 @@ export default function ChatPage() {
 
   return (
     <div className="flex flex-col h-full min-h-screen">
-      <Chat 
-        title={room.name} 
-        messages={messages} 
-        href={`/options?id=${room.roomId}`}
-        onSend={sendMessage} 
+      <Chat
+        title={room?.name}
+        messages={messages}
+        href={`/options?id=${room?.roomId}`}
+        onSend={sendMessage}
       />
     </div>
   );
