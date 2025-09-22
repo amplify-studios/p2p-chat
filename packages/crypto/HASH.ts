@@ -1,13 +1,21 @@
 import crypto from "crypto";
 
-export default function hmacSign(sharedKey: Buffer, message: string):string {
+export default function getAESKeyThroughSharedSecret(sharedKey: Uint8Array, saltUint8?: Uint8Array) {
+    const salt = saltUint8 && saltUint8.length ? Buffer.from(saltUint8) : crypto.randomBytes(16);
+    const info = Buffer.from('aes-256-gcm-session', 'utf8');
+    const key = crypto.hkdfSync('sha256', sharedKey, salt, info,32);
+
+    return {key, salt}
+}
+
+export function hmacSign(sharedKey: Uint8Array, message: string):string {
     return crypto
         .createHmac('sha256', sharedKey)
         .update(message)
         .digest('hex');
 }
 
-export function hmacVerify(sharedKey: Buffer, message: string, hashToVerify:string):boolean {
+export function hmacVerify(sharedKey: Uint8Array, message: string, hashToVerify:string):boolean {
     const expectedHash = hmacSign(sharedKey, message);
 
     let result = 0;
