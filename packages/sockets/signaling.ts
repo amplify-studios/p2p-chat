@@ -16,7 +16,7 @@ export interface Client {
 export interface PeerInfo {
   id: string;
   username: string;
-  pubkey: string | null;
+  pubkey: string;
 }
 
 // Base structure for any message sent via WebSocket

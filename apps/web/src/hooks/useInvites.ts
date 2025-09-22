@@ -4,7 +4,7 @@ import { useDB } from "@/hooks/useDB";
 import { generateBase58Id } from "@chat/crypto";
 import { InviteMessage } from "@chat/sockets";
 import { InviteType } from "@chat/core";
-import { refreshRooms } from "@/lib/utils";
+import { parseBytes, refreshRooms } from "@/lib/utils";
 
 export function useInvites() {
   const db = useDB();
@@ -63,6 +63,10 @@ export function useInvites() {
       ...invite.room,
       roomId: generateBase58Id(),
     });
+
+    for(const cred of invite.room.keys) {
+      await db.put("credentials", cred);
+    }
 
     await db.delete("invites", invite.inviteId);
     setInvites((prev) => prev.filter((i) => i.inviteId !== invite.inviteId));

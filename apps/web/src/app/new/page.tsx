@@ -11,7 +11,7 @@ import { CredentialsType, RoomType } from '@chat/core';
 import { useAuth } from '@/hooks/useAuth';
 import { getSignalingClient } from '@/lib/signalingClient';
 import { InviteMessage } from '@chat/sockets';
-import { refreshRooms } from '@/lib/utils';
+import { parseBytes, refreshRooms } from '@/lib/utils';
 import { usePeers } from '@/hooks/usePeers';
 
 export default function NewRoom() {
@@ -53,9 +53,10 @@ export default function NewRoom() {
     setError('');
 
     const roomId = generateBase58Id();
+    const peer = peers.find((p) => p.id == otherUserId);
+    if(!peer) return;
 
-
-    const localRoomName = type === 'single' ? peers.find((p) => p.id == otherUserId)?.username || otherUserId : name;
+    const localRoomName = type === 'single' ? peer.username || otherUserId : name;
     const inviteRoomName = type === 'single' ? user.username || user.userId : name;
 
     const room: RoomType = {
@@ -77,15 +78,19 @@ export default function NewRoom() {
 
       const invite = {
         from: myId,
-        room: { ...room, name: inviteRoomName }, // send my name as the room name
+        room: { ...room, name: inviteRoomName },
         target: otherUserId,
       } as InviteMessage;
 
       signalingClient.sendRoomInvite(otherUserId, invite);
     }
 
-    // Save the room locally with the local room name
     await db.put('rooms', room);
+    await db.put('credentials', {
+      userId: peer.id,
+      username: peer.username,
+      public: parseBytes(peer.pubkey)
+    } as CredentialsType);
 
     refreshRooms();
 
