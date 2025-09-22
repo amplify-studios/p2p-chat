@@ -1,8 +1,5 @@
 {
   "name": "@chat/crypto",
   "version": "0.1.0",
-  "main": "index.ts",
-  "devDependencies": {
-    "@types/crypto-js": "^4.2.2"
-  }
+  "main": "index.ts"
 }

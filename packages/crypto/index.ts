@@ -1,10 +1,9 @@
 "use client";
 
 import hmacSign from "./HASH";
-
 export * from './uuid';
-
-export { createECDHkey } from "./ECDH";
+export * from "./ECDH";
+export * from "./AES";
 
 export function HmacUsage() {
     const sharedKey = "shared-key";
@@ -16,4 +15,3 @@ export function HmacUsage() {
 }
 
 HmacUsage();
-
