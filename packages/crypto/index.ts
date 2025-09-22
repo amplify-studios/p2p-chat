@@ -1,6 +1,6 @@
 "use client";
 
-import hmacSign from "./HASH";
+import { hmacSign } from "./HASH";
 export * from './uuid';
 export * from "./ECDH";
 export * from "./AES";
