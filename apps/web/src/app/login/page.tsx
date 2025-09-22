@@ -41,7 +41,7 @@ export default function Login() {
     if (!user) {
       const id = generateBase58Id(8);
       const keys = createECDHkey();
-      await db.put("credentials", {
+      await db.put("user", {
         userId: id,
         public: keys.getPublicKey(),
         private: keys.getPrivateKey(),

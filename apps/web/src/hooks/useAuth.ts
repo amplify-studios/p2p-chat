@@ -16,17 +16,16 @@ export function useAuth(redirectIfNoUser: boolean = true) {
     let cancelled = false;
 
     (async () => {
-      const users = await db.getAll('credentials');
+      const userCollection = await db.getAll('user');
       if (cancelled) return;
 
-      if (!users || users.length === 0) {
+      if (!userCollection || userCollection.length === 0) {
         if (redirectIfNoUser) router.push('/login');
         setUser(null);
         return;
       }
 
-      // NOTE: Since we store all credentials in the same collection our user is always first
-      setUser(users[0]);
+      setUser(userCollection[0]);
     })();
 
     return () => {

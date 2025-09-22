@@ -1,7 +1,5 @@
 'use client';
 
-import { Chat, Message } from '@/components/local/Chat';
-import { useRef, useState } from 'react';
 import { useDB } from '@/hooks/useDB';
 import Loading from '@/components/local/Loading';
 import { useAuth } from '@/hooks/useAuth';
@@ -20,11 +18,8 @@ export default function ChatOptionsPage() {
   const router = useRouter();
   
   if (!db || !rooms) return <Loading />;
-  
-  console.log(rooms);
 
-  if (!roomId) 
-    return <EmptyState msg='No room selected' />;
+  if (!roomId) return <EmptyState msg='No room selected' />;
 
   const room = rooms.find((room) => room.roomId === roomId);
   if (!room) return <EmptyState msg='Room not found' />;
