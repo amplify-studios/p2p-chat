@@ -8,8 +8,6 @@ TODO: Block user
 TODO: Delete connection
 TODO: Delete chat
 TODO: Restore data
-TODO: Sending invites
-TODO: Receiving invites
 TODO: Notifications system
 TODO: Room options
 DONE: IndexedDB
@@ -19,3 +17,5 @@ DONE: Backup data
 DONE: Erase Data
 DONE: Signaling server
 DONE: Online peers page
+DONE: Sending invites
+DONE: Receiving invites
