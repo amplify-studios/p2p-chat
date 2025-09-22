@@ -21,11 +21,11 @@ wss.on("connection", (ws) => {
         clientId = data.id;
         clients.set(clientId, {
           ws,
-          nickname: data.nickname || "Anonymous",
+          username: data.username || "Anonymous",
           pubkey: data.pubkey || null
         });
 
-        console.log(`Client joined: ${clientId} (${data.nickname})`);
+        console.log(`Client joined: ${clientId} (${data.username})`);
 
         ws.send(JSON.stringify({
           type: "welcome",
@@ -87,9 +87,9 @@ wss.on("connection", (ws) => {
 });
 
 function getPeerList() {
-  return Array.from(clients.entries()).map(([id, { nickname, pubkey }]) => ({
+  return Array.from(clients.entries()).map(([id, { username, pubkey }]) => ({
     id,
-    nickname,
+    username,
     pubkey
   }));
 }

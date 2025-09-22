@@ -5,13 +5,13 @@ export type SignalHandler = (msg: any) => void;
 export class SignalingClient {
   private ws: WebSocket | null = null;
   private id: string;
-  private nickname: string;
+  private username: string;
   private pubkey: string;
   private handlers: Record<string, SignalHandler[]> = {};
 
-  constructor(id: string, nickname: string, pubkey: string) {
+  constructor(id: string, username: string, pubkey: string) {
     this.id = id;
-    this.nickname = nickname;
+    this.username = username;
     this.pubkey = pubkey;
   }
 
@@ -23,7 +23,7 @@ export class SignalingClient {
         this.send({
           type: "join",
           id: this.id,
-          nickname: this.nickname,
+          username: this.username,
           pubkey: this.pubkey,
         });
         resolve();

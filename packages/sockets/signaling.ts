@@ -8,14 +8,14 @@ import { RoomType } from "@chat/core";
 // Represents a connected peer
 export interface Client {
   ws: WebSocket;           // WebSocket connection
-  nickname: string;        // Peer nickname
+  username: string;        // Peer username
   pubkey: string | null;   // Optional public key
 }
 
 // Basic peer info to send to clients
 export interface PeerInfo {
   id: string;
-  nickname: string;
+  username: string;
   pubkey: string | null;
 }
 
@@ -28,7 +28,7 @@ export interface BaseMessage {
 export interface JoinMessage extends BaseMessage {
   type: "join";
   id: string;
-  nickname?: string;
+  username?: string;
   pubkey?: string | null;
 }
 

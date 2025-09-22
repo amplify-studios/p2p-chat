@@ -17,7 +17,7 @@ export default function Sidebar({ children }: SidebarProps) {
   const { rooms, activeRoomId } = useRooms();
   if (!rooms) return <Loading />;
   const { client } = useClient(); // NOTE: used to set status to online immediately
-  const { invites: currentInvites, acceptInvite, declineInvite } = useInvites();
+  const { invites, acceptInvite, declineInvite } = useInvites(); // NOTE: used to always check for invites
 
   return (
     <div className="flex flex-col md:flex-row md:h-screen">

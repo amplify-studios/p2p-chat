@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useDB } from '@/hooks/useDB';
@@ -17,6 +17,7 @@ export default function NewRoom() {
   const user = useAuth(true);
   const db = useDB();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [name, setName] = useState('');
   const [type, setType] = useState<'single' | 'group'>('single');
@@ -24,10 +25,18 @@ export default function NewRoom() {
   const [otherUserId, setOtherUserId] = useState('');
   const [error, setError] = useState('');
 
+  // Pre-fill otherUserId if query param is present
+  useEffect(() => {
+    const prefillId = searchParams.get('userId');
+    if (prefillId) {
+      setOtherUserId(prefillId);
+    }
+  }, [searchParams]);
+
   if (!user || !db) return <Loading />;
 
   const validate = () => {
-    if (!name.trim()) return 'Room name is required';
+    if (type === 'group' && !name.trim()) return 'Room name is required';
     if (type === 'single' && !otherUserId.trim()) return 'User ID is required for single chat';
     return '';
   };
@@ -41,9 +50,13 @@ export default function NewRoom() {
     setError('');
 
     const roomId = generateBase58Id();
+
+    const localRoomName = type === 'single' ? otherUserId : name;
+    const inviteRoomName = type === 'single' ? user.username || user.userId : name;
+
     const room: RoomType = {
       roomId,
-      name,
+      name: localRoomName,
       type,
       keys: [user],
     };
@@ -60,16 +73,16 @@ export default function NewRoom() {
 
       const invite = {
         from: myId,
-        room: room,
-        target: otherUserId
+        room: { ...room, name: inviteRoomName }, // send my name as the room name
+        target: otherUserId,
       } as InviteMessage;
+
       signalingClient.sendRoomInvite(otherUserId, invite);
     }
 
-    // Save the room locally
+    // Save the room locally with the local room name
     await db.put('rooms', room);
 
-    // Trigger a storage event for other tabs if needed
     refreshRooms();
 
     setName('');
@@ -88,13 +101,15 @@ export default function NewRoom() {
 
         {error && <p className="text-destructive mb-4">{error}</p>}
 
-        <Input
-          type="text"
-          placeholder="Room Name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className="mb-4"
-        />
+        {type === 'group' && (
+          <Input
+            type="text"
+            placeholder="Room Name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="mb-4"
+          />
+        )}
 
         <div className="mb-4 flex gap-4">
           <label className="flex items-center gap-2">
@@ -130,7 +145,7 @@ export default function NewRoom() {
         )}
 
         <Button onClick={handleCreateRoom} className="w-full">
-          Send Invite 
+          Send Invite
         </Button>
       </div>
     </div>

@@ -5,6 +5,7 @@ import { getSignalingClient } from "@/lib/signalingClient";
 import type { PeerInfo, PeersMessage } from "@chat/sockets";
 import EmptyState from "@/components/local/EmptyState";
 import { useAuth } from "@/hooks/useAuth";
+import Link from "next/link";
 
 export default function Peers() {
   const user = useAuth(true);
@@ -64,18 +65,29 @@ export default function Peers() {
     <div className="p-4 max-w-lg mx-auto">
       <h1 className="text-2xl font-bold mb-4 text-center text-foreground">Online Peers</h1>
       <ul className="space-y-2">
-        {peers.map((p) => (
-          <li
-            key={p.id}
-            className="flex justify-between items-center p-3 bg-card rounded shadow hover:bg-secondary transition"
-          >
-            <div>
-              <p className="font-medium">{p.nickname || "Anonymous"}</p>
-              <p className="text-sm text-gray-500">{p.id}</p>
-            </div>
-            <span className="text-sm text-green-500 font-semibold">● Online</span>
-          </li>
-        ))}
+        {peers.map((p) => {
+          const isMe = p.id === user?.userId;
+
+          return (
+            <Link key={p.id} href={(isMe) ? "#" : `/new?userId=${p.id}`}>
+              <li
+                className={`flex justify-between items-center p-3 bg-card rounded shadow transition ${
+                  isMe ? "border-2 border-primary" : "hover:bg-secondary"
+                }`}
+              >
+                <div>
+                  <p className="font-medium">
+                    {p.username || "Anonymous"} {isMe && <span className="text-xs text-blue-500 ml-2">(You)</span>}
+                  </p>
+                  <p className="text-sm text-gray-500">{p.id}</p>
+                </div>
+                <span className={`text-sm font-semibold ${isMe ? "text-blue-500" : "text-green-500"}`}>
+                  {isMe ? "● Me" : "● Online"}
+                </span>
+              </li>
+            </Link>
+          );
+        })}
       </ul>
     </div>
   );
