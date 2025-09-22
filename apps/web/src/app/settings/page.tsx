@@ -8,6 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { backupDB, eraseDB, restoreDB } from '@/lib/storage';
 import { useRouter } from 'next/navigation';
 import { refreshRooms } from '@/lib/utils';
+import { Input } from '@/components/ui/input';
 
 export default function SettingsPage() {
   const user = useAuth(true);
@@ -95,6 +96,17 @@ export default function SettingsPage() {
       </div>
 
       <div className="flex items-center justify-between">
+        <span className="font-medium">Restore Data</span>
+        <Input
+          type="file"
+          accept="application/json"
+          onChange={handleRestore}
+          disabled={restoreLoading}
+          className="cursor-pointer"
+        />
+      </div>
+
+      <div className="flex items-center justify-between">
         <span className="font-medium">Erase Data</span>
         <Button
           size="sm"
@@ -104,17 +116,6 @@ export default function SettingsPage() {
         >
           {eraseLoading ? 'Erasing...' : 'Erase'}
         </Button>
-      </div>
-
-      <div className="flex items-center justify-between">
-        <span className="font-medium">Restore Data</span>
-        <input
-          type="file"
-          accept="application/json"
-          onChange={handleRestore}
-          disabled={restoreLoading}
-          className="cursor-pointer"
-        />
       </div>
 
       {toast && (

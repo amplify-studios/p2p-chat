@@ -56,41 +56,6 @@ export default function Home() {
           <p className="text-gray-500 text-sm">Online Peers</p>
         </div>
       </div>
-
-      {/* Online Peers List */}
-      <section>
-        <h2 className="text-2xl font-semibold mb-4">Online Friends</h2>
-        {peersLoading ? (
-          <p className="text-gray-500">Loading peers...</p>
-        ) : peers.length === 0 ? (
-          <EmptyState msg="No peers online" />
-        ) : (
-          <ul className="space-y-2">
-            {peers.map((p) => {
-              const isMe = p.id === user.userId;
-              return (
-                <Link key={p.id} href={isMe ? '#' : `/new?userId=${p.id}`}>
-                  <li
-                    className={`flex justify-between items-center p-3 bg-card rounded shadow transition ${
-                      isMe ? 'border-2 border-primary' : 'hover:bg-secondary'
-                    }`}
-                  >
-                    <div>
-                      <p className="font-medium">
-                        {p.username || 'Anonymous'} {isMe && <span className="text-xs text-blue-500 ml-2">(You)</span>}
-                      </p>
-                      <p className="text-sm text-gray-500">{p.id}</p>
-                    </div>
-                    <span className={`text-sm font-semibold ${isMe ? 'text-blue-500' : 'text-green-500'}`}>
-                      {isMe ? '● Me' : '● Online'}
-                    </span>
-                  </li>
-                </Link>
-              );
-            })}
-          </ul>
-        )}
-      </section>
     </div>
   );
 }
