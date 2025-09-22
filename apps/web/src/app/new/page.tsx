@@ -12,12 +12,14 @@ import { useAuth } from '@/hooks/useAuth';
 import { getSignalingClient } from '@/lib/signalingClient';
 import { InviteMessage } from '@chat/sockets';
 import { refreshRooms } from '@/lib/utils';
+import { usePeers } from '@/hooks/usePeers';
 
 export default function NewRoom() {
   const user = useAuth(true);
   const db = useDB();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const {peers, loading} = usePeers();
 
   const [name, setName] = useState('');
   const [type, setType] = useState<'single' | 'group'>('single');
@@ -42,6 +44,7 @@ export default function NewRoom() {
   };
 
   const handleCreateRoom = async () => {
+    if(loading) return;
     const validationError = validate();
     if (validationError) {
       setError(validationError);
@@ -51,7 +54,8 @@ export default function NewRoom() {
 
     const roomId = generateBase58Id();
 
-    const localRoomName = type === 'single' ? otherUserId : name;
+
+    const localRoomName = type === 'single' ? peers.find((p) => p.id == otherUserId)?.username || otherUserId : name;
     const inviteRoomName = type === 'single' ? user.username || user.userId : name;
 
     const room: RoomType = {
