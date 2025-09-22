@@ -7,7 +7,7 @@ export function createECDHkey(): crypto.ECDH {
 }
 
 export function computeSecret(user_ECDH: crypto.ECDH, otherPublicKey: string): Uint8Array {
-  return user_ECDH.computeSecret(Uint8Array.from(otherPublicKey));
+  return user_ECDH.computeSecret(otherPublicKey, 'hex');
 }
 
 export function secretMatch(user_secret: Uint8Array, other_secret: Uint8Array): boolean {

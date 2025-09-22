@@ -7,18 +7,24 @@ import Loading from '@/components/local/Loading';
 import { useAuth } from '@/hooks/useAuth';
 import { useSearchParams } from 'next/navigation';
 import { useRooms } from '@/hooks/useRooms';
-import { prepareSendMessagePackage } from '@/lib/messaging';
+import { prepareSendMessagePackage, returnDecryptedMessage } from '@/lib/messaging';
 import EmptyState from '@/components/local/EmptyState';
 import { MessageType } from '@chat/core';
 
 // TODO: Remove
-import { createECDHkey } from '@chat/crypto';
+import { createECDHkey, generateAESKey } from '@chat/crypto';
+import { getSignalingClient } from '@/lib/signalingClient';
+
+import crypto from 'crypto';
+
+import { AESdecrypt, AESencrypt } from '@chat/crypto';
 
 export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const msgId = useRef(0);
   const db = useDB();
   const user = useAuth(true);
+  const userECDH = createECDHkey();
   const searchParams = useSearchParams();
   const roomId = searchParams?.get('id');
 
@@ -27,6 +33,9 @@ export default function ChatPage() {
 
   useEffect(() => {
     if (!db || !roomId) return;
+
+    if (!user?.private) return;
+    userECDH.setPrivateKey(user.private);
 
     (async () => {
       const allMessages = await db.getAll('messages');
@@ -56,13 +65,18 @@ export default function ChatPage() {
   const sendMessage = (text: string) => {
     logMessage(text, 'me');
 
-
     // TODO: Get the other user's key
     const otherUserKey = createECDHkey();
+    userECDH.setPrivateKey(otherUserKey.getPrivateKey())
 
     // TODO: Send message
     const sendData = prepareSendMessagePackage(otherUserKey.getPublicKey().toString('hex'), text);
     console.log(sendData);
+    // getSignalingClient().then((c) => {
+
+    //   // c.sendMessage(roomId, sendData.encryptedMessage, sendData.authTag, sendData.ephemeralPublicKey);
+    // });
+    logMessage(returnDecryptedMessage( userECDH , sendData), 'other');
 
     // Save locally
     db.put('messages', {
