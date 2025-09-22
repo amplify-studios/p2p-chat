@@ -8,7 +8,11 @@ import { useAuth } from '@/hooks/useAuth';
 import { useSearchParams } from 'next/navigation';
 import { useRooms } from '@/hooks/useRooms';
 import { getSignalingClient } from '@/lib/signalingClient';
+import { prepareSendMessagePackage } from '@/lib/messaging';
 import EmptyState from '@/components/local/EmptyState';
+
+// TODO: Remove
+import { createECDHkey } from '@chat/crypto';
 
 export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -51,6 +55,14 @@ export default function ChatPage() {
 
   const sendMessage = (text: string) => {
     logMessage(text, 'me');
+
+
+    // TODO: Get the other user's key
+    const otherUserKey = createECDHkey();
+
+    // TODO: Send message
+    const sendData = prepareSendMessagePackage(otherUserKey.getPublicKey().toString('hex'), text);
+    console.log(sendData);
 
     // Save locally
     db.put('messages', {
