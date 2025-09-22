@@ -31,7 +31,7 @@ export default function Peers() {
           return (
             <Link key={p.id} href={isMe ? "#" : `/new?userId=${p.id}`}>
               <li
-                className={`flex justify-between items-center p-3 bg-card rounded shadow transition ${
+                className={`mb-2 flex justify-between items-center p-3 bg-card rounded shadow transition ${
                   isMe ? "border-2 border-primary" : "hover:bg-secondary"
                 }`}
               >

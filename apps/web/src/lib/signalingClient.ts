@@ -11,7 +11,7 @@ export function initSignalingClient(client: SignalingClient) {
 export async function getSignalingClient(): Promise<SignalingClient> {
   if (!singletonClient) {
     const db = await getDB();
-    const creds = await db.getAll("credentials");
+    const creds = await db.getAll("user");
     if (!creds) throw new Error("No credentials available");
     singletonClient = new SignalingClient(
       creds[0].userId,

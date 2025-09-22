@@ -1,13 +1,13 @@
 'use client';
 
-import { Chat, Message } from '@/components/local/Chat';
-import { useRef, useState } from 'react';
 import { useDB } from '@/hooks/useDB';
 import Loading from '@/components/local/Loading';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useRooms } from '@/hooks/useRooms';
 import { Button } from '@/components/ui/button';
+import EmptyState from '@/components/local/EmptyState';
+import { refreshRooms } from '@/lib/utils';
 
 export default function ChatOptionsPage() {
   const db = useDB();
@@ -18,30 +18,16 @@ export default function ChatOptionsPage() {
   const router = useRouter();
   
   if (!db || !rooms) return <Loading />;
-  
-  console.log(rooms);
 
-  if (!roomId) {
-    return (
-      <h1 className="flex text-2xl items-center justify-center min-h-screen bg-gray-50">
-        No room selected
-      </h1>
-    );
-  }
+  if (!roomId) return <EmptyState msg='No room selected' />;
 
   const room = rooms.find((room) => room.roomId === roomId);
-  if (!room) {
-    return (
-      <h1 className="flex text-2xl items-center justify-center min-h-screen bg-gray-50">
-        Room not found
-      </h1>
-    );
-  }
+  if (!room) return <EmptyState msg='Room not found' />;
+
   const deleteRoom = async () => {
     await db.delete('rooms', room.roomId);
     router.push('/');
-    location.reload();
-    console.log(rooms.toString);
+    refreshRooms();
   };
   return (
     <div>
