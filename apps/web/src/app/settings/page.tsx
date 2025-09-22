@@ -5,14 +5,16 @@ import Loading from '@/components/local/Loading';
 import ThemeSwitcher from '@/components/local/ThemeSwitcher';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
-import { backupDB, eraseDB } from '@/lib/storage';
+import { backupDB, eraseDB, restoreDB } from '@/lib/storage';
 import { useRouter } from 'next/navigation';
+import { refreshRooms } from '@/lib/utils';
 
 export default function SettingsPage() {
   const user = useAuth(true);
   const router = useRouter();
   const [backupLoading, setBackupLoading] = useState(false);
   const [eraseLoading, setEraseLoading] = useState(false);
+  const [restoreLoading, setRestoreLoading] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
 
   if (!user) return <Loading />;
@@ -52,6 +54,25 @@ export default function SettingsPage() {
     }
   };
 
+  const handleRestore = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setRestoreLoading(true);
+    try {
+      const text = await file.text();
+      await restoreDB(text);
+      refreshRooms();
+      showToast('Database restored successfully!');
+    } catch (err) {
+      console.error(err);
+      alert('Restoring database failed');
+    } finally {
+      setRestoreLoading(false);
+      e.target.value = ''; // reset file input
+    }
+  };
+
   return (
     <div className="p-6 max-w-md mx-auto flex flex-col gap-6">
       <h1 className="text-2xl font-bold">Settings</h1>
@@ -83,6 +104,17 @@ export default function SettingsPage() {
         >
           {eraseLoading ? 'Erasing...' : 'Erase'}
         </Button>
+      </div>
+
+      <div className="flex items-center justify-between">
+        <span className="font-medium">Restore Data</span>
+        <input
+          type="file"
+          accept="application/json"
+          onChange={handleRestore}
+          disabled={restoreLoading}
+          className="cursor-pointer"
+        />
       </div>
 
       {toast && (

@@ -9,7 +9,7 @@ import { useDB } from '@/hooks/useDB';
 import Loading from '@/components/local/Loading';
 import { createECDHkey, generateBase58Id } from '@chat/crypto';
 import { useAuth } from '@/hooks/useAuth';
-import { createSignalingClient, initSignalingClient } from '@/lib/signalingClient';
+import { initSignalingClient } from '@/lib/signalingClient';
 import { SignalingClient } from '@chat/sockets';
 
 const validateForm = (username: string, password: string): string | null => {
