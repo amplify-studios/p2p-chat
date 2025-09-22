@@ -18,7 +18,7 @@
 2. Send/Receive Message
 3. Local Storage
 4. Authentication
-5. Registration 
+5. Registration
 
 ### 1. User Connection
 
@@ -36,7 +36,7 @@
 4. Encrypt the message with AES-256-GCM (random 96-bit IV per message).
 5. Send:
     - Ciphertext
-    - Nonce/IV
+    - AuthTag
     - Ephemeral public key (so recipient can derive the same shared secret)
 
 #### Receive
