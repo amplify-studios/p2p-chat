@@ -5,8 +5,9 @@ import { useRef, useState } from 'react';
 import { useDB } from '@/hooks/useDB';
 import Loading from '@/components/local/Loading';
 import { useAuth } from '@/hooks/useAuth';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useRooms } from '@/hooks/useRooms';
+import { Button } from '@/components/ui/button';
 
 export default function ChatOptionsPage() {
   const db = useDB();
@@ -14,8 +15,11 @@ export default function ChatOptionsPage() {
   const { rooms } = useRooms();
   const searchParams = useSearchParams();
   const roomId = searchParams?.get('id');
-
+  const router = useRouter();
+  
   if (!db || !rooms) return <Loading />;
+  
+  console.log(rooms);
 
   if (!roomId) {
     return (
@@ -33,8 +37,18 @@ export default function ChatOptionsPage() {
       </h1>
     );
   }
-
+  const deleteRoom = async () => {
+    await db.delete('rooms', room.roomId);
+    router.push('/');
+    location.reload();
+    console.log(rooms.toString);
+  };
   return (
-    <h1>Options for chat: {roomId}</h1>
+    <div>
+      <h1>Options for chat: {roomId}</h1>
+      <Button onClick={deleteRoom} className="w-20">
+        Delete
+      </Button>
+    </div>
   );
 }
