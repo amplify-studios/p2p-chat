@@ -6,7 +6,7 @@ export * from "./ECDH";
 export * from "./AES";
 
 export function HmacUsage() {
-    const sharedKey = "shared-key";
+    const sharedKey: Uint8Array = Uint8Array.from("shared-key");
     const message = "Hello World!";
     const hex = hmacSign(sharedKey, message);
 
