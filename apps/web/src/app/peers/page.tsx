@@ -4,8 +4,11 @@ import { useEffect, useState } from "react";
 import { getSignalingClient } from "@/lib/signalingClient";
 import type { PeerInfo, PeersMessage } from "@chat/sockets";
 import EmptyState from "@/components/local/EmptyState";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function Peers() {
+  const user = useAuth(true);
+
   const [peers, setPeers] = useState<PeerInfo[]>([]);
   const [loading, setLoading] = useState(true);
 

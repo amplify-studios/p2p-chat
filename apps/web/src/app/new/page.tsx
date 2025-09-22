@@ -10,7 +10,8 @@ import { generateBase58Id } from '@chat/crypto';
 import { CredentialsType, RoomType } from '@chat/core';
 import { useAuth } from '@/hooks/useAuth';
 import { getSignalingClient } from '@/lib/signalingClient';
-import { InvitePayload } from '@chat/sockets';
+import { InviteMessage } from '@chat/sockets';
+import { refreshRooms } from '@/lib/utils';
 
 export default function NewRoom() {
   const user = useAuth(true);
@@ -44,7 +45,7 @@ export default function NewRoom() {
       roomId,
       name,
       type,
-      keys: keys.length > 0 ? keys : [],
+      keys: [user],
     };
 
     const signalingClient = await getSignalingClient();
@@ -57,12 +58,11 @@ export default function NewRoom() {
         return;
       }
 
-      // Send room invite using the helper
-      const invite: InvitePayload = {
-        room,
+      const invite = {
         from: myId,
-        nickname: user.username || myId,
-      };
+        room: room,
+        target: otherUserId
+      } as InviteMessage;
       signalingClient.sendRoomInvite(otherUserId, invite);
     }
 
@@ -70,8 +70,7 @@ export default function NewRoom() {
     await db.put('rooms', room);
 
     // Trigger a storage event for other tabs if needed
-    localStorage.setItem('rooms_updated', Date.now().toString());
-    window.dispatchEvent(new StorageEvent('storage', { key: 'rooms_updated' }));
+    refreshRooms();
 
     setName('');
     setOtherUserId('');

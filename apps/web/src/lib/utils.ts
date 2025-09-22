@@ -13,3 +13,8 @@ export function hexToUint8Array(hex: string): Uint8Array {
   }
   return array;
 }
+
+export function refreshRooms() {
+    localStorage.setItem('rooms_updated', Date.now().toString());
+    window.dispatchEvent(new StorageEvent('storage', { key: 'rooms_updated' }));
+}

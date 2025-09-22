@@ -1,17 +1,14 @@
 import { useEffect, useState } from "react";
 import { getSignalingClient } from "@/lib/signalingClient";
 import { useDB } from "@/hooks/useDB";
-import { InviteType } from "@chat/core";
 import { generateBase58Id } from "@chat/crypto";
-
-export interface RoomInvite {
-  from: string;
-  room: InviteType;
-}
+import { InviteMessage } from "@chat/sockets";
+import { InviteType } from "@chat/core";
+import { refreshRooms } from "@/lib/utils";
 
 export function useInvites() {
   const db = useDB();
-  const [invites, setInvites] = useState<RoomInvite[]>([]);
+  const [invites, setInvites] = useState<InviteType[]>([]);
 
   useEffect(() => {
     if (!db) return;
@@ -22,24 +19,35 @@ export function useInvites() {
       const client = await getSignalingClient();
       if (!client) return;
 
-      const handleRoomInvite = async (msg: RoomInvite) => {
-        await db.put("invites", {
-          ...msg.room,
-          inviteId: generateBase58Id()
-        });
-        setInvites((prev) => [...prev, msg]);
+      const handleRoomInvite = async (msg: InviteMessage) => {
+        const inviteId = generateBase58Id();
+
+        const newInvite: InviteType = {
+          inviteId,
+          room: msg.room,
+          from: msg.from,
+        };
+
+        await db.put("invites", newInvite);
+        setInvites((prev) => [...prev, newInvite]);
+
         console.log(`Received room invite from ${msg.from}: ${msg.room.name}`);
       };
 
-      client.on("roomInvite", handleRoomInvite);
+      client.on("invite", handleRoomInvite);
 
       const storedInvites = await db.getAll("invites");
       if (storedInvites) {
-        setInvites(storedInvites.map((i: any) => ({ from: i.from, room: i.room })));
+        const normalized = storedInvites.map((i: any) => ({
+          inviteId: i.inviteId ?? generateBase58Id(),
+          from: i.from ?? "",
+          room: i.room ?? { roomId: "", name: "", type: "single", keys: [] },
+        }));
+        setInvites(normalized);
       }
 
       cleanup = () => {
-        client.off("roomInvite", handleRoomInvite);
+        client.off("invite", handleRoomInvite);
       };
     };
 
@@ -48,22 +56,24 @@ export function useInvites() {
     return () => cleanup?.();
   }, [db]);
 
-  const acceptInvite = async (invite: RoomInvite) => {
+  const acceptInvite = async (invite: InviteType) => {
     if (!db) return;
-    // Move invite to rooms table
+
     await db.put("rooms", {
       ...invite.room,
       roomId: generateBase58Id(),
     });
-    // Remove invite from invites table
-    await db.delete("invites", invite.room.name);
-    setInvites((prev) => prev.filter((i) => i.room.name !== invite.room.name));
+
+    await db.delete("invites", invite.inviteId);
+    setInvites((prev) => prev.filter((i) => i.inviteId !== invite.inviteId));
+    refreshRooms();
   };
 
-  const declineInvite = async (invite: RoomInvite) => {
+  const declineInvite = async (invite: InviteType) => {
     if (!db) return;
-    await db.delete("invites", invite.room.name);
-    setInvites((prev) => prev.filter((i) => i.room.name !== invite.room.name));
+
+    await db.delete("invites", invite.inviteId);
+    setInvites((prev) => prev.filter((i) => i.inviteId !== invite.inviteId));
   };
 
   return { invites, acceptInvite, declineInvite };

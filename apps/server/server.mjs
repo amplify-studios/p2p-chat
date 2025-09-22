@@ -40,11 +40,10 @@ wss.on("connection", (ws) => {
       case "invite": {
         const target = clients.get(data.target);
         if (target) {
-          console.log(`Room invite from ${clientId}`)
           target.ws.send(JSON.stringify({
             type: "invite",
             from: clientId,
-            room: data.room
+            room: data.payload.room
           }));
         }
         break;

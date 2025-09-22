@@ -24,7 +24,7 @@ let dbPromise: Promise<IDBPDatabase<MyDB>> | null = null;
 
 export function getDB() {
   if (!dbPromise) {
-    dbPromise = openDB<MyDB>('my-database', 4, {
+    dbPromise = openDB<MyDB>('my-database', 5, {
       upgrade(db) {
         db.createObjectStore('messages', { autoIncrement: true });
         db.createObjectStore('credentials', { keyPath: 'userId' });

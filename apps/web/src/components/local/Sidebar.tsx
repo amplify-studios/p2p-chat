@@ -5,9 +5,9 @@ import Link from 'next/link';
 import { MessageSquareDot, Plus, Settings, Users } from 'lucide-react';
 import { useRooms } from '@/hooks/useRooms';
 import Loading from './Loading';
-import { useInvites } from '@/hooks/useInvites';
 import SidebarItem from './SidebarItem';
 import useClient from '@/hooks/useClient';
+import { useInvites } from '@/hooks/useInvites';
 
 interface SidebarProps {
   children: ReactNode;
@@ -17,6 +17,7 @@ export default function Sidebar({ children }: SidebarProps) {
   const { rooms, activeRoomId } = useRooms();
   if (!rooms) return <Loading />;
   const { client } = useClient(); // NOTE: used to set status to online immediately
+  const { invites: currentInvites, acceptInvite, declineInvite } = useInvites();
 
   return (
     <div className="flex flex-col md:flex-row md:h-screen">

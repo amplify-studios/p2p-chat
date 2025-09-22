@@ -34,7 +34,6 @@ export class SignalingClient {
       this.ws.onmessage = (event) => {
         try {
           const msg = JSON.parse(event.data);
-          console.log(msg);
           this.dispatch(msg.type, msg);
         } catch (e) {
           console.error("Invalid signaling message", event.data);

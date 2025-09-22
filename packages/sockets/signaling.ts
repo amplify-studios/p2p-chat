@@ -3,6 +3,8 @@
 // In case of changes to the API these should change as well to avoid conflicts.
 // We should maybe consider using typescript for the server too to have a single point of reference.
 
+import { RoomType } from "@chat/core";
+
 // Represents a connected peer
 export interface Client {
   ws: WebSocket;           // WebSocket connection
@@ -41,22 +43,8 @@ export interface WelcomeMessage extends BaseMessage {
 export interface InviteMessage extends BaseMessage {
   type: "invite";
   from: string;
-  room: Room;
+  room: RoomType
   target?: string; // optional when sending
-}
-
-// Structure of a room
-export interface Room {
-  roomId: string;
-  name: string;
-  type: "single" | "group";
-  keys: CredentialsType[];
-}
-
-// User credentials stored in the room
-export interface CredentialsType {
-  userId: string;
-  public: string;
 }
 
 // WebRTC signaling messages

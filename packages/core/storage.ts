@@ -21,7 +21,6 @@ export interface RoomType {
 
 export interface InviteType {
   inviteId: string;
-  name: string;
-  type: 'single' | 'group';
-  keys: CredentialsType[];
+  from: string;
+  room: RoomType;
 }
