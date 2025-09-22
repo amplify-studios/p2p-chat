@@ -1,13 +1,13 @@
 import crypto from "crypto";
 
-export default function hmacSign(sharedKey: string, message: string):string {
+export default function hmacSign(sharedKey: Buffer, message: string):string {
     return crypto
         .createHmac('sha256', sharedKey)
         .update(message)
         .digest('hex');
 }
 
-export function hmacVerify(sharedKey: string, message: string, hashToVerify:string):boolean {
+export function hmacVerify(sharedKey: Buffer, message: string, hashToVerify:string):boolean {
     const expectedHash = hmacSign(sharedKey, message);
 
     let result = 0;
