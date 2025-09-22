@@ -1,13 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
 import Loading from '@/components/local/Loading';
-import EmptyState from '@/components/local/EmptyState';
 import { useAuth } from '@/hooks/useAuth';
 import { useInvites } from '@/hooks/useInvites';
 import { usePeers } from '@/hooks/usePeers';
 import { useDB } from '@/hooks/useDB';
+import { MessageType } from '@chat/core';
 
 export default function Home() {
   const user = useAuth(true);
@@ -17,12 +16,11 @@ export default function Home() {
 
   const [newMessagesCount, setNewMessagesCount] = useState(0);
 
-  // Fetch number of new messages (example)
   useEffect(() => {
     if (!db) return;
     const fetchMessages = async () => {
       const allMessages = await db.getAll('messages');
-      const unread = allMessages?.filter((m: any) => !m.read)?.length || 0;
+      const unread = allMessages?.filter((m: MessageType) => !m.read)?.length || 0;
       setNewMessagesCount(unread);
     };
     fetchMessages();
@@ -51,8 +49,8 @@ export default function Home() {
           <p className="text-xl font-bold">{invites.length}</p>
           <p className="text-gray-500 text-sm">Pending Invites</p>
         </div>
-        <div className="p-4 bg-card rounded shadow flex flex-col items-center">
-          <p className="text-xl font-bold">{peers.length}</p>
+          <div className="p-4 bg-card rounded shadow flex flex-col items-center">
+          <p className="text-xl font-bold">{(peersLoading) ? "Loading..." : peers.length}</p>
           <p className="text-gray-500 text-sm">Online Peers</p>
         </div>
       </div>

@@ -7,9 +7,9 @@ import Loading from '@/components/local/Loading';
 import { useAuth } from '@/hooks/useAuth';
 import { useSearchParams } from 'next/navigation';
 import { useRooms } from '@/hooks/useRooms';
-import { getSignalingClient } from '@/lib/signalingClient';
 import { prepareSendMessagePackage } from '@/lib/messaging';
 import EmptyState from '@/components/local/EmptyState';
+import { MessageType } from '@chat/core';
 
 // TODO: Remove
 import { createECDHkey } from '@chat/crypto';
@@ -70,7 +70,7 @@ export default function ChatPage() {
       senderId: user.userId,
       message: text,
       timestamp: Date.now()
-    });
+    } as MessageType);
   };
 
   return (
