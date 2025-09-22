@@ -9,6 +9,7 @@ import { backupDB, eraseDB, restoreDB } from '@/lib/storage';
 import { useRouter } from 'next/navigation';
 import { refreshRooms } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
+import { getSignalingClient } from '@/lib/signalingClient';
 
 export default function SettingsPage() {
   const user = useAuth(true);
@@ -46,6 +47,10 @@ export default function SettingsPage() {
     try {
       await eraseDB();
       showToast('Erased all data successfully!');
+
+      // Quit signaling server
+      const client = await getSignalingClient();
+      client.disconnect();
     } catch (err) {
       console.error(err);
       alert('Erasing data failed');

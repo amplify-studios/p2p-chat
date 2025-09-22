@@ -92,4 +92,17 @@ export class SignalingClient {
       console.warn("WebSocket not connected, dropping message:", msg);
     }
   }
+
+  disconnect() {
+    this.handlers = {};
+
+    if (this.ws) {
+      if (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING) {
+        this.ws.close();
+      }
+      this.ws = null;
+    }
+
+    console.log("SignalingClient disconnected");
+  }
 }

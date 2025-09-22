@@ -8,7 +8,6 @@ TODO: Block user
 TODO: Delete connection
 TODO: Notifications system
 TODO: Room options
-TODO: leave signaling server when erasing data
 DONE: IndexedDB
 DONE: ECDH crypto methods
 DONE: AES-256-GCM crypto methods
@@ -20,3 +19,4 @@ DONE: Sending invites
 DONE: Receiving invites
 DONE: Restore data
 DONE: Delete chat
+DONE: leave signaling server when erasing data
