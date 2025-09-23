@@ -25,6 +25,9 @@ export default function ChatOptionsPage() {
   if (!room) return <EmptyState msg='Room not found' />;
 
   const deleteChat = async () => {
+    const confirmed = confirm('Are you sure you want to delete this room? This action cannot be undone.');
+    if (!confirmed) return;
+
     await db.delete('rooms', room.roomId);
 
     const tx = db.transaction("messages", "readwrite");
