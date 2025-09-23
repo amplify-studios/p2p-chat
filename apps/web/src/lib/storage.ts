@@ -1,9 +1,8 @@
 import { MessageType, CredentialsType, RoomType, InviteType, BlockType } from '@chat/core';
 import { openDB, DBSchema, IDBPDatabase } from 'idb';
-import { Blocks } from 'lucide-react';
 
 const DB_NAME = "my-database";
-const DB_VERSION = 6;
+const DB_VERSION = 7;
 const BACKUP_FILE = "p2p-chat-backup.json";
 
 interface MyDB extends DBSchema {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -27,6 +27,14 @@ export default function Login() {
   const user = useAuth();
 
   const db = useDB();
+
+  useEffect(() => {
+    if(user) {
+      router.push("/");
+      return;
+    }
+  }, [user, router]);
+
   if (!db) return <Loading />;
 
   const handleLogin = async () => {
@@ -55,7 +63,7 @@ export default function Login() {
       initSignalingClient(client); // Only instance of the class
 
       await client.connect("ws://localhost:8080");
-    }
+    } 
 
     sessionStorage.setItem(username, password);
     router.push("/");
