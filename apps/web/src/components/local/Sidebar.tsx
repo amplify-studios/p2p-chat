@@ -15,9 +15,10 @@ interface SidebarProps {
 
 export default function Sidebar({ children }: SidebarProps) {
   const { rooms, activeRoomId } = useRooms();
+  useClient(); // NOTE: used to set status to online immediately
+  useInvites(); // NOTE: used to always check for invites
+
   if (!rooms) return <Loading />;
-  const { client } = useClient(); // NOTE: used to set status to online immediately
-  const { invites, acceptInvite, declineInvite } = useInvites(); // NOTE: used to always check for invites
 
   return (
     <div className="flex flex-col md:flex-row md:h-screen">

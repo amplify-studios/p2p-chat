@@ -6,12 +6,12 @@ export function createECDHkey(): crypto.ECDH {
   return user;
 }
 
-export function computeSecret(user_ECDH: crypto.ECDH, otherPublicKey: string): Buffer {
-  return user_ECDH.computeSecret(Buffer.from(otherPublicKey, 'hex'));
+export function computeSecret(user_ECDH: crypto.ECDH, otherPublicKey: string): Uint8Array {
+  return user_ECDH.computeSecret(otherPublicKey, 'hex');
 }
 
-export function secretMatch(user_secret: Buffer, other_secret: Buffer): boolean {
-  return user_secret.equals(other_secret);
+export function secretMatch(user_secret: Uint8Array, other_secret: Uint8Array): boolean {
+  return user_secret === other_secret;
 }
 
 // export function encryptMessage(otherPublicKey: string, message: string): string {}

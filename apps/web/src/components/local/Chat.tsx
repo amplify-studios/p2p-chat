@@ -5,7 +5,7 @@ import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card'
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { EllipsisVertical, Option, Send, User } from 'lucide-react';
+import { EllipsisVertical, Send, User } from 'lucide-react';
 import EmptyState from './EmptyState';
 
 export interface Message {

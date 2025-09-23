@@ -4,7 +4,7 @@ import { useDB } from "@/hooks/useDB";
 import { generateBase58Id } from "@chat/crypto";
 import { InviteMessage } from "@chat/sockets";
 import { InviteType } from "@chat/core";
-import { parseBytes, refreshRooms } from "@/lib/utils";
+import { refreshRooms } from "@/lib/utils";
 
 export function useInvites() {
   const db = useDB();
@@ -38,7 +38,7 @@ export function useInvites() {
 
       const storedInvites = await db.getAll("invites");
       if (storedInvites) {
-        const normalized = storedInvites.map((i: any) => ({
+        const normalized = storedInvites.map((i: InviteType) => ({
           inviteId: i.inviteId ?? generateBase58Id(),
           from: i.from ?? "",
           room: i.room ?? { roomId: "", name: "", type: "single", keys: [] },

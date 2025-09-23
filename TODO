@@ -6,11 +6,8 @@ TODO: Chat sync
 TODO: Chat invite (link + qr)
 TODO: Block user
 TODO: Delete connection
-TODO: Delete chat
-TODO: Restore data
 TODO: Notifications system
 TODO: Room options
-TODO: leave signaling server when erasing data
 DONE: IndexedDB
 DONE: ECDH crypto methods
 DONE: AES-256-GCM crypto methods
@@ -20,3 +17,6 @@ DONE: Signaling server
 DONE: Online peers page
 DONE: Sending invites
 DONE: Receiving invites
+DONE: Restore data
+DONE: Delete chat
+DONE: leave signaling server when erasing data

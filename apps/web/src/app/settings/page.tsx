@@ -5,14 +5,18 @@ import Loading from '@/components/local/Loading';
 import ThemeSwitcher from '@/components/local/ThemeSwitcher';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
-import { backupDB, eraseDB } from '@/lib/storage';
+import { backupDB, eraseDB, restoreDB } from '@/lib/storage';
 import { useRouter } from 'next/navigation';
+import { refreshRooms } from '@/lib/utils';
+import { Input } from '@/components/ui/input';
+import { getSignalingClient } from '@/lib/signalingClient';
 
 export default function SettingsPage() {
   const user = useAuth(true);
   const router = useRouter();
   const [backupLoading, setBackupLoading] = useState(false);
   const [eraseLoading, setEraseLoading] = useState(false);
+  const [restoreLoading, setRestoreLoading] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
 
   if (!user) return <Loading />;
@@ -43,12 +47,35 @@ export default function SettingsPage() {
     try {
       await eraseDB();
       showToast('Erased all data successfully!');
+
+      // Quit signaling server
+      const client = await getSignalingClient();
+      client.disconnect();
     } catch (err) {
       console.error(err);
       alert('Erasing data failed');
     } finally {
       setEraseLoading(false);
       router.push("/login");
+    }
+  };
+
+  const handleRestore = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setRestoreLoading(true);
+    try {
+      const text = await file.text();
+      await restoreDB(text);
+      refreshRooms();
+      showToast('Database restored successfully!');
+    } catch (err) {
+      console.error(err);
+      alert('Restoring database failed');
+    } finally {
+      setRestoreLoading(false);
+      e.target.value = ''; // reset file input
     }
   };
 
@@ -71,6 +98,17 @@ export default function SettingsPage() {
         >
           {backupLoading ? 'Backing up...' : 'Backup'}
         </Button>
+      </div>
+
+      <div className="flex items-center justify-between">
+        <span className="font-medium">Restore Data</span>
+        <Input
+          type="file"
+          accept="application/json"
+          onChange={handleRestore}
+          disabled={restoreLoading}
+          className="cursor-pointer"
+        />
       </div>
 
       <div className="flex items-center justify-between">

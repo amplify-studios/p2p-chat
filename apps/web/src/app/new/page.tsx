@@ -23,7 +23,7 @@ export default function NewRoom() {
 
   const [name, setName] = useState('');
   const [type, setType] = useState<'single' | 'group'>('single');
-  const [keys, setKeys] = useState<CredentialsType[]>([]);
+  // const [keys, setKeys] = useState<CredentialsType[]>([]);
   const [otherUserId, setOtherUserId] = useState('');
   const [error, setError] = useState('');
 
