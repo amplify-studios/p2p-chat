@@ -35,6 +35,8 @@ export default function NewRoom() {
     }
   }, [searchParams]);
 
+  const autoaccept = searchParams.get("autoaccept") === "true";
+
   if (!user || !db) return <Loading />;
 
   const validate = () => {
@@ -80,6 +82,7 @@ export default function NewRoom() {
         from: myId,
         room: { ...room, name: inviteRoomName },
         target: otherUserId,
+        autoaccept,
       } as InviteMessage;
 
       signalingClient.sendRoomInvite(otherUserId, invite);

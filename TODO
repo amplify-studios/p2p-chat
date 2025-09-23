@@ -8,6 +8,7 @@ TODO: Block user
 TODO: Delete connection
 TODO: Notifications system
 TODO: Room options
+TODO: Encrypting local data with key derived from password
 DONE: IndexedDB
 DONE: ECDH crypto methods
 DONE: AES-256-GCM crypto methods

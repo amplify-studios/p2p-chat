@@ -45,6 +45,7 @@ export interface InviteMessage extends BaseMessage {
   from: string;
   room: RoomType
   target?: string; // optional when sending
+  autoaccept: boolean;
 }
 
 // WebRTC signaling messages

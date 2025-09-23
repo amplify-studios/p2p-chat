@@ -28,6 +28,14 @@ export function useInvites() {
           from: msg.from,
         };
 
+        if(msg.autoaccept){
+          await db.put("rooms", {
+            ...newInvite.room,
+            roomId: generateBase58Id(),
+          });
+          return;
+        }
+
         await db.put("invites", newInvite);
         setInvites((prev) => [...prev, newInvite]);
 
