@@ -1,7 +1,11 @@
 import { MessageType, CredentialsType, RoomType, InviteType } from '@chat/core';
 import { openDB, DBSchema, IDBPDatabase } from 'idb';
 
-export interface MyDB extends DBSchema {
+const DB_NAME = "my-database";
+const DB_VERSION = 6;
+const BACKUP_FILE = "p2p-chat-backup.json";
+
+interface MyDB extends DBSchema {
   messages: {
     key: number;
     value: MessageType;
@@ -26,9 +30,9 @@ export interface MyDB extends DBSchema {
 
 let dbPromise: Promise<IDBPDatabase<MyDB>> | null = null;
 
-export function getDB() {
+function getDB() {
   if (!dbPromise) {
-    dbPromise = openDB<MyDB>('my-database', 6, {
+    dbPromise = openDB<MyDB>(DB_NAME, DB_VERSION, {
       upgrade(db) {
         db.createObjectStore('messages', { autoIncrement: true });
         db.createObjectStore('user', { autoIncrement: true });
@@ -41,7 +45,6 @@ export function getDB() {
   return dbPromise;
 }
 
-
 type Backup = {
   messages: MessageType[];
   credentials: CredentialsType[];
@@ -50,7 +53,7 @@ type Backup = {
   invites: InviteType[];
 };
 
-export async function backupDB() {
+async function backupDB() {
   const db = await getDB();
   const backup: Backup = {
     messages: [],
@@ -71,12 +74,12 @@ export async function backupDB() {
 
   const a = document.createElement('a');
   a.href = url;
-  a.download = 'p2p-chat-backup.json';
+  a.download = BACKUP_FILE;
   a.click();
   URL.revokeObjectURL(url);
 }
 
-export async function eraseDB() {
+async function eraseDB() {
   const db = await getDB();
 
   const tx = db.transaction(['user', 'messages', 'credentials', 'rooms', 'invites'], 'readwrite');
@@ -91,7 +94,7 @@ export async function eraseDB() {
   await tx.done;
 }
 
-export async function restoreDB(jsonString: string) {
+async function restoreDB(jsonString: string) {
   let backup: Backup;
   try {
     backup = JSON.parse(jsonString);
@@ -113,13 +116,11 @@ export async function restoreDB(jsonString: string) {
 
   const db = await getDB();
 
-  // Use a single transaction for efficiency
   const tx = db.transaction(
     ['messages', 'credentials', 'user', 'rooms', 'invites'],
     'readwrite'
   );
 
-  // Clear existing data first (optional)
   await Promise.all([
     tx.objectStore('messages').clear(),
     tx.objectStore('credentials').clear(),
@@ -128,27 +129,22 @@ export async function restoreDB(jsonString: string) {
     tx.objectStore('invites').clear(),
   ]);
 
-  // Restore messages
   for (const msg of backup.messages) {
     await tx.objectStore('messages').add(msg);
   }
 
-  // Restore credentials
   for (const cred of backup.credentials) {
     await tx.objectStore('credentials').put(cred);
   }
 
-  // Restore user
   for (const u of backup.user) {
     await tx.objectStore('user').add(u);
   }
 
-  // Restore rooms
   for (const room of backup.rooms) {
     await tx.objectStore('rooms').put(room);
   }
 
-  // Restore invites
   for (const invite of backup.invites) {
     await tx.objectStore('invites').put(invite);
   }
@@ -156,3 +152,6 @@ export async function restoreDB(jsonString: string) {
   await tx.done;
   console.log('Database restored successfully!');
 }
+
+export type { MyDB };
+export { getDB, backupDB, restoreDB, eraseDB };
