@@ -45,7 +45,12 @@ export interface InviteMessage extends BaseMessage {
   from: string;
   room: RoomType
   target?: string; // optional when sending
-  autoaccept: boolean;
+}
+
+export interface QrAckMessage extends BaseMessage {
+  type: "qrack";
+  from: string;
+  room: RoomType
 }
 
 // WebRTC signaling messages

@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode } from 'react';
+import { ReactNode, useEffect } from 'react';
 import Link from 'next/link';
 import { MessageSquareDot, Plus, Settings, Users } from 'lucide-react';
 import { useRooms } from '@/hooks/useRooms';
@@ -8,15 +8,52 @@ import Loading from './Loading';
 import SidebarItem from './SidebarItem';
 import useClient from '@/hooks/useClient';
 import { useInvites } from '@/hooks/useInvites';
+import { QrAckMessage } from '@chat/sockets';
+import { useAuth } from '@/hooks/useAuth';
+import { useDB } from '@/hooks/useDB';
+import { refreshRooms } from '@/lib/utils';
+import { useRouter } from 'next/navigation';
+import { RoomType } from '@chat/core';
+import { generateBase58Id } from '@chat/crypto';
 
 interface SidebarProps {
   children: ReactNode;
 }
 
 export default function Sidebar({ children }: SidebarProps) {
+  const user = useAuth(true);
+  const db = useDB();
+  const router = useRouter();
   const { rooms, activeRoomId } = useRooms();
-  useClient(); // NOTE: used to set status to online immediately
+  const { client } = useClient(); // NOTE: used to set status to online immediately
   useInvites(); // NOTE: used to always check for invites
+
+  // TODO: export to a `useQrAcks` hook
+  useEffect(() => {
+    if (!client || !db || !user) return;
+
+    const handleQrAck = async (msg: QrAckMessage) => {
+      console.log("QR ACK: ", msg);
+
+      const room = { 
+        ...msg.room,
+        roomId: generateBase58Id(),
+      } as RoomType;
+
+      await db.put("rooms", room);
+      for (const key of room.keys) {
+        await db.put("credentials", key);
+      }
+      refreshRooms();
+
+      router.push(`/chat?id=${room.roomId}`);
+    };
+
+    client.on("qrack", handleQrAck);
+    return () => {
+      client.off("qrack", handleQrAck);
+    };
+  }, [client, db, user, router]);
 
   if (!rooms) return <Loading />;
 

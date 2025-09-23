@@ -3,7 +3,7 @@ import { SignalingClient } from "@chat/sockets";
 import { useEffect, useState } from "react";
 
 export default function useClient() {
-  const [client, setClient] = useState<SignalingClient | undefined>(undefined);
+  const [client, setClient] = useState<SignalingClient | null>(null);
 
   useEffect(() => {
     let isMounted = true;
