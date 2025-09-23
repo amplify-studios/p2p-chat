@@ -48,11 +48,25 @@ export default function ChatOptionsPage() {
     router.push('/');
     refreshRooms();
   };
+
+  const block = async () => {
+    const confirmed = confirm('Are you sure you want to block this user?');
+    if (!confirmed) return;
+
+    
+
+    console.log("User blocked");
+    router.push('/');
+  }
+
   return (
-    <div>
+    <div className='flex flex-col gap-2 items-start'>
       <h1>Options for chat: {roomId}</h1>
       <Button onClick={deleteChat} className="w-20">
         Delete
+      </Button>
+      <Button onClick={block} className="w-30">
+        Block this user
       </Button>
     </div>
   );
