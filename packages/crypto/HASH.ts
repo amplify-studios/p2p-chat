@@ -31,3 +31,7 @@ export function hmacVerify(sharedKey: Uint8Array, message: string, hashToVerify:
 
     return result === 0;
 }
+
+export function hash(data: string): string {
+  return crypto.createHash("sha256").update(data).digest("hex");
+}

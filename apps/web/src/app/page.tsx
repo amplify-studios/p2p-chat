@@ -9,7 +9,7 @@ import { useDB } from '@/hooks/useDB';
 import { MessageType } from '@chat/core';
 
 export default function Home() {
-  const user = useAuth(true);
+  const { user } = useAuth();
   const db = useDB();
   const { invites } = useInvites();
   const { peers, loading: peersLoading } = usePeers();

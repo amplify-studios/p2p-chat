@@ -23,7 +23,7 @@ import useClient from '@/hooks/useClient';
 import { decode } from 'punycode';
 
 export default function NewRoom() {
-  const user = useAuth(true);
+  const { user } = useAuth();
   const db = useDB();
   const router = useRouter();
   const searchParams = useSearchParams();

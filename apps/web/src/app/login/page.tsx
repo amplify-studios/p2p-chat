@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import PasswordField from '@/components/local/PasswordField';
 import { useDB } from '@/hooks/useDB';
 import Loading from '@/components/local/Loading';
-import { createECDHkey, generateBase58Id } from '@chat/crypto';
+import { createECDHkey, generateBase58Id, hash } from '@chat/crypto';
 import { useAuth } from '@/hooks/useAuth';
 import { initSignalingClient } from '@/lib/signalingClient';
 import { SignalingClient } from '@chat/sockets';
@@ -24,7 +24,7 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const router = useRouter();
-  const user = useAuth();
+  const { user } = useAuth();
 
   const db = useDB();
 
@@ -65,7 +65,7 @@ export default function Login() {
       await client.connect("ws://localhost:8080");
     } 
 
-    sessionStorage.setItem(username, password);
+    sessionStorage.setItem(username, hash(password));
     router.push("/");
   };
 

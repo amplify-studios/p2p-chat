@@ -23,7 +23,7 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const msgId = useRef(0);
   const db = useDB();
-  const user = useAuth(true);
+  const { user } = useAuth();
   const userECDH = createECDHkey();
   const searchParams = useSearchParams();
   const roomId = searchParams?.get('id');

@@ -11,7 +11,7 @@ import { refreshRooms } from '@/lib/utils';
 
 export default function ChatOptionsPage() {
   const db = useDB();
-  useAuth(true);
+  useAuth();
   const { rooms } = useRooms();
   const searchParams = useSearchParams();
   const roomId = searchParams?.get('id');

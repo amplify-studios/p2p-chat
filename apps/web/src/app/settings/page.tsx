@@ -13,7 +13,7 @@ import { getSignalingClient } from '@/lib/signalingClient';
 import QrScanner from "@/components/local/QrScanner";
 
 export default function SettingsPage() {
-  const user = useAuth(true);
+  const { user } = useAuth();
   const router = useRouter();
   const [backupLoading, setBackupLoading] = useState(false);
   const [eraseLoading, setEraseLoading] = useState(false);

@@ -6,7 +6,7 @@ import EmptyState from "@/components/local/EmptyState";
 import Link from "next/link";
 
 export default function Peers() {
-  const user = useAuth(true);
+  const { user } = useAuth();
   const { peers, loading } = usePeers();
 
   if (loading) {

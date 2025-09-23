@@ -21,7 +21,7 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ children }: SidebarProps) {
-  const user = useAuth(true);
+  const { user } = useAuth();
   const db = useDB();
   const router = useRouter();
   const { rooms, activeRoomId } = useRooms();

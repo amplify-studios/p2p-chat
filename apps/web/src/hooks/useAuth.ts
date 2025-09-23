@@ -4,9 +4,11 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useDB } from '@/hooks/useDB';
 import { CredentialsType } from '@chat/core';
+import { generateAESKey } from '@chat/crypto';
 
-export function useAuth(redirectIfNoUser: boolean = true) {
+export function useAuth() {
   const [user, setUser] = useState<CredentialsType | null>(null);
+  const [key, setKey] = useState<Uint8Array | null>(null);
   const db = useDB();
   const router = useRouter();
 
@@ -20,7 +22,7 @@ export function useAuth(redirectIfNoUser: boolean = true) {
       if (cancelled) return;
 
       if (!userCollection || userCollection.length === 0) {
-        if (redirectIfNoUser) router.push('/login');
+        router.push('/login');
         setUser(null);
         return;
       }
@@ -28,10 +30,21 @@ export function useAuth(redirectIfNoUser: boolean = true) {
       setUser(userCollection[0]);
     })();
 
+    if(!user) return;
+    const pass = sessionStorage.getItem(user?.username);
+    if(!pass) {
+      router.push('/login');
+      setKey(null);
+      return;
+    }
+
+    const aesKey = generateAESKey(new TextEncoder().encode(pass));
+    setKey(aesKey);
+
     return () => {
       cancelled = true;
     };
-  }, [db, router, redirectIfNoUser]);
+  }, [db, router]);
 
-  return user;
+  return { user, key };
 }
