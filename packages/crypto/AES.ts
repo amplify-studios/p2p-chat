@@ -5,6 +5,10 @@ export function generateAESKey(computed_secret: Uint8Array): Uint8Array {
 }
 
 export function AESencrypt(key: Uint8Array, message: string): {encryptedMessage: string, authTag: string, iv: string} {
+  if(!key) {
+    console.error("No key provided");
+  }
+
   const iv = crypto.randomBytes(12);
   const cipher = crypto.createCipheriv("aes-256-gcm", key, iv);
   let encryptedMessage = cipher.update(message, "utf8", "hex");

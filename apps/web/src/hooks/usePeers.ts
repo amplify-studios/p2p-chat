@@ -29,7 +29,7 @@ export function usePeers() {
         };
 
         client.on("peers", handlePeers);
-        client.requestPeers();
+        client.requestPeers(); // NOTE: May be unecessary
 
         return () => {
           client.off("peers", handlePeers);

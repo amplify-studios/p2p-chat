@@ -7,13 +7,15 @@ import { Button } from '@/components/ui/button';
 import PasswordField from '@/components/local/PasswordField';
 import { useDB } from '@/hooks/useDB';
 import Loading from '@/components/local/Loading';
-import { createECDHkey, generateBase58Id, hash } from '@chat/crypto';
+import { EncryptedCredentialsType, createECDHkey, decryptCredentialsType, encryptInviteType, generateAESKey, generateBase58Id, hash } from '@chat/crypto';
 import { useAuth } from '@/hooks/useAuth';
 import { initSignalingClient } from '@/lib/signalingClient';
 import { SignalingClient } from '@chat/sockets';
+import { CredentialsType } from '@chat/core';
+import { PASSWORD_KEY } from '@/lib/storage';
 
-const validateForm = (username: string, password: string): string | null => {
-  if (!username.trim()) return "Provide a username";
+const validateForm = (username: string, password: string, requireUsername: boolean): string | null => {
+  if (requireUsername && !username.trim()) return "Provide a username";
   if (!password.trim()) return "Provide a password";
   if (password.trim().length < 8) return "Provide a stronger password";
   return null;
@@ -24,80 +26,121 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, encryptedUser } = useAuth();
+  const { db, putEncr } = useDB();
 
-  const db = useDB();
+  const [existingUser, setExistingUser] = useState<null | typeof user | typeof encryptedUser>(null);
 
   useEffect(() => {
-    if(user) {
-      router.push("/");
-      return;
+    if (!encryptedUser) return;
+
+    const storedPass = sessionStorage.getItem(PASSWORD_KEY);
+    if (storedPass) {
+      router.push('/');
+    } else {
+      setExistingUser(encryptedUser);
     }
-  }, [user, router]);
+  }, [encryptedUser, router]);
 
   if (!db) return <Loading />;
 
   const handleLogin = async () => {
     setError("");
-
-    const validationError = validateForm(username, password);
+    const requireUsername = !existingUser;
+    const validationError = validateForm(username, password, requireUsername);
     if (validationError) {
       setError(validationError);
       return;
     }
 
-    if (!user) {
+    if (!existingUser) {
+      // --- New user ---
       const id = generateBase58Id(8);
       const keys = createECDHkey();
-      await db.put("user", {
+
+      const user: CredentialsType = {
         userId: id,
-        public: keys.getPublicKey(),
-        private: keys.getPrivateKey(),
+        public: keys.getPublicKey().toString("hex"),
+        private: keys.getPrivateKey().toString("hex"),
         username,
-      });
-      const client = new SignalingClient(
-        id,
-        username,
-        keys.getPublicKey().toString()
-      );
-      initSignalingClient(client); // Only instance of the class
+      };
+      const hashedPass = hash(password);
+      sessionStorage.setItem(PASSWORD_KEY, hashedPass);
 
+      const encr = await putEncr("user", user, generateAESKey(new TextEncoder().encode(hashedPass)));
+      if (!encr) {
+        setError("Failed to store credentials");
+        return;
+      }
+
+      const client = new SignalingClient(id, username, user.public);
+      initSignalingClient(client);
       await client.connect("ws://localhost:8080");
-    } 
+    } else {
+      // --- Existing user unlock ---
+      const storedHash = sessionStorage.getItem(PASSWORD_KEY);
+      if (storedHash && storedHash !== hash(password)) {
+        setError("Incorrect password");
+        return;
+      }
 
-    sessionStorage.setItem(username, hash(password));
+      const aesKey = generateAESKey(new TextEncoder().encode(hash(password)));
+      let decrUser: CredentialsType;
+
+      try{
+        decrUser = decryptCredentialsType(existingUser as EncryptedCredentialsType, aesKey);
+      } catch(err: unknown) {
+        setError("Incorrect password");
+        return;
+      }
+      sessionStorage.setItem(PASSWORD_KEY, hash(password));
+      setUsername(decrUser.username);
+
+      const client = new SignalingClient(
+        decrUser.userId,
+        decrUser.username,
+        decrUser.public
+      );
+      initSignalingClient(client);
+      await client.connect("ws://localhost:8080");
+    }
+
     router.push("/");
   };
+
+  console.log(existingUser);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-background">
       <div className="bg-card p-8 rounded-lg shadow-md w-full max-w-sm">
         <h1 className="text-2xl font-bold mb-6 text-center text-foreground">
-          Login
+          {existingUser ? "Unlock" : "Login"}
         </h1>
 
         {error && <p className="text-destructive mb-4">{error}</p>}
 
-        <Input
-          type="text"
-          placeholder="Username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          className="mb-4"
-        />
+        {!existingUser && (
+          <Input
+            type="text"
+            placeholder="Username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            className="mb-4"
+          />
+        )}
 
         <PasswordField
           id="password"
           name="password"
           placeholder="Password"
           value={password}
-          showStrength={true}
+          showStrength={!existingUser}
           onChange={(e) => setPassword(e.target.value)}
           className="mb-4"
         />
 
         <Button onClick={handleLogin} className="w-full">
-          Login
+          {existingUser ? "Unlock" : "Login"}
         </Button>
       </div>
     </div>

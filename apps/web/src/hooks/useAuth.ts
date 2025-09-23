@@ -4,12 +4,14 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useDB } from '@/hooks/useDB';
 import { CredentialsType } from '@chat/core';
-import { generateAESKey } from '@chat/crypto';
+import { decryptCredentialsType, EncryptedCredentialsType, generateAESKey } from '@chat/crypto';
+import { PASSWORD_KEY } from '@/lib/storage';
 
 export function useAuth() {
   const [user, setUser] = useState<CredentialsType | null>(null);
+  const [encryptedUser, setEncryptedUser] = useState<EncryptedCredentialsType | null>(null);
   const [key, setKey] = useState<Uint8Array | null>(null);
-  const db = useDB();
+  const { db } = useDB();
   const router = useRouter();
 
   useEffect(() => {
@@ -18,33 +20,55 @@ export function useAuth() {
     let cancelled = false;
 
     (async () => {
-      const userCollection = await db.getAll('user');
+      const users = await db.getAll('user');
       if (cancelled) return;
 
-      if (!userCollection || userCollection.length === 0) {
-        router.push('/login');
+      if (!users || users.length === 0) {
         setUser(null);
+        setEncryptedUser(null);
+        setKey(null);
+        router.push('/login');
         return;
       }
 
-      setUser(userCollection[0]);
+      const currentUser = users[0];
+      setEncryptedUser(currentUser);
+
+      const storedHash = sessionStorage.getItem(PASSWORD_KEY);
+      if (!storedHash) {
+        // Unlock mode: user exists but no password in sessionStorage
+        setUser(null);
+        setKey(null);
+        router.push('/login');
+        return;
+      }
+
+      const aesKey = generateAESKey(new TextEncoder().encode(storedHash));
+      if (!aesKey) {
+        setUser(null);
+        setKey(null);
+        router.push('/login');
+        return;
+      }
+
+      const decrypted = decryptCredentialsType(currentUser, aesKey);
+      if (!decrypted) {
+        setUser(null);
+        setKey(aesKey);
+        router.push('/login');
+        return;
+      }
+
+      if (!cancelled) {
+        setUser(decrypted);
+        setKey(aesKey);
+      }
     })();
-
-    if(!user) return;
-    const pass = sessionStorage.getItem(user?.username);
-    if(!pass) {
-      router.push('/login');
-      setKey(null);
-      return;
-    }
-
-    const aesKey = generateAESKey(new TextEncoder().encode(pass));
-    setKey(aesKey);
 
     return () => {
       cancelled = true;
     };
   }, [db, router]);
 
-  return { user, key };
+  return { user, encryptedUser, key };
 }

@@ -21,8 +21,8 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ children }: SidebarProps) {
-  const { user } = useAuth();
-  const db = useDB();
+  const { user, key } = useAuth();
+  const { db, putEncr } = useDB();
   const router = useRouter();
   const { rooms, activeRoomId } = useRooms();
   const { client } = useClient(); // NOTE: used to set status to online immediately
@@ -33,16 +33,16 @@ export default function Sidebar({ children }: SidebarProps) {
     if (!client || !db || !user) return;
 
     const handleQrAck = async (msg: QrAckMessage) => {
-      console.log("QR ACK: ", msg);
+      if(!key) return;
 
       const room = { 
         ...msg.room,
         roomId: generateBase58Id(),
       } as RoomType;
 
-      await db.put("rooms", room);
-      for (const key of room.keys) {
-        await db.put("credentials", key);
+      await putEncr("rooms", room, key);
+      for (const k of room.keys) {
+        await putEncr("credentials", k, key);
       }
       refreshRooms();
 

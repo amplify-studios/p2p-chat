@@ -6,7 +6,7 @@ import EmptyState from "@/components/local/EmptyState";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function Invites() {
-  const { user } = useAuth();
+  useAuth();
   const { invites: currentInvites, acceptInvite, declineInvite } = useInvites();
 
   if (!currentInvites.length) {

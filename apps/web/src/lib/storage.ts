@@ -1,34 +1,37 @@
-import { MessageType, CredentialsType, RoomType, InviteType, BlockType } from '@chat/core';
+import { EncryptedBlockType, EncryptedCredentialsType, EncryptedInviteType, EncryptedMessageType, EncryptedRoomType } from '@chat/crypto';
 import { openDB, DBSchema, IDBPDatabase } from 'idb';
 
 const DB_NAME = "my-database";
-const DB_VERSION = 7;
+const DB_VERSION = 8;
 const BACKUP_FILE = "p2p-chat-backup.json";
+export const PASSWORD_KEY = "vergina";
+
+export type Collection = 'messages' | 'credentials' | 'user' | 'rooms' | 'invites' | 'blocks';
 
 interface MyDB extends DBSchema {
   messages: {
     key: number;
-    value: MessageType;
+    value: EncryptedMessageType;
   };
   user: {
     key: number;
-    value: CredentialsType;
+    value: EncryptedCredentialsType;
   }
   credentials: {
     key: string;
-    value: CredentialsType;
+    value: EncryptedCredentialsType;
   };
   rooms: {
     key: string;
-    value: RoomType;
+    value: EncryptedRoomType;
   };
   invites: {
     key: string;
-    value: InviteType;
+    value: EncryptedInviteType;
   }
   blocks: {
     key: number;
-    value: BlockType;
+    value: EncryptedBlockType;
   }
 }
 
@@ -51,12 +54,12 @@ function getDB() {
 }
 
 type Backup = {
-  messages: MessageType[];
-  credentials: CredentialsType[];
-  user: CredentialsType[];
-  rooms: RoomType[];
-  invites: InviteType[];
-  blocks: BlockType[]
+  messages: EncryptedMessageType[];
+  credentials: EncryptedCredentialsType[];
+  user: EncryptedCredentialsType[];
+  rooms: EncryptedRoomType[];
+  invites: EncryptedInviteType[];
+  blocks: EncryptedBlockType[]
 };
 
 async function backupDB() {

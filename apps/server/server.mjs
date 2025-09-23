@@ -40,6 +40,7 @@ wss.on("connection", (ws) => {
       case "invite": {
         const target = clients.get(data.target);
         if (target) {
+          console.log("INVITE");
           target.ws.send(JSON.stringify({
             type: "invite",
             from: clientId,
