@@ -16,6 +16,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cookies-next": "^6.1.0",
+    "futoin-hkdf": "^1.5.3",
     "idb": "^8.0.3",
     "lucide-react": "^0.544.0",
     "next": "15.5.3",
