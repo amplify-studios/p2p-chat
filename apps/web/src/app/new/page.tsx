@@ -7,46 +7,97 @@ import { Button } from '@/components/ui/button';
 import { useDB } from '@/hooks/useDB';
 import Loading from '@/components/local/Loading';
 import { generateBase58Id } from '@chat/crypto';
-import { CredentialsType, RoomType } from '@chat/core';
+import {
+  CredentialsType,
+  decodePayload,
+  encodePayload,
+  RoomType,
+} from '@chat/core';
 import { useAuth } from '@/hooks/useAuth';
 import { getSignalingClient } from '@/lib/signalingClient';
-import { InviteMessage } from '@chat/sockets';
+import { InviteMessage, QrAckMessage } from '@chat/sockets';
 import { parseBytes, refreshRooms } from '@/lib/utils';
 import { usePeers } from '@/hooks/usePeers';
+import { QRCodeCanvas } from 'qrcode.react';
+import useClient from '@/hooks/useClient';
+import { decode } from 'punycode';
 
 export default function NewRoom() {
   const user = useAuth(true);
   const db = useDB();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const {peers, loading} = usePeers();
+  const { peers, loading } = usePeers();
+  const { client } = useClient();
 
   const [name, setName] = useState('');
   const [type, setType] = useState<'single' | 'group'>('single');
-  // const [keys, setKeys] = useState<CredentialsType[]>([]);
   const [otherUserId, setOtherUserId] = useState('');
   const [error, setError] = useState('');
+  const [qrValue, setQrValue] = useState<string | null>(null);
 
-  // Pre-fill otherUserId if query param is present
   useEffect(() => {
-    const prefillId = searchParams.get('userId');
+    if (!client || !db || !user) return;
+
+    const prefillId = searchParams.get("userId");
     if (prefillId) {
       setOtherUserId(prefillId);
     }
-  }, [searchParams]);
 
-  const autoaccept = searchParams.get("autoaccept") === "true";
+    const handleQrInvite = async () => {
+      const qrParam = searchParams.get("qr");
+      if (!qrParam) return;
 
-  if (!user || !db) return <Loading />;
+      try {
+        const decoded = decodePayload(qrParam);
+
+        const creds: CredentialsType = {
+          userId: decoded.userId,
+          username: decoded.username,
+          public: decoded.public,
+        };
+
+        const room: RoomType = {
+          roomId: generateBase58Id(),
+          name: decoded.roomName,
+          type: decoded.type,
+          keys: [creds],
+        };
+
+        await db.put("rooms", room);
+        await db.put("credentials", creds);
+        refreshRooms();
+
+        client.sendQrAck(creds.userId, {
+          from: user.userId,
+          room: {
+            ...room,
+            name: (room.type == "single") ? user.username : room.name
+          } as RoomType,
+        } as QrAckMessage);
+
+        router.push(`/chat?id=${room.roomId}`);
+      } catch (err) {
+        console.error("Invalid QR invite:", err);
+        alert(`Invalid QR invite: ${err}`);
+      }
+    };
+
+    handleQrInvite();
+  }, [searchParams, db, user, router, client]);
+
+
+  if (!client || !user || !db) return <Loading />;
 
   const validate = () => {
     if (type === 'group' && !name.trim()) return 'Room name is required';
-    if (type === 'single' && !otherUserId.trim()) return 'User ID is required for single chat';
+    if (type === 'single' && !otherUserId.trim())
+      return 'User ID is required for single chat';
     return '';
   };
 
   const handleCreateRoom = async () => {
-    if(loading) return;
+    if (loading) return;
     const validationError = validate();
     if (validationError) {
       setError(validationError);
@@ -55,8 +106,8 @@ export default function NewRoom() {
     setError('');
 
     const roomId = generateBase58Id();
-    const peer = peers.find((p) => p.id == otherUserId);
-    if(!peer) return;
+    const peer = peers.find((p) => p.id === otherUserId);
+    if (!peer) return;
 
     const localRoomName = type === 'single' ? peer.username || otherUserId : name;
     const inviteRoomName = type === 'single' ? user.username || user.userId : name;
@@ -70,38 +121,41 @@ export default function NewRoom() {
 
     const signalingClient = await getSignalingClient();
 
-    if (type === 'single') {
-      const myId = user.userId;
-      const myPubkey = user.public;
-      if (!myPubkey) {
-        setError('Your public key is missing, cannot create room');
-        return;
-      }
+    const invite = {
+      from: user.userId,
+      room: { ...room, name: inviteRoomName },
+      target: otherUserId,
+    } as InviteMessage;
 
-      const invite = {
-        from: myId,
-        room: { ...room, name: inviteRoomName },
-        target: otherUserId,
-        autoaccept,
-      } as InviteMessage;
-
-      signalingClient.sendRoomInvite(otherUserId, invite);
-    }
+    signalingClient.sendRoomInvite(otherUserId, invite);
 
     await db.put('rooms', room);
     await db.put('credentials', {
       userId: peer.id,
       username: peer.username,
-      public: parseBytes(peer.pubkey)
+      public: parseBytes(peer.pubkey),
     } as CredentialsType);
 
     refreshRooms();
-
-    setName('');
-    setOtherUserId('');
-    setType('single');
-
     router.push(`/chat?id=${roomId}`);
+  };
+
+  const handleGenerateQR = async () => {
+    const roomId = generateBase58Id();
+    const roomName = type === 'single' ? user.username || user.userId : name;
+
+    const payload = {
+      roomId,
+      roomName,
+      type,
+      userId: user.userId,
+      username: user.username,
+      public: user.public,
+    };
+
+    const encoded = encodePayload(payload);
+    const url = `${window.location.origin}/new?qr=${encoded}`;
+    setQrValue(url);
   };
 
   return (
@@ -156,9 +210,20 @@ export default function NewRoom() {
           />
         )}
 
-        <Button onClick={handleCreateRoom} className="w-full">
+        <Button onClick={handleCreateRoom} className="w-full mb-2">
           Send Invite
         </Button>
+
+        <Button onClick={handleGenerateQR} className="w-full mb-2">
+          Generate QR Invite
+        </Button>
+
+        {qrValue && (
+          <div className="flex flex-col items-center mt-4 gap-2">
+            <p className="text-sm text-muted-foreground">Scan to join instantly:</p>
+            <QRCodeCanvas value={qrValue} size={400} />
+          </div>
+        )}
       </div>
     </div>
   );

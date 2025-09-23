@@ -1,4 +1,4 @@
-import { InviteMessage } from "./signaling";
+import { InviteMessage, QrAckMessage } from "./signaling";
 
 export type SignalHandler = (msg: any) => void;
 
@@ -75,6 +75,10 @@ export class SignalingClient {
 
   sendRoomInvite(target: string, payload: InviteMessage) {
     this.send({ type: "invite", target, payload });
+  }
+
+  sendQrAck(target: string, payload: QrAckMessage) {
+    this.send({ type: "qrack", target, payload });
   }
 
   onRoomInvite(handler: (invite: InviteMessage) => void) {
