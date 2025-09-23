@@ -25,3 +25,7 @@ export interface InviteType {
   from: string;
   room: RoomType;
 }
+
+export interface BlockType {
+  userId: string;
+}

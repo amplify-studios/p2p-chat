@@ -1,5 +1,6 @@
-import { MessageType, CredentialsType, RoomType, InviteType } from '@chat/core';
+import { MessageType, CredentialsType, RoomType, InviteType, BlockType } from '@chat/core';
 import { openDB, DBSchema, IDBPDatabase } from 'idb';
+import { Blocks } from 'lucide-react';
 
 const DB_NAME = "my-database";
 const DB_VERSION = 6;
@@ -26,6 +27,10 @@ interface MyDB extends DBSchema {
     key: string;
     value: InviteType;
   }
+  blocks: {
+    key: number;
+    value: BlockType;
+  }
 }
 
 let dbPromise: Promise<IDBPDatabase<MyDB>> | null = null;
@@ -39,6 +44,7 @@ function getDB() {
         db.createObjectStore('credentials', { keyPath: 'userId' });
         db.createObjectStore('rooms', { keyPath: 'roomId' });
         db.createObjectStore('invites', { keyPath: 'inviteId' });
+        db.createObjectStore('blocks', { autoIncrement: true })
       },
     });
   }
@@ -51,6 +57,7 @@ type Backup = {
   user: CredentialsType[];
   rooms: RoomType[];
   invites: InviteType[];
+  blocks: BlockType[]
 };
 
 async function backupDB() {
@@ -61,6 +68,7 @@ async function backupDB() {
     user: [],
     rooms: [],
     invites: [],
+    blocks: []
   };
 
   backup.messages = await db.getAll('messages');
@@ -68,6 +76,7 @@ async function backupDB() {
   backup.user = await db.getAll('user');
   backup.rooms = await db.getAll('rooms');
   backup.invites = await db.getAll('invites');
+  backup.blocks = await db.getAll('blocks');
 
   const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
@@ -82,13 +91,14 @@ async function backupDB() {
 async function eraseDB() {
   const db = await getDB();
 
-  const tx = db.transaction(['user', 'messages', 'credentials', 'rooms', 'invites'], 'readwrite');
+  const tx = db.transaction(['user', 'messages', 'credentials', 'rooms', 'invites', 'blocks'], 'readwrite');
   await Promise.all([
     tx.objectStore('messages').clear(),
     tx.objectStore('credentials').clear(),
     tx.objectStore('user').clear(),
     tx.objectStore('rooms').clear(),
     tx.objectStore('invites').clear(),
+    tx.objectStore('blocks').clear()
   ]);
 
   await tx.done;
@@ -108,7 +118,8 @@ async function restoreDB(jsonString: string) {
     !backup.credentials ||
     !backup.user ||
     !backup.rooms ||
-    !backup.invites
+    !backup.invites ||
+    !backup.blocks
   ) {
     console.error('Backup JSON is missing required fields');
     return;
@@ -117,7 +128,7 @@ async function restoreDB(jsonString: string) {
   const db = await getDB();
 
   const tx = db.transaction(
-    ['messages', 'credentials', 'user', 'rooms', 'invites'],
+    ['messages', 'credentials', 'user', 'rooms', 'invites', 'blocks'],
     'readwrite'
   );
 
@@ -127,6 +138,7 @@ async function restoreDB(jsonString: string) {
     tx.objectStore('user').clear(),
     tx.objectStore('rooms').clear(),
     tx.objectStore('invites').clear(),
+    tx.objectStore('blocks').clear()
   ]);
 
   for (const msg of backup.messages) {
@@ -147,6 +159,10 @@ async function restoreDB(jsonString: string) {
 
   for (const invite of backup.invites) {
     await tx.objectStore('invites').put(invite);
+  }
+
+  for (const block of backup.blocks) {
+    await tx.objectStore('blocks').put(block);
   }
 
   await tx.done;
