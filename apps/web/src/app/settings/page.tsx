@@ -10,6 +10,7 @@ import { useRouter } from 'next/navigation';
 import { refreshRooms } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { getSignalingClient } from '@/lib/signalingClient';
+import QrScanner from "@/components/local/QrScanner";
 
 export default function SettingsPage() {
   const user = useAuth(true);
@@ -122,6 +123,15 @@ export default function SettingsPage() {
           {eraseLoading ? 'Erasing...' : 'Erase'}
         </Button>
       </div>
+
+      { /*
+      <div className="flex items-center justify-between">
+        <QrScanner onScan={(data) => {
+          console.log("Scanned QR payload:", data);
+        }} />
+      </div>
+      */ }
+
 
       {toast && (
         <div className="p-2 bg-green-100 text-green-800 rounded text-sm">

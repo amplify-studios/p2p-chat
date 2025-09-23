@@ -18,7 +18,7 @@ export async function getSignalingClient(): Promise<SignalingClient> {
       creds[0].username,
       creds[0].public.toString()
     );
-    await singletonClient.connect("ws://localhost:8080");
+    await singletonClient.connect("ws://192.168.1.8:8080");
   }
   return singletonClient;
 }

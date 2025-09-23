@@ -1,14 +1,13 @@
-TODO: Key derivation crypto methods
 TODO: Sending messages
 TODO: Receiving messages
 TODO: Group chats
 TODO: Chat sync
-TODO: Chat invite (link + qr)
 TODO: Block user
 TODO: Delete connection
 TODO: Notifications system
 TODO: Room options
 TODO: Encrypting local data with key derived from password
+TODO: chat invite (link)
 DONE: IndexedDB
 DONE: ECDH crypto methods
 DONE: AES-256-GCM crypto methods
@@ -21,3 +20,5 @@ DONE: Receiving invites
 DONE: Restore data
 DONE: Delete chat
 DONE: leave signaling server when erasing data
+DONE: chat invide (qr)
+DONE: Key derivation crypto methods
