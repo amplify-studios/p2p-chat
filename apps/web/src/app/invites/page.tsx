@@ -9,12 +9,9 @@ export default function Invites() {
   useAuth(true);
   const { invites: currentInvites, acceptInvite, declineInvite } = useInvites();
 
-  console.log("Hello WOrld");
-  console.log("Invites: ", currentInvites);
   if (!currentInvites.length) {
     return <EmptyState msg="No pending invites" />
   }
-
 
   return (
     <div className="p-6 flex flex-col gap-4">

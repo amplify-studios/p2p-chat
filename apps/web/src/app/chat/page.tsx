@@ -35,7 +35,7 @@ export default function ChatPage() {
     if (!db || !roomId) return;
 
     if (!user?.private) return;
-    userECDH.setPrivateKey(user.private);
+    // userECDH.setPrivateKey(user.private);
 
     (async () => {
       const allMessages = await db.getAll('messages');

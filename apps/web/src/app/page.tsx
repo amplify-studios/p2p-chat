@@ -20,7 +20,7 @@ export default function Home() {
     if (!db) return;
     const fetchMessages = async () => {
       const allMessages = await db.getAll('messages');
-      const unread = allMessages?.filter((m: MessageType) => !m.read)?.length || 0;
+      const unread = allMessages?.filter((m: MessageType) => m.senderId != user?.userId && !m.read)?.length || 0;
       setNewMessagesCount(unread);
     };
     fetchMessages();
