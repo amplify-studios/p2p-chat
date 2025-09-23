@@ -26,7 +26,21 @@ export default function ChatOptionsPage() {
 
   const deleteChat = async () => {
     await db.delete('rooms', room.roomId);
-    const allMessages = await db.getAll("messages");
+
+    const tx = db.transaction("messages", "readwrite");
+    const store = tx.objectStore("messages");
+
+    let cursor = await store.openCursor();
+
+    while(cursor) {
+      const message = cursor.value;
+      if (message.roomId === roomId) {
+        await cursor.delete();
+      }
+      cursor = await cursor.continue();
+    }
+
+    await tx.done;
 
     router.push('/');
     refreshRooms();
