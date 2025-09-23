@@ -24,15 +24,17 @@ export default function ChatOptionsPage() {
   const room = rooms.find((room) => room.roomId === roomId);
   if (!room) return <EmptyState msg='Room not found' />;
 
-  const deleteRoom = async () => {
+  const deleteChat = async () => {
     await db.delete('rooms', room.roomId);
+    const allMessages = await db.getAll("messages");
+
     router.push('/');
     refreshRooms();
   };
   return (
     <div>
       <h1>Options for chat: {roomId}</h1>
-      <Button onClick={deleteRoom} className="w-20">
+      <Button onClick={deleteChat} className="w-20">
         Delete
       </Button>
     </div>
