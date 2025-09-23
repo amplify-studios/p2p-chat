@@ -15,6 +15,7 @@ import { refreshRooms } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import { RoomType } from '@chat/core';
 import { generateBase58Id } from '@chat/crypto';
+import { useQrAcks } from '@/hooks/useQrAcks';
 
 interface SidebarProps {
   children: ReactNode;
@@ -28,32 +29,7 @@ export default function Sidebar({ children }: SidebarProps) {
   const { client } = useClient(); // NOTE: used to set status to online immediately
   useInvites(); // NOTE: used to always check for invites
 
-  // TODO: export to a `useQrAcks` hook
-  useEffect(() => {
-    if (!client || !db || !user) return;
-
-    const handleQrAck = async (msg: QrAckMessage) => {
-      if(!key) return;
-
-      const room = { 
-        ...msg.room,
-        roomId: generateBase58Id(),
-      } as RoomType;
-
-      await putEncr("rooms", room, key);
-      for (const k of room.keys) {
-        await putEncr("credentials", k, key);
-      }
-      refreshRooms();
-
-      router.push(`/chat?id=${room.roomId}`);
-    };
-
-    client.on("qrack", handleQrAck);
-    return () => {
-      client.off("qrack", handleQrAck);
-    };
-  }, [client, db, user, router]);
+  useQrAcks({client});
 
   if (!rooms) return <Loading />;
 

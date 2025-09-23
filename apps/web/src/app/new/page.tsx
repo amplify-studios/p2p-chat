@@ -20,6 +20,7 @@ import { refreshRooms } from '@/lib/utils';
 import { usePeers } from '@/hooks/usePeers';
 import { QRCodeCanvas } from 'qrcode.react';
 import useClient from '@/hooks/useClient';
+import ResponsiveQr from '@/components/local/ResponsiveQr';
 
 export default function NewRoom() {
   const { user, key } = useAuth();
@@ -166,7 +167,8 @@ export default function NewRoom() {
     };
 
     const encoded = encodePayload(payload);
-    const url = `${window.location.origin}/new?qr=${encoded}`;
+    // const url = `${window.location.origin}/new?qr=${encoded}`;
+    const url = `http://192.168.1.8:3000/new?qr=${encoded}`;
     setQrValue(url);
   };
 
@@ -233,7 +235,7 @@ export default function NewRoom() {
         {qrValue && (
           <div className="flex flex-col items-center mt-4 gap-2">
             <p className="text-sm text-muted-foreground">Scan to join instantly:</p>
-            <QRCodeCanvas value={qrValue} size={400} />
+            <ResponsiveQr qrValue={qrValue} />
           </div>
         )}
       </div>
