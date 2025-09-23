@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { getSignalingClient } from "@/lib/signalingClient";
 import { useDB } from "@/hooks/useDB";
 import { generateBase58Id } from "@chat/crypto";
-import { InviteMessage } from "@chat/sockets";
+import { connectToPeer, InviteMessage, handleSignal } from "@chat/sockets";
 import { InviteType } from "@chat/core";
 import { refreshRooms } from "@/lib/utils";
 import { useAuth } from "./useAuth";
@@ -75,6 +75,25 @@ export function useInvites() {
     await db.delete("invites", invite.inviteId);
     setInvites((prev) => prev.filter((i) => i.inviteId !== invite.inviteId));
     refreshRooms();
+
+    // WebRTC flow
+    const client = await getSignalingClient();
+
+    await connectToPeer(
+      client,
+      invite.from, // inviter’s peer id
+      (msg) => {
+        console.log("Message from peer:", msg);
+        // TODO: push into message store
+      }
+    );
+
+    client.on("signal", (msg) => {
+      const { from, payload } = msg;
+      handleSignal(client, from, payload, (m) => {
+        console.log("Message from", from, ":", m);
+      });
+    });
   };
 
   const declineInvite = async (invite: InviteType) => {

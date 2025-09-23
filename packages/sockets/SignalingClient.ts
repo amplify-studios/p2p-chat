@@ -58,6 +58,10 @@ export class SignalingClient {
     for (const h of handlers) h(msg);
   }
 
+  sendSignal(target: string, signal: RTCSessionDescriptionInit | RTCIceCandidate) {
+    this.send({ type: "signal", target, payload: signal});
+  }
+
   sendOffer(target: string, offer: RTCSessionDescriptionInit) {
     this.send({ type: "offer", target, payload: offer });
   }
