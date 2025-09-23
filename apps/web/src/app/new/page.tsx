@@ -144,6 +144,7 @@ export default function NewRoom() {
     const roomId = generateBase58Id();
     const roomName = type === 'single' ? user.username || user.userId : name;
 
+    // TODO: send only userId and get other user info through the server
     const payload = {
       roomId,
       roomName,
