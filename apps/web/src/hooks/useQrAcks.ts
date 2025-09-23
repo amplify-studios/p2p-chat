@@ -41,6 +41,6 @@ export function useQrAcks({client}: props) {
     return () => {
       client.off("qrack", handleQrAck);
     };
-  }, [client, db, user, key, router]);
+  }, [client, db, putEncr, user, key, router]);
 }
 

@@ -24,7 +24,7 @@ export default function Home() {
       setNewMessagesCount(unread);
     };
     fetchMessages();
-  }, [db]);
+  }, [db, getAllDecr, key, user?.userId]);
 
   if (!user) return <Loading />;
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode, useEffect } from 'react';
+import { ReactNode } from 'react';
 import Link from 'next/link';
 import { Home, MessageSquareDot, Plus, Settings, Users } from 'lucide-react';
 import { useRooms } from '@/hooks/useRooms';
@@ -8,13 +8,7 @@ import Loading from './Loading';
 import SidebarItem from './SidebarItem';
 import useClient from '@/hooks/useClient';
 import { useInvites } from '@/hooks/useInvites';
-import { QrAckMessage } from '@chat/sockets';
 import { useAuth } from '@/hooks/useAuth';
-import { useDB } from '@/hooks/useDB';
-import { refreshRooms } from '@/lib/utils';
-import { useRouter } from 'next/navigation';
-import { RoomType } from '@chat/core';
-import { generateBase58Id } from '@chat/crypto';
 import { useQrAcks } from '@/hooks/useQrAcks';
 
 interface SidebarProps {
@@ -22,9 +16,7 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ children }: SidebarProps) {
-  const { user, key } = useAuth();
-  const { db, putEncr } = useDB();
-  const router = useRouter();
+  useAuth(); // NOTE: used to always check whether the user credentials are present
   const { rooms, activeRoomId } = useRooms();
   const { client } = useClient(); // NOTE: used to set status to online immediately
   useInvites(); // NOTE: used to always check for invites

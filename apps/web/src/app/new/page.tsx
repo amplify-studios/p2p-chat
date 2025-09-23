@@ -18,7 +18,6 @@ import { getSignalingClient } from '@/lib/signalingClient';
 import { InviteMessage, QrAckMessage } from '@chat/sockets';
 import { refreshRooms } from '@/lib/utils';
 import { usePeers } from '@/hooks/usePeers';
-import { QRCodeCanvas } from 'qrcode.react';
 import useClient from '@/hooks/useClient';
 import ResponsiveQr from '@/components/local/ResponsiveQr';
 
@@ -85,7 +84,7 @@ export default function NewRoom() {
     };
 
     handleQrInvite();
-  }, [searchParams, db, user, router, client]);
+  }, [searchParams, db, putEncr, key, user, router, client]);
 
 
   if (!client || !user || !db) return <Loading />;

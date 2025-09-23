@@ -70,7 +70,7 @@ export function useDB() {
     }
 
     if (encr) {
-      await db.put(collection, encr as any);
+      await db.put(collection, encr as EncryptedStorageType);
       return encr;
     }
     return null;

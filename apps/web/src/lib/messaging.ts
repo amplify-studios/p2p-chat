@@ -1,4 +1,4 @@
-import { createECDHkey, computeSecret, AESencrypt, AESdecrypt, getAESKeyThroughSharedSecret, generateAESKey } from '@chat/crypto';
+import { createECDHkey, computeSecret, AESencrypt, AESdecrypt, generateAESKey } from '@chat/crypto';
 import { MessagePackage } from '@chat/core';
 import crypto from 'crypto';
 

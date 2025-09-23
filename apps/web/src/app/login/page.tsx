@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import PasswordField from '@/components/local/PasswordField';
 import { useDB } from '@/hooks/useDB';
 import Loading from '@/components/local/Loading';
-import { EncryptedCredentialsType, createECDHkey, decryptCredentialsType, encryptInviteType, generateAESKey, generateBase58Id, hash } from '@chat/crypto';
+import { EncryptedCredentialsType, createECDHkey, decryptCredentialsType, generateAESKey, generateBase58Id, hash } from '@chat/crypto';
 import { useAuth } from '@/hooks/useAuth';
 import { initSignalingClient } from '@/lib/signalingClient';
 import { SignalingClient } from '@chat/sockets';
@@ -26,10 +26,10 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const router = useRouter();
-  const { user, encryptedUser } = useAuth();
+  const { encryptedUser } = useAuth();
   const { db, putEncr } = useDB();
 
-  const [existingUser, setExistingUser] = useState<null | typeof user | typeof encryptedUser>(null);
+  const [existingUser, setExistingUser] = useState<null | CredentialsType | EncryptedCredentialsType>(null);
 
   useEffect(() => {
     if (!encryptedUser) return;
@@ -90,6 +90,7 @@ export default function Login() {
       try{
         decrUser = decryptCredentialsType(existingUser as EncryptedCredentialsType, aesKey);
       } catch(err: unknown) {
+        console.error("Could not decrypt credentials: ", err)
         setError("Incorrect password");
         return;
       }

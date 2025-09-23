@@ -28,7 +28,7 @@ export function useRooms() {
     window.addEventListener('storage', handler);
 
     return () => window.removeEventListener('storage', handler);
-  }, [db, key]);
+  }, [db, getAllDecr, key]);
 
   return { rooms, activeRoomId };
 }

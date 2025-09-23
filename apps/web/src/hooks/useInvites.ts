@@ -58,7 +58,7 @@ export function useInvites() {
     setup();
 
     return () => cleanup?.();
-  }, [db, key]);
+  }, [db, getAllDecr, putEncr, key]);
 
   const acceptInvite = async (invite: InviteType) => {
     if (!db || !key) return;
