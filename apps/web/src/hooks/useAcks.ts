@@ -19,23 +19,14 @@ export function useAcks({ client }: Props) {
     if (!client || !db || !user || !key) return;
 
     const handleAck = async (msg: AckMessage) => {
-      const roomFromAck = msg.room;
+      const room = msg.room;
 
-      const storedCreds = (await getAllDecr("credentials", key)) as CredentialsType[];
-
-      const filledKeys = roomFromAck.keys.map((k) => {
-        if (k.public) return k;
-
-        const stored = storedCreds.find((c) => c.userId === k.userId);
-        return stored || k;
-      });
-
-      const room: RoomType = { ...roomFromAck, keys: filledKeys };
       console.log("Received Invite ACK from room: ", room);
 
       await putEncr("rooms", room, key);
 
-      for (const cred of filledKeys) {
+      for (const cred of room.keys) {
+        if(cred.userId === user.userId) continue;
         await putEncr("credentials", cred, key);
       }
 

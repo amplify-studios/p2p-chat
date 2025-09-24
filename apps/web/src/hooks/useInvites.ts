@@ -73,6 +73,11 @@ export function useInvites() {
           userId: user.userId,
           public: user.public,
           username: user.username
+        },
+        {
+          userId: invite.from,
+          public: invite.public,
+          username: invite.name
         }
       ],
     };
