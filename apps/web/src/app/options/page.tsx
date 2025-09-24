@@ -9,10 +9,11 @@ import EmptyState from '@/components/local/EmptyState';
 import { refreshRooms } from '@/lib/utils';
 import { BlockType } from '@chat/core';
 import { useAuth } from '@/hooks/useAuth';
+import { decryptMessageType } from '@chat/crypto';
 
 export default function ChatOptionsPage() {
-  const db = useDB();
-  const { user } = useAuth();
+  const { db, putEncr } = useDB();
+  const { user, key } = useAuth();
   const { rooms } = useRooms();
   const searchParams = useSearchParams();
   const roomId = searchParams?.get('id');
@@ -29,6 +30,8 @@ export default function ChatOptionsPage() {
     const confirmed = confirm('Are you sure you want to delete this room? This action cannot be undone.');
     if (!confirmed) return;
 
+    if(!key) return;
+
     await db.delete('rooms', room.roomId);
 
     const tx = db.transaction("messages", "readwrite");
@@ -37,7 +40,9 @@ export default function ChatOptionsPage() {
     let cursor = await store.openCursor();
 
     while(cursor) {
-      const message = cursor.value;
+      const encrMsg = cursor.value;
+      const message = decryptMessageType(encrMsg, key);
+
       if (message.roomId === roomId) {
         await cursor.delete();
       }
@@ -53,6 +58,8 @@ export default function ChatOptionsPage() {
   const block = async () => {
     const confirmed = confirm('Are you sure you want to block this user?');
     if (!confirmed) return;
+
+    if(!key) return;
     
     console.log(room.keys);
     const otherUser = room.keys.find((key) => key.username !== user?.username);
@@ -61,7 +68,7 @@ export default function ChatOptionsPage() {
     const userToBlock: BlockType = {
       userId: otherUser?.userId
     }
-    await db.put('blocks', userToBlock);
+    await putEncr('blocks', userToBlock, key);
     await db.delete('rooms', room.roomId);
     
     router.push('/');

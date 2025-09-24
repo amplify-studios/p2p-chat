@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { QrAckMessage, SignalingClient } from "@chat/sockets";
+import { AckMessage, SignalingClient } from "@chat/sockets";
 import { RoomType } from "@chat/core";
 import { useDB } from "./useDB";
 import { useAuth } from "./useAuth";
@@ -11,7 +11,7 @@ interface props {
   client: SignalingClient | null
 };
 
-export function useQrAcks({client}: props) {
+export function useAcks({client}: props) {
   const {db, putEncr } = useDB();
   const { user, key } = useAuth();
   const router = useRouter();
@@ -19,7 +19,7 @@ export function useQrAcks({client}: props) {
   useEffect(() => {
     if (!client || !db || !user) return;
 
-    const handleQrAck = async (msg: QrAckMessage) => {
+    const handleAck = async (msg: AckMessage) => {
       if (!key) return;
 
       const room = {
@@ -37,9 +37,9 @@ export function useQrAcks({client}: props) {
       router.push(`/chat?id=${room.roomId}`);
     };
 
-    client.on("qrack", handleQrAck);
+    client.on("ack", handleAck);
     return () => {
-      client.off("qrack", handleQrAck);
+      client.off("ack", handleAck);
     };
   }, [client, db, putEncr, user, key, router]);
 }

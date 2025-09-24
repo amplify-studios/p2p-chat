@@ -9,7 +9,7 @@ import SidebarItem from './SidebarItem';
 import useClient from '@/hooks/useClient';
 import { useInvites } from '@/hooks/useInvites';
 import { useAuth } from '@/hooks/useAuth';
-import { useQrAcks } from '@/hooks/useQrAcks';
+import { useAcks } from '@/hooks/useAcks';
 
 interface SidebarProps {
   children: ReactNode;
@@ -21,7 +21,7 @@ export default function Sidebar({ children }: SidebarProps) {
   const { client } = useClient(); // NOTE: used to set status to online immediately
   useInvites(); // NOTE: used to always check for invites
 
-  useQrAcks({client});
+  useAcks({client});
 
   if (!rooms) return <Loading />;
 

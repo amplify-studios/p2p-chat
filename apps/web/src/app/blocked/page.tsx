@@ -13,7 +13,7 @@ export default function BlocklistPage() {
 
     return (
         <div className="p-4 max-w-lg mx-auto">
-            <h1 className="text-2xl font-bold mb-4 text-center text-foreground">Blocks</h1>
+            <h1 className="text-2xl font-bold mb-4 text-center text-foreground">Blocked Users</h1>
             <ul className="space-y-2">
                 {currentBlocks.map((block) => (
                 <div

@@ -15,7 +15,7 @@ import {
 } from '@chat/core';
 import { useAuth } from '@/hooks/useAuth';
 import { getSignalingClient } from '@/lib/signalingClient';
-import { InviteMessage, QrAckMessage } from '@chat/sockets';
+import { InviteMessage, AckMessage } from '@chat/sockets';
 import { refreshRooms } from '@/lib/utils';
 import { usePeers } from '@/hooks/usePeers';
 import useClient from '@/hooks/useClient';
@@ -68,13 +68,13 @@ export default function NewRoom() {
         refreshRooms();
 
         // TODO: encrypt using the shared derived key @creatorkostas
-        client.sendQrAck(creds.userId, {
+        client.sendAck(creds.userId, {
           from: user.userId,
           room: {
             ...room,
             name: (room.type == "single") ? user.username : room.name
           } as RoomType,
-        } as QrAckMessage);
+        } as AckMessage);
 
         router.push(`/chat?id=${room.roomId}`);
       } catch (err) {

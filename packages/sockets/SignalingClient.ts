@@ -82,8 +82,8 @@ export class SignalingClient {
     this.send({ type: "invite", target, payload });
   }
 
-  sendQrAck(target: string, payload: QrAckMessage) {
-    this.send({ type: "qrack", target, payload });
+  sendAck(target: string, payload: QrAckMessage) {
+    this.send({ type: "ack", target, payload });
   }
 
   onRoomInvite(handler: (invite: InviteMessage) => void) {

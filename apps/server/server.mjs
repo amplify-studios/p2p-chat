@@ -49,11 +49,11 @@ wss.on("connection", (ws) => {
         break;
       }
 
-      case "qrack": {
+      case "ack": {
         const target = clients.get(data.target);
         if(target) {
           target.ws.send(JSON.stringify({
-            type: "qrack",
+            type: "ack",
             from: clientId,
             room: data.payload.room
           }));

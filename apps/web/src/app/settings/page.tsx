@@ -81,7 +81,7 @@ export default function SettingsPage() {
   };
 
   const handleBlocklist = () => {
-    router.push('/blocks');
+    router.push('/blocked');
   }
 
   return (

@@ -102,20 +102,14 @@ export function decryptInviteType(enc: EncryptedInviteType, key: Uint8Array): In
   };
 }
 
-export interface EncryptedBlockType {
-  userId: EncryptedField;
-}
+export interface EncryptedBlockType extends BlockType {};
 
 export function encryptBlockType(block: BlockType, key: Uint8Array): EncryptedBlockType {
-  return {
-    userId: encField(key, block.userId),
-  };
+  return block;
 }
 
 export function decryptBlockType(enc: EncryptedBlockType, key: Uint8Array): BlockType {
-  return {
-    userId: decField(key, enc.userId),
-  };
+  return enc;
 }
 
 export type EncryptedStorageType = EncryptedMessageType | EncryptedCredentialsType | EncryptedRoomType | EncryptedInviteType | EncryptedBlockType;

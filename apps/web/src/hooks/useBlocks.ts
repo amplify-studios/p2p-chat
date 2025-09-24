@@ -3,7 +3,7 @@ import { useDB } from "@/hooks/useDB";
 import { BlockType } from "@chat/core";
 
 export function useBlocks() {
-    const db = useDB();
+    const { db } = useDB();
     const [blocks, setBlocks] = useState<BlockType[]>([]);
 
     useEffect(() => {

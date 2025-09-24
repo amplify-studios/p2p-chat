@@ -47,8 +47,8 @@ export interface InviteMessage extends BaseMessage {
   target?: string; // optional when sending
 }
 
-export interface QrAckMessage extends BaseMessage {
-  type: "qrack";
+export interface AckMessage extends BaseMessage {
+  type: "ack";
   from: string;
   room: RoomType
 }
