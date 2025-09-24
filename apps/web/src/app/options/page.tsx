@@ -2,21 +2,20 @@
 
 import { useDB } from '@/hooks/useDB';
 import Loading from '@/components/local/Loading';
-import { useAuth } from '@/hooks/useAuth';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useRooms } from '@/hooks/useRooms';
 import { Button } from '@/components/ui/button';
 import EmptyState from '@/components/local/EmptyState';
 import { refreshRooms } from '@/lib/utils';
+import { BlockType } from '@chat/core';
 
 export default function ChatOptionsPage() {
   const db = useDB();
-  useAuth(true);
   const { rooms } = useRooms();
   const searchParams = useSearchParams();
   const roomId = searchParams?.get('id');
   const router = useRouter();
-  
+
   if (!db || !rooms) return <Loading />;
 
   if (!roomId) return <EmptyState msg='No room selected' />;
@@ -52,22 +51,36 @@ export default function ChatOptionsPage() {
   const block = async () => {
     const confirmed = confirm('Are you sure you want to block this user?');
     if (!confirmed) return;
-
     
+    //console.log(room.keys);
 
-    console.log("User blocked");
+    const userToBlock: BlockType = {
+      userId: room.name
+    }
+    await db.put('blocks', userToBlock);
+    await db.delete('rooms', room.roomId);
+    
     router.push('/');
+    refreshRooms()
   }
 
   return (
-    <div className='flex flex-col gap-2 items-start'>
-      <h1>Options for chat: {roomId}</h1>
-      <Button onClick={deleteChat} className="w-20">
-        Delete
-      </Button>
-      <Button onClick={block} className="w-30">
-        Block this user
-      </Button>
+    <div className="p-4 max-w-lg mx-auto">
+      <h1 className="text-2xl font-bold mb-4 text-center text-foreground">Options</h1>
+      <ul className="space-y-2">
+          <div className="flex flex-col items-center gap-5 justify-center">
+              <div>
+                  <Button onClick={deleteChat} className="w-20">
+                    Delete chat
+                  </Button>
+              </div>
+              <div>
+                  <Button onClick={block} className="w-30">
+                    Block this user
+                  </Button>
+              </div>
+          </div>
+      </ul>
     </div>
-  );
+);
 }

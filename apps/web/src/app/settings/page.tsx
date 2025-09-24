@@ -11,6 +11,7 @@ import { refreshRooms } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { getSignalingClient } from '@/lib/signalingClient';
 import QrScanner from "@/components/local/QrScanner";
+import SidebarItem from '@/components/local/SidebarItem';
 
 export default function SettingsPage() {
   const user = useAuth(true);
@@ -80,6 +81,10 @@ export default function SettingsPage() {
     }
   };
 
+  const handleBlocklist = () => {
+    router.push('/blocks');
+  }
+
   return (
     <div className="p-6 max-w-md mx-auto flex flex-col gap-6">
       <h1 className="text-2xl font-bold">Settings</h1>
@@ -121,6 +126,16 @@ export default function SettingsPage() {
           disabled={eraseLoading}
         >
           {eraseLoading ? 'Erasing...' : 'Erase'}
+        </Button>
+      </div>
+
+      <div className="flex items-center justify-between">
+        <Button
+          className='w-100'
+          variant="outline"
+          onClick={handleBlocklist}
+        >
+          Block list
         </Button>
       </div>
 
