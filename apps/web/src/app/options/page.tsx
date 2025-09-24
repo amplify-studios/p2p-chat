@@ -8,10 +8,11 @@ import { Button } from '@/components/ui/button';
 import EmptyState from '@/components/local/EmptyState';
 import { refreshRooms } from '@/lib/utils';
 import { BlockType } from '@chat/core';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function ChatOptionsPage() {
   const db = useDB();
-  useAuth();
+  const { user } = useAuth();
   const { rooms } = useRooms();
   const searchParams = useSearchParams();
   const roomId = searchParams?.get('id');
@@ -53,10 +54,12 @@ export default function ChatOptionsPage() {
     const confirmed = confirm('Are you sure you want to block this user?');
     if (!confirmed) return;
     
-    //console.log(room.keys);
+    console.log(room.keys);
+    const otherUser = room.keys.find((key) => key.username !== user?.username);
+    if (!otherUser) return;
 
     const userToBlock: BlockType = {
-      userId: room.name
+      userId: otherUser?.userId
     }
     await db.put('blocks', userToBlock);
     await db.delete('rooms', room.roomId);
