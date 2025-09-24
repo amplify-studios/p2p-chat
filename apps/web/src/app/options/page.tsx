@@ -29,8 +29,7 @@ export default function ChatOptionsPage() {
   const deleteChat = async () => {
     const confirmed = confirm('Are you sure you want to delete this room? This action cannot be undone.');
     if (!confirmed) return;
-
-    if(!key) return;
+    if (!key) return;
 
     await db.delete('rooms', room.roomId);
 
@@ -38,7 +37,6 @@ export default function ChatOptionsPage() {
     const store = tx.objectStore("messages");
 
     let cursor = await store.openCursor();
-
     while(cursor) {
       const encrMsg = cursor.value;
       const message = decryptMessageType(encrMsg, key);
@@ -55,43 +53,43 @@ export default function ChatOptionsPage() {
     refreshRooms();
   };
 
-  const block = async () => {
+  const blockUser = async () => {
     const confirmed = confirm('Are you sure you want to block this user?');
     if (!confirmed) return;
+    if (!key) return;
 
-    if(!key) return;
-    
-    console.log(room.keys);
-    const otherUser = room.keys.find((key) => key.username !== user?.username);
+    const otherUser = room.keys.find((k) => k.userId !== user?.userId);
     if (!otherUser) return;
 
-    const userToBlock: BlockType = {
-      userId: otherUser?.userId
-    }
+    const userToBlock: BlockType = { userId: otherUser.userId };
     await putEncr('blocks', userToBlock, key);
     await db.delete('rooms', room.roomId);
-    
+
     router.push('/');
-    refreshRooms()
-  }
+    refreshRooms();
+  };
 
   return (
-    <div className="p-4 max-w-lg mx-auto">
-      <h1 className="text-2xl font-bold mb-4 text-center text-foreground">Options</h1>
-      <ul className="space-y-2">
-          <div className="flex flex-col items-center gap-5 justify-center">
-              <div>
-                  <Button onClick={deleteChat} className="w-20">
-                    Delete chat
-                  </Button>
-              </div>
-              <div>
-                  <Button onClick={block} className="w-30">
-                    Block this user
-                  </Button>
-              </div>
-          </div>
-      </ul>
+    <div className="p-6 max-w-md mx-auto flex flex-col gap-6">
+      <h1 className="text-2xl font-bold text-center text-foreground">Chat Options</h1>
+
+      <div className="flex flex-col gap-4">
+        <Button
+          className="w-full"
+          variant="outline"
+          onClick={blockUser}
+        >
+          Block This User
+        </Button>
+
+        <Button
+        className="w-full"
+        variant="destructive"
+        onClick={deleteChat}
+        >
+        Delete Chat
+        </Button>
+      </div>
     </div>
-);
+  );
 }
