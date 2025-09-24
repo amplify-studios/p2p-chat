@@ -52,13 +52,20 @@ wss.on("connection", (ws) => {
       case "qrack": {
         const target = clients.get(data.target);
         if(target) {
-          console.log("QR ack sent");
           target.ws.send(JSON.stringify({
             type: "qrack",
             from: clientId,
             room: data.payload.room
           }));
         }
+        break;
+      }
+
+      case "peers": {
+        ws.send(JSON.stringify({
+          type: "peers",
+          peers: getPeerList()
+        }));
         break;
       }
 
@@ -74,14 +81,6 @@ wss.on("connection", (ws) => {
             payload: data.payload
           }));
         }
-        break;
-      }
-
-      case "peers": {
-        ws.send(JSON.stringify({
-          type: "peers",
-          peers: getPeerList()
-        }));
         break;
       }
 

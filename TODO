@@ -6,8 +6,10 @@ TODO: Block user
 TODO: Delete connection
 TODO: Notifications system
 TODO: Room options
-TODO: Encrypting local data with key derived from password
 TODO: chat invite (link)
+TODO: config
+TODO: scanning qr from within the app
+TODO: inviteAccepted signal to start the connection from both sides
 DONE: IndexedDB
 DONE: ECDH crypto methods
 DONE: AES-256-GCM crypto methods
@@ -23,3 +25,4 @@ DONE: leave signaling server when erasing data
 DONE: chat invide (qr)
 DONE: Key derivation crypto methods
 DONE: QR Scanner
+DONE: Encrypting local data with key derived from password

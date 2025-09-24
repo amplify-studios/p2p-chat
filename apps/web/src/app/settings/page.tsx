@@ -11,10 +11,9 @@ import { refreshRooms } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { getSignalingClient } from '@/lib/signalingClient';
 import QrScanner from "@/components/local/QrScanner";
-import SidebarItem from '@/components/local/SidebarItem';
 
 export default function SettingsPage() {
-  const user = useAuth(true);
+  const { user } = useAuth();
   const router = useRouter();
   const [backupLoading, setBackupLoading] = useState(false);
   const [eraseLoading, setEraseLoading] = useState(false);

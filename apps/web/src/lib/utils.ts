@@ -47,3 +47,4 @@ export function parseBytes(str: string): Uint8Array {
 
   return new Uint8Array(bytes);
 }
+

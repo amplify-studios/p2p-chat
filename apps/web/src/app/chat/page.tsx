@@ -22,8 +22,8 @@ import { AESdecrypt, AESencrypt } from '@chat/crypto';
 export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const msgId = useRef(0);
-  const db = useDB();
-  const user = useAuth(true);
+  const { db, getAllDecr, putEncr } = useDB();
+  const { user, key } = useAuth();
   const userECDH = createECDHkey();
   const searchParams = useSearchParams();
   const roomId = searchParams?.get('id');
@@ -38,7 +38,9 @@ export default function ChatPage() {
     // userECDH.setPrivateKey(user.private);
 
     (async () => {
-      const allMessages = await db.getAll('messages');
+      if(!key) return;
+
+      const allMessages = await getAllDecr('messages', key) as MessageType[]; // NOTE: maybe should change to the shared derived key
       const roomMessages = allMessages
         .filter((m) => m.roomId === roomId)
         .sort((a, b) => a.timestamp - b.timestamp)
@@ -62,7 +64,8 @@ export default function ChatPage() {
     setMessages((prev) => [...prev, { id: msgId.current, text, sender }]);
   };
 
-  const sendMessage = (text: string) => {
+  const sendMessage = async (text: string) => {
+    if(!key) return;
     logMessage(text, 'me');
 
     // TODO: Get the other user's key
@@ -79,12 +82,12 @@ export default function ChatPage() {
     logMessage(returnDecryptedMessage( userECDH , sendData), 'other');
 
     // Save locally
-    db.put('messages', {
+    await putEncr('messages', {
       roomId,
       senderId: user.userId,
       message: text,
       timestamp: Date.now()
-    } as MessageType);
+    } as MessageType, key);
   };
 
   return (

@@ -9,22 +9,22 @@ import { useDB } from '@/hooks/useDB';
 import { MessageType } from '@chat/core';
 
 export default function Home() {
-  const user = useAuth(true);
-  const db = useDB();
+  const { user, key } = useAuth();
+  const { db, getAllDecr } = useDB();
   const { invites } = useInvites();
   const { peers, loading: peersLoading } = usePeers();
 
   const [newMessagesCount, setNewMessagesCount] = useState(0);
 
   useEffect(() => {
-    if (!db) return;
+    if (!db || !key) return;
     const fetchMessages = async () => {
-      const allMessages = await db.getAll('messages');
+      const allMessages = await getAllDecr('messages', key) as MessageType[];
       const unread = allMessages?.filter((m: MessageType) => m.senderId != user?.userId && !m.read)?.length || 0;
       setNewMessagesCount(unread);
     };
     fetchMessages();
-  }, [db]);
+  }, [db, getAllDecr, key, user?.userId]);
 
   if (!user) return <Loading />;
 

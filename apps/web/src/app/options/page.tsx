@@ -11,6 +11,7 @@ import { BlockType } from '@chat/core';
 
 export default function ChatOptionsPage() {
   const db = useDB();
+  useAuth();
   const { rooms } = useRooms();
   const searchParams = useSearchParams();
   const roomId = searchParams?.get('id');

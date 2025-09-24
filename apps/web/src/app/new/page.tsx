@@ -16,15 +16,14 @@ import {
 import { useAuth } from '@/hooks/useAuth';
 import { getSignalingClient } from '@/lib/signalingClient';
 import { InviteMessage, QrAckMessage } from '@chat/sockets';
-import { parseBytes, refreshRooms } from '@/lib/utils';
+import { refreshRooms } from '@/lib/utils';
 import { usePeers } from '@/hooks/usePeers';
-import { QRCodeCanvas } from 'qrcode.react';
 import useClient from '@/hooks/useClient';
-import { decode } from 'punycode';
+import ResponsiveQr from '@/components/local/ResponsiveQr';
 
 export default function NewRoom() {
-  const user = useAuth(true);
-  const db = useDB();
+  const { user, key } = useAuth();
+  const { db, putEncr }  = useDB();
   const router = useRouter();
   const searchParams = useSearchParams();
   const { peers, loading } = usePeers();
@@ -37,7 +36,7 @@ export default function NewRoom() {
   const [qrValue, setQrValue] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!client || !db || !user) return;
+    if (!client || !db || !user || !key) return;
 
     const prefillId = searchParams.get("userId");
     if (prefillId) {
@@ -64,10 +63,11 @@ export default function NewRoom() {
           keys: [creds],
         };
 
-        await db.put("rooms", room);
-        await db.put("credentials", creds);
+        await putEncr("rooms", room, key);
+        await putEncr("credentials", creds, key);
         refreshRooms();
 
+        // TODO: encrypt using the shared derived key @creatorkostas
         client.sendQrAck(creds.userId, {
           from: user.userId,
           room: {
@@ -84,7 +84,7 @@ export default function NewRoom() {
     };
 
     handleQrInvite();
-  }, [searchParams, db, user, router, client]);
+  }, [searchParams, db, putEncr, key, user, router, client]);
 
 
   if (!client || !user || !db) return <Loading />;
@@ -98,6 +98,8 @@ export default function NewRoom() {
 
   const handleCreateRoom = async () => {
     if (loading) return;
+    if(!key) return;
+
     const validationError = validate();
     if (validationError) {
       setError(validationError);
@@ -107,7 +109,10 @@ export default function NewRoom() {
 
     const roomId = generateBase58Id();
     const peer = peers.find((p) => p.id === otherUserId);
-    if (!peer) return;
+    if (!peer) {
+      console.error(`Peer ${otherUserId} not found`)
+      return;
+    }
 
     const localRoomName = type === 'single' ? peer.username || otherUserId : name;
     const inviteRoomName = type === 'single' ? user.username || user.userId : name;
@@ -116,10 +121,15 @@ export default function NewRoom() {
       roomId,
       name: localRoomName,
       type,
-      keys: [user],
+      keys: [
+        user, 
+        {
+          userId: peer.id,
+          username: peer.username,
+          public: peer.pubkey
+        } as CredentialsType
+      ],
     };
-
-    const signalingClient = await getSignalingClient();
 
     const invite = {
       from: user.userId,
@@ -127,14 +137,15 @@ export default function NewRoom() {
       target: otherUserId,
     } as InviteMessage;
 
+    const signalingClient = await getSignalingClient();
     signalingClient.sendRoomInvite(otherUserId, invite);
 
-    await db.put('rooms', room);
-    await db.put('credentials', {
+    await putEncr('rooms', room, key);
+    await putEncr('credentials', {
       userId: peer.id,
       username: peer.username,
-      public: parseBytes(peer.pubkey),
-    } as CredentialsType);
+      public: peer.pubkey,
+    } as CredentialsType, key);
 
     refreshRooms();
     router.push(`/chat?id=${roomId}`);
@@ -144,18 +155,19 @@ export default function NewRoom() {
     const roomId = generateBase58Id();
     const roomName = type === 'single' ? user.username || user.userId : name;
 
-    // TODO: send only userId and get other user info through the server
     const payload = {
       roomId,
       roomName,
       type,
+      // TODO: send only userId and get other user info through the server
       userId: user.userId,
       username: user.username,
       public: user.public,
     };
 
     const encoded = encodePayload(payload);
-    const url = `${window.location.origin}/new?qr=${encoded}`;
+    // const url = `${window.location.origin}/new?qr=${encoded}`;
+    const url = `http://192.168.1.8:3000/new?qr=${encoded}`;
     setQrValue(url);
   };
 
@@ -222,7 +234,7 @@ export default function NewRoom() {
         {qrValue && (
           <div className="flex flex-col items-center mt-4 gap-2">
             <p className="text-sm text-muted-foreground">Scan to join instantly:</p>
-            <QRCodeCanvas value={qrValue} size={400} />
+            <ResponsiveQr qrValue={qrValue} />
           </div>
         )}
       </div>

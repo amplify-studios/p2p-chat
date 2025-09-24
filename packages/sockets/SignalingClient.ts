@@ -34,6 +34,7 @@ export class SignalingClient {
       this.ws.onmessage = (event) => {
         try {
           const msg = JSON.parse(event.data);
+          console.log(msg);
           this.dispatch(msg.type, msg);
         } catch (e) {
           console.error("Invalid signaling message", event.data);
@@ -55,6 +56,10 @@ export class SignalingClient {
   private dispatch(type: string, msg: any) {
     const handlers = this.handlers[type] || [];
     for (const h of handlers) h(msg);
+  }
+
+  sendSignal(target: string, signal: RTCSessionDescriptionInit | RTCIceCandidate) {
+    this.send({ type: "signal", target, payload: signal});
   }
 
   sendOffer(target: string, offer: RTCSessionDescriptionInit) {
