@@ -81,16 +81,16 @@ export function decryptRoomType(enc: EncryptedRoomType, key: Uint8Array): RoomTy
   };
 }
 
-export interface EncryptedInviteType extends Omit<InviteType, "from" | "room"> {
+export interface EncryptedInviteType extends Omit<InviteType, "from" | "name"> {
   from: EncryptedField;
-  room: EncryptedRoomType;
+  name: EncryptedField;
 }
 
 export function encryptInviteType(invite: InviteType, key: Uint8Array): EncryptedInviteType {
   return {
     ...invite,
     from: encField(key, invite.from),
-    room: encryptRoomType(invite.room, key),
+    name: encField(key, invite.name),
   };
 }
 
@@ -98,8 +98,8 @@ export function decryptInviteType(enc: EncryptedInviteType, key: Uint8Array): In
   return {
     ...enc,
     from: decField(key, enc.from),
-    room: decryptRoomType(enc.room, key),
-  };
+    name: decField(key, enc.name),
+  } as InviteType;
 }
 
 export interface EncryptedBlockType extends BlockType {};

@@ -33,7 +33,7 @@ wss.on("connection", (ws) => {
           message: "Joined signaling server successfully"
         }));
 
-        broadcastPeerList();
+        // broadcastPeerList();
         break;
       }
 
@@ -43,7 +43,9 @@ wss.on("connection", (ws) => {
           target.ws.send(JSON.stringify({
             type: "invite",
             from: clientId,
-            room: data.payload.room
+            name: data.payload.name,
+            roomType: data.payload.roomType,
+            pubkey: data.payload.pubkey
           }));
         }
         break;

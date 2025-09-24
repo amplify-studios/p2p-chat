@@ -22,7 +22,7 @@ export default function Invites() {
           className="p-4 bg-card rounded shadow flex justify-between items-center"
         >
           <div>
-            <p className="font-medium">{invite.room.name}</p>
+            <p className="font-medium">{invite.name}</p>
             <p className="text-sm text-gray-500">From: {invite.from}</p>
           </div>
           <div className="flex gap-2">

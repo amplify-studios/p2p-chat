@@ -23,7 +23,9 @@ export interface RoomType {
 export interface InviteType {
   inviteId: string;
   from: string; // encrypt
-  room: RoomType; // encrypt
+  name: string; // encrypt
+  public: string;
+  type: 'single' | 'group';
 }
 
 export interface BlockType {

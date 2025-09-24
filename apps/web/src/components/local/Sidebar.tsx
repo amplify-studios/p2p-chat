@@ -16,12 +16,11 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ children }: SidebarProps) {
-  useAuth(); // NOTE: used to always check whether the user credentials are present
-  const { rooms, activeRoomId } = useRooms();
   const { client } = useClient(); // NOTE: used to set status to online immediately
+  useAuth(); // NOTE: used to always check whether the user credentials are present
   useInvites(); // NOTE: used to always check for invites
-
-  useAcks({client});
+  useAcks({client}); // NOTE: Always check for ACKs
+  const { rooms, activeRoomId } = useRooms();
 
   if (!rooms) return <Loading />;
 

@@ -1,36 +1,42 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { AckMessage, SignalingClient } from "@chat/sockets";
-import { RoomType } from "@chat/core";
+import { CredentialsType, RoomType } from "@chat/core";
 import { useDB } from "./useDB";
 import { useAuth } from "./useAuth";
-import { generateBase58Id } from "@chat/crypto";
 import { refreshRooms } from "@/lib/utils";
 
-interface props {
-  client: SignalingClient | null
-};
+interface Props {
+  client: SignalingClient | null;
+}
 
-export function useAcks({client}: props) {
-  const {db, putEncr } = useDB();
+export function useAcks({ client }: Props) {
+  const { db, putEncr, getAllDecr } = useDB();
   const { user, key } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!client || !db || !user) return;
+    if (!client || !db || !user || !key) return;
 
     const handleAck = async (msg: AckMessage) => {
-      if (!key) return;
+      const roomFromAck = msg.room;
 
-      const room = {
-        ...msg.room,
-        roomId: generateBase58Id(),
-      } as RoomType;
+      const storedCreds = (await getAllDecr("credentials", key)) as CredentialsType[];
+
+      const filledKeys = roomFromAck.keys.map((k) => {
+        if (k.public) return k;
+
+        const stored = storedCreds.find((c) => c.userId === k.userId);
+        return stored || k;
+      });
+
+      const room: RoomType = { ...roomFromAck, keys: filledKeys };
+      console.log("Received Invite ACK from room: ", room);
 
       await putEncr("rooms", room, key);
 
-      for (const k of room.keys) {
-        await putEncr("credentials", k, key);
+      for (const cred of filledKeys) {
+        await putEncr("credentials", cred, key);
       }
 
       refreshRooms();
@@ -38,9 +44,6 @@ export function useAcks({client}: props) {
     };
 
     client.on("ack", handleAck);
-    return () => {
-      client.off("ack", handleAck);
-    };
-  }, [client, db, putEncr, user, key, router]);
+    return () => client.off("ack", handleAck);
+  }, [client, db, putEncr, getAllDecr, user, key, router]);
 }
-

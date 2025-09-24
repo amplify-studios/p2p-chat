@@ -43,13 +43,16 @@ export interface WelcomeMessage extends BaseMessage {
 export interface InviteMessage extends BaseMessage {
   type: "invite";
   from: string;
-  room: RoomType
+  name: string;
+  roomType: "single" | "group";
+  pubkey: string;
   target?: string; // optional when sending
 }
 
 export interface AckMessage extends BaseMessage {
   type: "ack";
   from: string;
+  to: string;
   room: RoomType
 }
 
