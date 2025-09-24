@@ -67,45 +67,45 @@ export default function Sidebar({ children }: SidebarProps) {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col bg-background overflow-auto">
-        {/* Mobile Top Scroll Nav */}
-        <nav className="md:hidden flex items-center border-b border-secondary sticky top-0 z-10 p-2">
-          <div className="flex-1 overflow-x-auto flex gap-2">
-            {rooms.map((room) => (
-              <Link
-                key={room.roomId}
-                href={`/chat?id=${room.roomId}`}
-                className={`flex-shrink-0 px-3 py-2 rounded whitespace-nowrap ${
-                  room.roomId === activeRoomId
-                    ? 'bg-secondary font-semibold'
-                    : 'hover:bg-secondary'
-                }`}
-              >
-                {room.name}
-              </Link>
-            ))}
+    <main className="flex-1 flex flex-col bg-background">
+      {/* Mobile Top Nav */}
+      <nav className="md:hidden flex items-center border-b border-secondary sticky top-0 z-10 bg-background p-2">
+        <div className="flex-1 overflow-x-auto flex gap-2">
+          {rooms.map((room) => (
             <Link
-              href="/new"
-              className="flex-shrink-0 px-3 py-2 rounded hover:bg-secondary flex items-center gap-1"
+              key={room.roomId}
+              href={`/chat?id=${room.roomId}`}
+              className={`flex-shrink-0 px-3 py-2 rounded whitespace-nowrap ${
+                room.roomId === activeRoomId
+                  ? 'bg-secondary font-semibold'
+                  : 'hover:bg-secondary'
+              }`}
             >
-              <Plus size={16} />
+              {room.name}
             </Link>
-          </div>
-
-          {/* Fixed right icons */}
-          <div className="flex gap-2 ml-2">
-            <SidebarItem href='/' type='small' icon={<Home size={16} />} />
-            <SidebarItem href='/invites' type='small' icon={<MessageSquareDot size={16} />} />
-            <SidebarItem href='/peers' type='small' icon={<Users size={16} />} />
-            <SidebarItem href='/settings' type='small' icon={<Settings size={16} />} />
-          </div>
-        </nav>
-
-        {/* Main scrollable content */}
-        <div className="flex-1 overflow-auto">
-          {children}
+          ))}
+          <Link
+            href="/new"
+            className="flex-shrink-0 px-3 py-2 rounded hover:bg-secondary flex items-center gap-1"
+          >
+            <Plus size={16} />
+          </Link>
         </div>
-      </main>
+
+        {/* Fixed right icons */}
+        <div className="flex gap-2 ml-2">
+          <SidebarItem href='/' type='small' icon={<Home size={16} />} />
+          <SidebarItem href='/invites' type='small' icon={<MessageSquareDot size={16} />} />
+          <SidebarItem href='/peers' type='small' icon={<Users size={16} />} />
+          <SidebarItem href='/settings' type='small' icon={<Settings size={16} />} />
+        </div>
+      </nav>
+
+      {/* Main scrollable content */}
+      <div className="flex-1 overflow-auto">
+        {children}
+      </div>
+    </main>
     </div>
   );
 }
