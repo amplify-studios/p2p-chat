@@ -2,12 +2,14 @@ TODO: Sending messages
 TODO: Receiving messages
 TODO: Group chats
 TODO: Chat sync
-TODO: Block user
 TODO: Delete connection
 TODO: Notifications system
 TODO: chat invite (link)
 TODO: config
-TODO: scanning qr from within the app
+TODO: QR Scanner
+TODO: Home page features
+TODO: proper 404 page
+TODO: robots.txt
 DONE: IndexedDB
 DONE: ECDH crypto methods
 DONE: AES-256-GCM crypto methods
@@ -22,6 +24,7 @@ DONE: Delete chat
 DONE: leave signaling server when erasing data
 DONE: chat invide (qr)
 DONE: Key derivation crypto methods
-DONE: QR Scanner
 DONE: Encrypting local data with key derived from password
 DONE: Room options
+DONE: Block user
+DONE: Friend list
