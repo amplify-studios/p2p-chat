@@ -76,7 +76,7 @@ export function usePeers() {
     };
 
     setup();
-  }, [key, getAllDecr, user]);
+  }, [key]);
 
   return { peers, friends, loading };
 }
