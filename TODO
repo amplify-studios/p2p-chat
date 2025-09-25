@@ -5,7 +5,6 @@ TODO: Chat sync
 TODO: Block user
 TODO: Delete connection
 TODO: Notifications system
-TODO: Room options
 TODO: chat invite (link)
 TODO: config
 TODO: scanning qr from within the app
@@ -25,3 +24,4 @@ DONE: chat invide (qr)
 DONE: Key derivation crypto methods
 DONE: QR Scanner
 DONE: Encrypting local data with key derived from password
+DONE: Room options

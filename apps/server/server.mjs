@@ -33,7 +33,7 @@ wss.on("connection", (ws) => {
           message: "Joined signaling server successfully"
         }));
 
-        // broadcastPeerList();
+        broadcastPeerList();
         break;
       }
 

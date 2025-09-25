@@ -4,10 +4,11 @@ import { usePeers } from "@/hooks/usePeers";
 import { useAuth } from "@/hooks/useAuth";
 import EmptyState from "@/components/local/EmptyState";
 import Link from "next/link";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 export default function Peers() {
   const { user } = useAuth();
-  const { peers, loading } = usePeers();
+  const { peers, friends, loading } = usePeers(); 
 
   if (loading) {
     return (
@@ -17,38 +18,78 @@ export default function Peers() {
     );
   }
 
-  if (!peers.length) {
-    return <EmptyState msg="No peers online" />;
-  }
-
   return (
     <div className="p-4 max-w-lg mx-auto">
-      <h1 className="text-2xl font-bold mb-4 text-center text-foreground">Online Peers</h1>
-      <ul className="space-y-2">
-        {peers.map((p) => {
-          const isMe = p.id === user?.userId;
+      <h1 className="text-2xl font-bold mb-4 text-center text-foreground">Peers</h1>
 
-          return (
-            <Link key={p.id} href={isMe ? "#" : `/new?userId=${p.id}`}>
-              <li
-                className={`mb-2 flex justify-between items-center p-3 bg-card rounded shadow transition ${
-                  isMe ? "border-2 border-primary" : "hover:bg-secondary"
-                }`}
-              >
-                <div>
-                  <p className="font-medium">
-                    {p.username || "Anonymous"} {isMe && <span className="text-xs text-blue-500 ml-2">(You)</span>}
-                  </p>
-                  <p className="text-sm text-gray-500">{p.id}</p>
-                </div>
-                <span className={`text-sm font-semibold ${isMe ? "text-blue-500" : "text-green-500"}`}>
-                  {isMe ? "● Me" : "● Online"}
-                </span>
-              </li>
-            </Link>
-          );
-        })}
-      </ul>
+      <Tabs defaultValue="all" className="w-full">
+        <TabsList className="grid grid-cols-2 w-full mb-4">
+          <TabsTrigger value="all">All Online</TabsTrigger>
+          <TabsTrigger value="friends">Friends</TabsTrigger>
+        </TabsList>
+
+        {/* All peers */}
+        <TabsContent value="all">
+          {peers.length === 0 ? (
+            <EmptyState msg="No peers online" />
+          ) : (
+            <ul className="space-y-2">
+              {peers.map((p) => {
+                const isMe = p.id === user?.userId;
+                return (
+                  <Link key={p.id} href={isMe ? "#" : `/new?userId=${p.id}`}>
+                    <li
+                      className={`mb-2 flex justify-between items-center p-3 bg-card rounded shadow transition ${
+                        isMe ? "border-2 border-primary" : "hover:bg-secondary"
+                      }`}
+                    >
+                      <div>
+                        <p className="font-medium">
+                          {p.username || "Anonymous"}{" "}
+                          {isMe && <span className="text-xs text-blue-500 ml-2">(You)</span>}
+                        </p>
+                        <p className="text-sm text-gray-500">{p.id}</p>
+                      </div>
+                      <span
+                        className={`text-sm font-semibold ${
+                          isMe ? "text-blue-500" : "text-green-500"
+                        }`}
+                      >
+                        {isMe ? "● Me" : "● Online"}
+                      </span>
+                    </li>
+                  </Link>
+                );
+              })}
+            </ul>
+          )}
+        </TabsContent>
+
+        {/* Friends only */}
+        <TabsContent value="friends">
+          {(!friends || friends.length === 0) ? (
+            <EmptyState msg="No friends added yet" />
+          ) : (
+            <ul className="space-y-2">
+              {friends.map((f) => (
+                <Link key={f.id} href={`/new?userId=${f.id}`}>
+                  <li
+                    className="mb-2 flex justify-between items-center p-3 bg-card rounded shadow hover:bg-secondary"
+                  >
+                    <div>
+                      <p className="font-medium">{f.username || "Anonymous"}</p>
+                      <p className="text-sm text-gray-500">{f.id}</p>
+                    </div>
+                    <span className={`text-sm font-semibold text-${(f.online) ? "green" : "red"}-500`}>
+                      {f.online ? "● Online" : "● Offline" }
+                    </span>
+                  </li>
+                </Link>
+              ))}
+            </ul>
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
