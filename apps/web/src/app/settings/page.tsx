@@ -10,9 +10,23 @@ import { useRouter } from 'next/navigation';
 import { refreshRooms } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { getSignalingClient } from '@/lib/signalingClient';
-import QrScanner from "@/components/local/QrScanner";
 import { useToast } from '@/components/local/ToastContext';
 import { Archive, QrCode, ShieldBan, Trash } from 'lucide-react';
+
+function SettingsRow({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex items-center justify-between">
+      <span className="font-medium">{label}</span>
+      <div className="flex items-center gap-2">{children}</div>
+    </div>
+  );
+}
 
 export default function SettingsPage() {
   const { user } = useAuth();
@@ -24,38 +38,38 @@ export default function SettingsPage() {
 
   if (!user) return <Loading />;
 
-
   const handleBackup = async () => {
     setBackupLoading(true);
     try {
       await backupDB(`p2p-${user.username}-${user.userId}-backup.json`);
-      showToast('Backup completed successfully!', "success");
+      showToast('Backup completed successfully!', 'success');
     } catch (err) {
       console.error(err);
-      showToast('Backup failed', "error");
+      showToast('Backup failed', 'error');
     } finally {
       setBackupLoading(false);
     }
   };
 
   const handleErase = async () => {
-    const confirmed = confirm('Are you sure you want to erase all data? This action cannot be undone.');
+    const confirmed = confirm(
+      'Are you sure you want to erase all data? This action cannot be undone.'
+    );
     if (!confirmed) return;
 
     setEraseLoading(true);
     try {
       await eraseDB();
-      showToast('Erased all data successfully!', "success");
+      showToast('Erased all data successfully!', 'success');
 
-      // Quit signaling server
       const client = await getSignalingClient();
       client.disconnect();
     } catch (err) {
       console.error(err);
-      showToast('Erasing data failed', "error");
+      showToast('Erasing data failed', 'error');
     } finally {
       setEraseLoading(false);
-      router.push("/login");
+      router.push('/login');
     }
   };
 
@@ -69,43 +83,37 @@ export default function SettingsPage() {
       await restoreDB(text);
       refreshRooms();
       sessionStorage.clear();
-      showToast('Database restored successfully!', "success");
+      showToast('Database restored successfully!', 'success');
     } catch (err) {
       console.error(err);
-      showToast('Restoring database failed', "error");
+      showToast('Restoring database failed', 'error');
     } finally {
       setRestoreLoading(false);
-      e.target.value = ''; // reset file input
+      e.target.value = '';
     }
   };
-
-  const handleBlocklist = () => {
-    router.push('/blocked');
-  }
 
   return (
     <div className="p-6 max-w-md mx-auto flex flex-col gap-6">
       <h1 className="text-2xl font-bold">Settings</h1>
 
-      <div className="flex items-center justify-between">
-        <span className="font-medium">Theme</span>
+      <SettingsRow label="Theme">
         <ThemeSwitcher />
-      </div>
+      </SettingsRow>
 
-      <div className="flex items-center justify-between">
-        <span className="font-medium">Backup Data</span>
+      <SettingsRow label="Backup Data">
         <Button
           size="sm"
           variant="outline"
           onClick={handleBackup}
           disabled={backupLoading}
         >
-          <Archive /> {backupLoading ? 'Backing up...' : 'Backup'}
+          <Archive className="mr-1 h-4 w-4" />
+          {backupLoading ? 'Backing up...' : 'Backup'}
         </Button>
-      </div>
+      </SettingsRow>
 
-      <div className="flex items-center justify-between">
-        <span className="font-medium">Restore Data</span>
+      <SettingsRow label="Restore Data">
         <Input
           type="file"
           accept="application/json"
@@ -113,37 +121,35 @@ export default function SettingsPage() {
           disabled={restoreLoading}
           className="cursor-pointer"
         />
-      </div>
+      </SettingsRow>
 
-      <div className="flex items-center justify-between">
-        <span className="font-medium">Erase Data</span>
+      <SettingsRow label="Erase Data">
         <Button
           size="sm"
-          variant="outline"
+          variant="destructive"
           onClick={handleErase}
           disabled={eraseLoading}
         >
-          <Trash /> {eraseLoading ? 'Erasing...' : 'Erase'}
+          <Trash className="mr-1 h-4 w-4" />
+          {eraseLoading ? 'Erasing...' : 'Erase'}
         </Button>
-      </div>
+      </SettingsRow>
 
-      <div className="flex items-center justify-center">
-        <Button
-          className='w-[100%]'
-          variant="outline"
-          onClick={handleBlocklist}
-        >
-          <ShieldBan /> Block list
-        </Button>
-      </div>
+      <Button
+        className="w-full"
+        variant="outline"
+        onClick={() => router.push('/blocked')}
+      >
+        <ShieldBan className="mr-1 h-4 w-4" /> Block List
+      </Button>
 
-      <div className="flex block md:hidden items-center justify-between">
+      <div className="block md:hidden">
         <Button
-          className='w-[100%]'
+          className="w-full"
           variant="outline"
-          onClick={() => router.push("/qr")}
+          onClick={() => router.push('/qr')}
         >
-          <QrCode /> Qr Scanner
+          <QrCode className="mr-1 h-4 w-4" /> QR Scanner
         </Button>
       </div>
     </div>
