@@ -6,8 +6,17 @@ export function createECDHkey(): crypto.ECDH {
   return user;
 }
 
-export function computeSecret(user_ECDH: crypto.ECDH, otherPublicKey: string): Uint8Array {
-  return user_ECDH.computeSecret(otherPublicKey, 'hex');
+function normalizeUint8Array(input: any): Uint8Array {
+  if (input instanceof Uint8Array) return input;
+  if (input instanceof String) return new Uint8Array(Buffer.from(input, 'hex'));
+  if (input && Array.isArray(input.data)) return new Uint8Array(input.data);
+  throw new Error("Invalid Uint8Array input");
+}
+
+export function computeSecret(user_ECDH: crypto.ECDH, otherPublicKey: Uint8Array | string): Uint8Array {
+  if (typeof otherPublicKey === 'string') return user_ECDH.computeSecret(otherPublicKey, 'hex');
+  else if (otherPublicKey instanceof Uint8Array) return user_ECDH.computeSecret(otherPublicKey);
+  throw new Error("Invalid other person public key");
 }
 
 export function secretMatch(user_secret: Uint8Array, other_secret: Uint8Array): boolean {

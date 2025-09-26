@@ -18,7 +18,7 @@ export function useRooms() {
     if (!db || !key) return;
 
     const fetchRooms = async () => {
-      const allRooms = await getAllDecr('rooms', key) as RoomType[] ?? [];
+      const allRooms = (await getAllDecr('rooms', key)) as RoomType[] ?? [];
       setRooms(allRooms);
     };
 

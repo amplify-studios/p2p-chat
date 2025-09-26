@@ -3,6 +3,8 @@ import { Roboto_Mono } from 'next/font/google';
 import './globals.css';
 import Layout from '@/components/local/Layout';
 import { ThemeProvider } from '@/components/theme-provider';
+import { getNotificationPermission } from '@chat/notifications';
+
 
 const robotoMono = Roboto_Mono({
   subsets: ['latin'],
@@ -19,6 +21,12 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+
+  // (async () => {
+  //   const notificationsPermission = await getNotificationPermission();
+  //   console.log(notificationsPermission);
+  // })();
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${robotoMono.variable} antialiased`}>

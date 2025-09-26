@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@chat/core": "*",
+    "@chat/notifications": "*",
     "@chat/crypto": "*",
     "@chat/sockets": "*",
     "@radix-ui/react-slot": "^1.2.3",

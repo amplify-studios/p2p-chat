@@ -13,7 +13,8 @@ export function prepareSendMessagePackage(otherUserPublicKey: string, message: s
 }
 
 export function returnDecryptedMessage(user: crypto.ECDH, messagePackage: MessagePackage): string {
-  const secret = computeSecret(user, messagePackage.ephemeralPublicKey);
+  // const secret = computeSecret(user, Uint8Array.from(messagePackage.ephemeralPublicKey));
+  const secret = computeSecret(user, new Uint8Array(Buffer.from(messagePackage.ephemeralPublicKey, 'hex')));
   const key = generateAESKey(secret);
   return AESdecrypt(key, messagePackage.encryptedMessage, messagePackage.authTag, messagePackage.iv);
 }
