@@ -128,9 +128,9 @@ export default function SettingsPage() {
         </Button>
       </div>
 
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-center">
         <Button
-          className='w-100'
+          className='w-[100%]'
           variant="outline"
           onClick={handleBlocklist}
         >
