@@ -6,8 +6,6 @@ TODO: Notifications system
 TODO: config
 TODO: Home page features
 TODO: Selecting / Defining signaling server/s to use
-TODO: Terms of Use
-TODO: Privacy Policy
 TODO: QR scanner decoding and redirecting to url
 TODO: QR scanner better ui
 DONE: IndexedDB
@@ -35,3 +33,4 @@ DONE: proper 404 page
 DONE: Delete connection
 DONE: chat invite (link)
 DONE: Custom confirm component
+DONE: Privacy Policy
