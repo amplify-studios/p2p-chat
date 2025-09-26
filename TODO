@@ -3,11 +3,13 @@ TODO: Receiving messages
 TODO: Group chats
 TODO: Chat sync
 TODO: Notifications system
-TODO: chat invite (link)
 TODO: config
 TODO: QR Scanner
 TODO: Home page features
 TODO: Selecting / Defining signaling server/s to use
+TODO: Custom confirm component
+TODO: Terms of Use
+TODO: Privacy Policy
 DONE: IndexedDB
 DONE: ECDH crypto methods
 DONE: AES-256-GCM crypto methods
@@ -31,3 +33,4 @@ DONE: global toast message system
 DONE: restrictive robots.txt
 DONE: proper 404 page
 DONE: Delete connection
+DONE: chat invite (link)

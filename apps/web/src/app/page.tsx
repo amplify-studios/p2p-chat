@@ -61,8 +61,9 @@ export default function Home() {
 
       {/* Status Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-        {info.map((i) => (
+        {info.map((i, index) => (
           <StatusCard
+            key={index}
             {...i}
           />
         ))}

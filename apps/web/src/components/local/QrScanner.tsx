@@ -23,7 +23,8 @@ export default function QrScanner({ onScan }: QrScannerProps) {
         stopScannerSafely();
       },
       (error) => {
-        console.warn("QR scan error:", error);
+        // console.warn("QR scan error:", error);
+        alert(`QR scan error: ${error}`);
       }
     )
     .then(() => {
@@ -49,5 +50,5 @@ export default function QrScanner({ onScan }: QrScannerProps) {
     };
   }, [onScan]);
 
-  return <div id="qr-scanner" style={{ width: "100%", height: "400px" }} />;
+  return <div id="qr-scanner" style={{ width: "100%", height: "100%" }} />;
 }

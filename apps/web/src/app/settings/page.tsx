@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { getSignalingClient } from '@/lib/signalingClient';
 import QrScanner from "@/components/local/QrScanner";
 import { useToast } from '@/components/local/ToastContext';
+import { QrCode } from 'lucide-react';
 
 export default function SettingsPage() {
   const { user } = useAuth();
@@ -136,13 +137,15 @@ export default function SettingsPage() {
         </Button>
       </div>
 
-      { /*
-      <div className="flex items-center justify-between">
-        <QrScanner onScan={(data) => {
-          console.log("Scanned QR payload:", data);
-        }} />
+      <div className="flex block md:hidden items-center justify-between">
+        <Button
+          className='w-[100%]'
+          variant="outline"
+          onClick={() => router.push("/qr")}
+        >
+          <QrCode /> Qr Scanner
+        </Button>
       </div>
-      */ }
     </div>
   );
 }
