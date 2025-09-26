@@ -116,6 +116,7 @@ export default function Peers() {
                             onClick={() => {
                               try { 
                                 db?.delete("credentials", f.id); 
+                                setFriends((prev) => prev.filter((b) => b.id !== f.id));
                               } catch(err: unknown) {
                                 showToast(`Failed to remove friend ${f.username}`)
                               }
