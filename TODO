@@ -2,13 +2,11 @@ TODO: Sending messages
 TODO: Receiving messages
 TODO: Group chats
 TODO: Chat sync
-TODO: Delete connection
 TODO: Notifications system
 TODO: chat invite (link)
 TODO: config
 TODO: QR Scanner
 TODO: Home page features
-TODO: proper 404 page
 TODO: Selecting / Defining signaling server/s to use
 DONE: IndexedDB
 DONE: ECDH crypto methods
@@ -31,3 +29,5 @@ DONE: Friend list
 DONE: Friend options (chat, remove, block)
 DONE: global toast message system
 DONE: restrictive robots.txt
+DONE: proper 404 page
+DONE: Delete connection
