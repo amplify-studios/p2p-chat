@@ -11,7 +11,7 @@ import { refreshRooms } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { getSignalingClient } from '@/lib/signalingClient';
 import { useToast } from '@/components/local/ToastContext';
-import { Archive, QrCode, ShieldBan, Trash } from 'lucide-react';
+import { Archive, QrCode, Server, ShieldBan, Trash } from 'lucide-react';
 import { useConfirm } from '@/components/local/ConfirmContext';
 
 function SettingsRow({
@@ -146,6 +146,14 @@ export default function SettingsPage() {
         onClick={() => router.push('/blocked')}
       >
         <ShieldBan className="mr-1 h-4 w-4" /> Block List
+      </Button>
+
+      <Button
+        className="w-full"
+        variant="outline"
+        onClick={() => router.push('/servers')}
+      >
+        <Server className="mr-1 h-4 w-4" /> Servers
       </Button>
 
       <div className="block md:hidden">
