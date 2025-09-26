@@ -8,7 +8,7 @@
 - Pros: seamless user discovery, users don’t need to know which server their friends are on.
 - Cons: adds infrastructure complexity — servers need trust, shared protocol, possibly authentication of inter-server communication.
 
-# 2. Independent signaling servers (simpler)
+## 2. Independent signaling servers (simpler)
 
 - Each signaling server is totally isolated.
 - Users must explicitly choose which server to connect to (maybe your client lets them select or store multiple).
@@ -19,7 +19,7 @@
 - Pros: simple, scalable, no cross-server coordination.
 - Cons: discovery is manual — I can’t just “find” you if we’re not on the same server, unless I already have your credentials.
 
-# 3. Hybrid approach
+## 3. Hybrid approach
 
 - Start simple with independent servers (option 2).
 - Add optional interconnection later for certain trusted servers (a federation layer).

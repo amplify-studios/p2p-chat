@@ -9,7 +9,8 @@ TODO: config
 TODO: QR Scanner
 TODO: Home page features
 TODO: proper 404 page
-TODO: robots.txt
+TODO: restrictive robots.txt
+TODO: Selecting / Defining signaling server/s to use
 DONE: IndexedDB
 DONE: ECDH crypto methods
 DONE: AES-256-GCM crypto methods
