@@ -33,4 +33,4 @@ export interface BlockType {
   username: string;
 }
 
-export type StorageType = MessageType | CredentialsType | RoomType | InviteType | BlockType;
+export type Type = MessageType | CredentialsType | RoomType | InviteType | BlockType;
