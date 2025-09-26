@@ -48,7 +48,7 @@ export default function NewRoom() {
   useEffect(() => {
     if (!client || !db || !user || !key || handledQr.current) return;
 
-    const qrParam = searchParams.get('qr');
+    const qrParam = searchParams.get('invite');
     if (!qrParam) return;
 
     handledQr.current = true;
@@ -100,6 +100,32 @@ export default function NewRoom() {
     if (type === 'single' && !otherUserId.trim())
       return 'User ID is required for single chat';
     return '';
+  };
+
+  const handleShare = async () => {
+    if (!qrValue) return;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: "Join my chat room",
+          text: "Here’s an invite to join my chat room:",
+          url: qrValue,
+        });
+        showToast("Invite shared!", "success");
+      } catch (err) {
+        console.error("Share failed:", err);
+        showToast("Failed to share", "error");
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(qrValue);
+        showToast("Link copied to clipboard", "info");
+      } catch (err) {
+        console.error("Clipboard write failed:", err);
+        showToast("Failed to copy link", "error");
+      }
+    }
   };
 
   const handleCreateRoom = async () => {
@@ -154,7 +180,8 @@ export default function NewRoom() {
     };
 
     const encoded = encodePayload(payload);
-    const url = `${window.location.origin}/new?qr=${encoded}`;
+    const url = `${window.location.origin}/new?invite=${encoded}`;
+    // const url = `http://192.168.1.8:3000/new?invite=${encoded}`;
     setQrValue(url);
   };
 
@@ -228,6 +255,10 @@ export default function NewRoom() {
               Scan to join instantly:
             </p>
             <ResponsiveQr qrValue={qrValue} />
+
+            <Button onClick={handleShare} className="mt-2">
+              Share Invite
+            </Button>
           </div>
         )}
       </div>
