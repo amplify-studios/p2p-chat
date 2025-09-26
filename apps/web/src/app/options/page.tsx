@@ -61,7 +61,7 @@ export default function ChatOptionsPage() {
     const otherUser = room.keys.find((k) => k.userId !== user?.userId);
     if (!otherUser) return;
 
-    const userToBlock: BlockType = { userId: otherUser.userId };
+    const userToBlock: BlockType = { userId: otherUser.userId, username: otherUser.username };
     await putEncr('blocks', userToBlock, key);
     await db.delete('rooms', room.roomId);
 
