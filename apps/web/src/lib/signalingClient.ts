@@ -36,7 +36,7 @@ export async function getSignalingClient(): Promise<SignalingClient> {
   if (!creds) throw new Error("Failed to decrypt user credentials");
 
   singletonClient = new SignalingClient(creds.userId, creds.username, creds.public);
-  await singletonClient.connect("ws://192.168.1.8:8080"); // TODO: change to config
+  await singletonClient.connect("ws://192.168.1.6:8080"); // TODO: change to config
 
   return singletonClient;
 }
