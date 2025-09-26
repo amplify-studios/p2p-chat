@@ -6,7 +6,6 @@ TODO: Notifications system
 TODO: config
 TODO: Home page features
 TODO: Selecting / Defining signaling server/s to use
-TODO: Custom confirm component
 TODO: Terms of Use
 TODO: Privacy Policy
 TODO: QR scanner decoding and redirecting to url
@@ -35,3 +34,4 @@ DONE: restrictive robots.txt
 DONE: proper 404 page
 DONE: Delete connection
 DONE: chat invite (link)
+DONE: Custom confirm component

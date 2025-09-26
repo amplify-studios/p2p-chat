@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { getSignalingClient } from '@/lib/signalingClient';
 import { useToast } from '@/components/local/ToastContext';
 import { Archive, QrCode, ShieldBan, Trash } from 'lucide-react';
+import { useConfirm } from '@/components/local/ConfirmContext';
 
 function SettingsRow({
   label,
@@ -35,6 +36,7 @@ export default function SettingsPage() {
   const [eraseLoading, setEraseLoading] = useState(false);
   const [restoreLoading, setRestoreLoading] = useState(false);
   const { showToast } = useToast();
+  const confirm = useConfirm();
 
   if (!user) return <Loading />;
 
@@ -52,9 +54,12 @@ export default function SettingsPage() {
   };
 
   const handleErase = async () => {
-    const confirmed = confirm(
-      'Are you sure you want to erase all data? This action cannot be undone.'
-    );
+    const confirmed = await confirm({
+      title: "Erase Local Data?",
+      message: 'Are you sure you want to erase all data? This action cannot be undone.',
+      confirmText: "Erase",
+      cancelText: "Cancel"
+    });
     if (!confirmed) return;
 
     setEraseLoading(true);

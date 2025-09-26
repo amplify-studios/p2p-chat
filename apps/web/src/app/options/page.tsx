@@ -11,6 +11,7 @@ import { BlockType } from '@chat/core';
 import { useAuth } from '@/hooks/useAuth';
 import { decryptMessageType } from '@chat/crypto';
 import { useBlocks } from '@/hooks/useBlocks';
+import { useConfirm } from '@/components/local/ConfirmContext';
 
 export default function ChatOptionsPage() {
   const { db, putEncr } = useDB();
@@ -20,6 +21,7 @@ export default function ChatOptionsPage() {
   const roomId = searchParams?.get('id');
   const router = useRouter();
   const { block } = useBlocks();
+  const confirm = useConfirm();
 
   if (!db || !rooms) return <Loading />;
 
@@ -29,7 +31,12 @@ export default function ChatOptionsPage() {
   if (!room) return <EmptyState msg='Room not found' />;
 
   const deleteChat = async () => {
-    const confirmed = confirm('Are you sure you want to delete this room? This action cannot be undone.');
+    const confirmed = await confirm({
+      title: "Delete Room?",
+      message: 'Are you sure you want to delete this room? This action cannot be undone.',
+      confirmText: "Delete",
+      cancelText: "Cancel"
+    });
     if (!confirmed) return;
     if (!key) return;
 
@@ -56,7 +63,12 @@ export default function ChatOptionsPage() {
   };
 
   const blockUser = async () => {
-    const confirmed = confirm('Are you sure you want to block this user?');
+    const confirmed = await confirm({
+      title: "Block User?",
+      message: 'Are you sure you want to block this user?',
+      confirmText: "Block",
+      cancelText: "Cancel"
+    });
     if (!confirmed) return;
     if (!key) return;
 

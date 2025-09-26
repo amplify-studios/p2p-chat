@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation';
 import { ReactNode } from 'react';
 import Sidebar from './Sidebar';
 import { ToastProvider } from './ToastContext';
+import { ConfirmProvider } from './ConfirmContext';
 
 export default function Layout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -11,10 +12,12 @@ export default function Layout({ children }: { children: ReactNode }) {
   if (pathname === '/login') return children;
 
   return (
-    <ToastProvider>
-      <Sidebar>
-        {children}
-      </Sidebar>
-    </ToastProvider>
+    <ConfirmProvider>
+      <ToastProvider>
+        <Sidebar>
+          {children}
+        </Sidebar>
+      </ToastProvider>
+    </ConfirmProvider>
   );
 }
