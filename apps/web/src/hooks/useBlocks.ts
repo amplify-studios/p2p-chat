@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { useDB } from "@/hooks/useDB";
-import { BlockType } from "@chat/core";
+import { BlockType, CredentialsType } from "@chat/core";
 import { useAuth } from "./useAuth";
 
 export function useBlocks() {
-  const { db, getAllDecr } = useDB();
+  const { db, getAllDecr, putEncr } = useDB();
   const { key } = useAuth();
   const [blocks, setBlocks] = useState<BlockType[]>([]);
 
@@ -16,6 +16,16 @@ export function useBlocks() {
       setBlocks(blocks);
     })();
   }, [db, key]);
+
+  const block = async (user: CredentialsType) => {
+    if (!key) return;
+    if (!db) return;
+
+    if (!user) return;
+
+    const userToBlock: BlockType = { userId: user.userId, username: user.username };
+    await putEncr('blocks', userToBlock, key);
+  };
 
   const unblock = async (block: BlockType) => {
     if (!db || !key) return;
@@ -39,5 +49,5 @@ export function useBlocks() {
     console.log(allblocks)
   };
 
-  return { blocks, unblock };
+  return { blocks, block, unblock };
 }

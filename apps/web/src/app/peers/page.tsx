@@ -7,10 +7,17 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { EllipsisVertical } from "lucide-react";
+import { useToast } from "@/components/local/ToastContext";
+import { useBlocks } from "@/hooks/useBlocks";
+import { CredentialsType } from "@chat/core";
+import { useDB } from "@/hooks/useDB";
 
 export default function Peers() {
   const { user } = useAuth();
-  const { peers, friends, loading } = usePeers(); 
+  const { peers, friends, setFriends, loading } = usePeers(); 
+  const { showToast } = useToast();
+  const { block } = useBlocks();
+  const { db } = useDB();
 
   if (loading) {
     return (
@@ -19,7 +26,7 @@ export default function Peers() {
       </div>
     );
   }
-
+  
   return (
     <div className="p-4 max-w-lg mx-auto">
       <h1 className="text-2xl font-bold mb-4 text-center text-foreground">Peers</h1>
@@ -44,6 +51,7 @@ export default function Peers() {
                     className={`mb-2 flex justify-between items-center p-3 bg-card rounded shadow transition ${
                       isMe ? "border-2 border-primary" : "hover:bg-secondary"
                     }`}
+                    onClick={() => window.location.href = `/new?userId=${p.id}`}
                   >
                     <div>
                       <p className="font-medium">
@@ -93,7 +101,10 @@ export default function Peers() {
                           <Button 
                             variant="ghost" 
                             className="w-full justify-start"
-                            onClick={() => window.location.href = `/new?userId=${f.id}`}
+                            onClick={() => {
+                              // TODO: instantly create a new room since invitation and connection have already happened
+                              window.location.href = `/new?userId=${f.id}`
+                            }}
                           >
                             New Chat
                           </Button>
@@ -102,7 +113,14 @@ export default function Peers() {
                           <Button 
                             variant="ghost" 
                             className="w-full justify-start text-red-500"
-                            onClick={() => console.log("Remove friend", f.id)}
+                            onClick={() => {
+                              try { 
+                                db?.delete("credentials", f.id); 
+                              } catch(err: unknown) {
+                                showToast(`Failed to remove friend ${f.username}`)
+                              }
+                              showToast(`Removed friend ${f.username}`);
+                            }}
                           >
                             Remove
                           </Button>
@@ -111,7 +129,10 @@ export default function Peers() {
                           <Button 
                             variant="ghost" 
                             className="w-full justify-start text-red-500"
-                            onClick={() => console.log("Block friend", f.id)}
+                            onClick={() => {
+                              block({ userId: f.id, username: f.username } as CredentialsType);
+                              showToast(`Blocked friend ${f.username}`)
+                            }}
                           >
                             Block
                           </Button>

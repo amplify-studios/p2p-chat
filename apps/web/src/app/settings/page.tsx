@@ -11,6 +11,7 @@ import { refreshRooms } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { getSignalingClient } from '@/lib/signalingClient';
 import QrScanner from "@/components/local/QrScanner";
+import { useToast } from '@/components/local/ToastContext';
 
 export default function SettingsPage() {
   const { user } = useAuth();
@@ -18,14 +19,10 @@ export default function SettingsPage() {
   const [backupLoading, setBackupLoading] = useState(false);
   const [eraseLoading, setEraseLoading] = useState(false);
   const [restoreLoading, setRestoreLoading] = useState(false);
-  const [toast, setToast] = useState<string | null>(null);
+  const { showToast } = useToast();
 
   if (!user) return <Loading />;
 
-  const showToast = (msg: string) => {
-    setToast(msg);
-    setTimeout(() => setToast(null), 3000);
-  };
 
   const handleBackup = async () => {
     setBackupLoading(true);
@@ -145,13 +142,6 @@ export default function SettingsPage() {
         }} />
       </div>
       */ }
-
-
-      {toast && (
-        <div className="p-2 bg-green-100 text-green-800 rounded text-sm">
-          {toast}
-        </div>
-      )}
     </div>
   );
 }

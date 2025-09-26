@@ -10,6 +10,7 @@ import { refreshRooms } from '@/lib/utils';
 import { BlockType } from '@chat/core';
 import { useAuth } from '@/hooks/useAuth';
 import { decryptMessageType } from '@chat/crypto';
+import { useBlocks } from '@/hooks/useBlocks';
 
 export default function ChatOptionsPage() {
   const { db, putEncr } = useDB();
@@ -18,6 +19,7 @@ export default function ChatOptionsPage() {
   const searchParams = useSearchParams();
   const roomId = searchParams?.get('id');
   const router = useRouter();
+  const { block } = useBlocks();
 
   if (!db || !rooms) return <Loading />;
 
@@ -59,10 +61,8 @@ export default function ChatOptionsPage() {
     if (!key) return;
 
     const otherUser = room.keys.find((k) => k.userId !== user?.userId);
-    if (!otherUser) return;
-
-    const userToBlock: BlockType = { userId: otherUser.userId, username: otherUser.username };
-    await putEncr('blocks', userToBlock, key);
+    if(!otherUser) return;
+    block(otherUser);
     await db.delete('rooms', room.roomId);
 
     router.push('/');

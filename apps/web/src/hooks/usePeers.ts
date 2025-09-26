@@ -78,5 +78,5 @@ export function usePeers() {
     setup();
   }, [key]);
 
-  return { peers, friends, loading };
+  return { peers, friends, setFriends, loading };
 }

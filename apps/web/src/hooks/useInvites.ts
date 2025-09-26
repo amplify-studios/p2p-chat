@@ -3,7 +3,7 @@ import { getSignalingClient } from "@/lib/signalingClient";
 import { useDB } from "@/hooks/useDB";
 import { generateBase58Id } from "@chat/crypto";
 import { connectToPeer, InviteMessage, handleSignal, AckMessage } from "@chat/sockets";
-import { InviteType, RoomType } from "@chat/core";
+import { CredentialsType, InviteType, RoomType } from "@chat/core";
 import { refreshRooms } from "@/lib/utils";
 import { useAuth } from "./useAuth";
 
@@ -64,6 +64,13 @@ export function useInvites() {
 
     // Generate the room
     const roomId = generateBase58Id();
+
+    const creds = {
+      userId: invite.from,
+      public: invite.public,
+      username: invite.name
+    } as CredentialsType;
+
     const room: RoomType = {
       roomId,
       name: invite.name,
@@ -74,16 +81,14 @@ export function useInvites() {
           public: user.public,
           username: user.username
         },
-        {
-          userId: invite.from,
-          public: invite.public,
-          username: invite.name
-        }
+        creds
       ],
     };
 
     // Save room
     await putEncr("rooms", room, key);
+
+    await putEncr("credentials", creds, key);
 
     // Delete the invite
     await db.delete("invites", invite.inviteId);
