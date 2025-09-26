@@ -121,13 +121,15 @@ export function decryptBlockType(enc: EncryptedBlockType, key: Uint8Array): Bloc
   }
 }
 
-export interface EncryptedServerSettingsType extends Omit<ServerSettingsType, "userServers"> {
-  userServers: EncryptedField[]
+export interface EncryptedServerSettingsType extends Omit<ServerSettingsType, "selectedServers" | "userServers"> {
+  selectedServers: EncryptedField[];
+  userServers: EncryptedField[];
 }
 
 export function encryptServerSettingsType(settings: ServerSettingsType, key: Uint8Array): EncryptedServerSettingsType {
   return {
     ...settings,
+    selectedServers: settings.selectedServers.map((s) => encField(key, s)),
     userServers: settings.userServers.map((s) => encField(key, s))
   }
 }
@@ -135,6 +137,7 @@ export function encryptServerSettingsType(settings: ServerSettingsType, key: Uin
 export function decryptServerSettingsType(enc: EncryptedServerSettingsType, key: Uint8Array): ServerSettingsType {
   return {
     ...enc,
+    selectedServers: enc.selectedServers.map((s) => decField(key, s)),
     userServers: enc.userServers.map((s) => decField(key, s))
   }
 }

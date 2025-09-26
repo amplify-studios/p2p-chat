@@ -38,7 +38,7 @@ export interface ServerSettingsType {
   autoSelectAll: boolean, 
   selectedServers: string[], // encrypt
   useUser: boolean, 
-  userServers: string[], 
+  userServers: string[], // encrypt
   shareFederation: boolean
 }
 
