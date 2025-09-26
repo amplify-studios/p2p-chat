@@ -4,12 +4,13 @@ TODO: Group chats
 TODO: Chat sync
 TODO: Notifications system
 TODO: config
-TODO: QR Scanner
 TODO: Home page features
 TODO: Selecting / Defining signaling server/s to use
 TODO: Custom confirm component
 TODO: Terms of Use
 TODO: Privacy Policy
+TODO: QR scanner decoding and redirecting to url
+TODO: QR scanner better ui
 DONE: IndexedDB
 DONE: ECDH crypto methods
 DONE: AES-256-GCM crypto methods
