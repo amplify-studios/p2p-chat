@@ -1,5 +1,6 @@
 import { BlockType, CredentialsType, InviteType, MessageType, RoomType } from "@chat/core";
 import { AESencrypt, AESdecrypt } from "./AES";
+import BlocklistPage from "@/app/blocked/page";
 
 export interface EncryptedField {
   encryptedMessage: string;
@@ -102,14 +103,22 @@ export function decryptInviteType(enc: EncryptedInviteType, key: Uint8Array): In
   } as InviteType;
 }
 
-export interface EncryptedBlockType extends BlockType {};
+export interface EncryptedBlockType extends Omit<BlockType, "username"> {
+  username: EncryptedField;
+};
 
 export function encryptBlockType(block: BlockType, key: Uint8Array): EncryptedBlockType {
-  return block;
+  return {
+    ...block,
+    username: encField(key, block.username)
+  }
 }
 
 export function decryptBlockType(enc: EncryptedBlockType, key: Uint8Array): BlockType {
-  return enc;
+  return {
+    ...enc,
+    username: decField(key, enc.username)
+  }
 }
 
 export type EncryptedStorageType = EncryptedMessageType | EncryptedCredentialsType | EncryptedRoomType | EncryptedInviteType | EncryptedBlockType;

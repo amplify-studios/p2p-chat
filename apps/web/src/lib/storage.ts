@@ -3,8 +3,7 @@ import { openDB, DBSchema, IDBPDatabase } from 'idb';
 
 const DB_NAME = "my-database";
 const DB_VERSION = 8;
-const BACKUP_FILE = "p2p-chat-backup.json";
-export const PASSWORD_KEY = "vergina";
+export const PASSWORD_KEY = "vergina"; // FIXME: randomize based on the userId
 
 export type Collection = 'messages' | 'credentials' | 'user' | 'rooms' | 'invites' | 'blocks';
 
@@ -62,7 +61,7 @@ type Backup = {
   blocks: EncryptedBlockType[]
 };
 
-async function backupDB() {
+async function backupDB(file: string) {
   const db = await getDB();
   const backup: Backup = {
     messages: [],
@@ -85,7 +84,7 @@ async function backupDB() {
 
   const a = document.createElement('a');
   a.href = url;
-  a.download = BACKUP_FILE;
+  a.download = file;
   a.click();
   URL.revokeObjectURL(url);
 }

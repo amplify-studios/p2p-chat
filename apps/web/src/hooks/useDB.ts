@@ -17,7 +17,7 @@ import {
   encryptBlockType,
   EncryptedStorageType,
 } from '@chat/crypto';
-import { BlockType, CredentialsType, InviteType, MessageType, RoomType, StorageType } from '@chat/core';
+import { BlockType, CredentialsType, InviteType, MessageType, RoomType, Type} from '@chat/core';
 
 export function useDB() {
   const [db, setDb] = useState<IDBPDatabase<MyDB> | null>(null);
@@ -35,7 +35,7 @@ export function useDB() {
     };
   }, []);
 
-  async function putEncr(collection: Collection, obj: StorageType, key: Uint8Array): Promise<EncryptedStorageType | null>{
+  async function putEncr(collection: Collection, obj: Type, key: Uint8Array): Promise<EncryptedStorageType | null>{
     if (!db) return null;
 
     let encr: EncryptedStorageType;

@@ -7,12 +7,13 @@ import { useInvites } from '@/hooks/useInvites';
 import { usePeers } from '@/hooks/usePeers';
 import { useDB } from '@/hooks/useDB';
 import { MessageType } from '@chat/core';
+import StatusCard from '@/components/local/StatusCard';
 
 export default function Home() {
   const { user, key } = useAuth();
   const { db, getAllDecr } = useDB();
   const { invites } = useInvites();
-  const { peers, loading: peersLoading } = usePeers();
+  const { peers, loading: peersLoading, friends } = usePeers();
 
   const [newMessagesCount, setNewMessagesCount] = useState(0);
 
@@ -28,6 +29,25 @@ export default function Home() {
 
   if (!user) return <Loading />;
 
+  const info = [
+    {
+      value: newMessagesCount,
+      description: "New Messages"
+    },
+    {
+      value: invites.length,
+      description: 'Pending Invites'
+    },
+    {
+      value: (peersLoading) ? "Loading..." : peers.length,
+      description: 'Peers Online'
+    },
+    {
+      value: friends.filter(f => peers.some(p => p.id === f.id)).length,
+      description: 'Friends Online'
+    },
+  ]
+
   return (
     <div className="p-6 max-w-4xl mx-auto">
       {/* App Name / Logo */}
@@ -41,18 +61,12 @@ export default function Home() {
 
       {/* Status Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-        <div className="p-4 bg-card rounded shadow flex flex-col items-center">
-          <p className="text-xl font-bold">{newMessagesCount}</p>
-          <p className="text-gray-500 text-sm">New Messages</p>
-        </div>
-        <div className="p-4 bg-card rounded shadow flex flex-col items-center">
-          <p className="text-xl font-bold">{invites.length}</p>
-          <p className="text-gray-500 text-sm">Pending Invites</p>
-        </div>
-          <div className="p-4 bg-card rounded shadow flex flex-col items-center">
-          <p className="text-xl font-bold">{(peersLoading) ? "Loading..." : peers.length}</p>
-          <p className="text-gray-500 text-sm">Online Peers</p>
-        </div>
+        {info.map((i, index) => (
+          <StatusCard
+            key={index}
+            {...i}
+          />
+        ))}
       </div>
     </div>
   );

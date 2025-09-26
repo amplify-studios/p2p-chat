@@ -10,7 +10,24 @@ import { useRouter } from 'next/navigation';
 import { refreshRooms } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { getSignalingClient } from '@/lib/signalingClient';
-import QrScanner from "@/components/local/QrScanner";
+import { useToast } from '@/components/local/ToastContext';
+import { Archive, QrCode, ShieldBan, Trash } from 'lucide-react';
+import { useConfirm } from '@/components/local/ConfirmContext';
+
+function SettingsRow({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex items-center justify-between">
+      <span className="font-medium">{label}</span>
+      <div className="flex items-center gap-2">{children}</div>
+    </div>
+  );
+}
 
 export default function SettingsPage() {
   const { user } = useAuth();
@@ -18,46 +35,46 @@ export default function SettingsPage() {
   const [backupLoading, setBackupLoading] = useState(false);
   const [eraseLoading, setEraseLoading] = useState(false);
   const [restoreLoading, setRestoreLoading] = useState(false);
-  const [toast, setToast] = useState<string | null>(null);
+  const { showToast } = useToast();
+  const confirm = useConfirm();
 
   if (!user) return <Loading />;
-
-  const showToast = (msg: string) => {
-    setToast(msg);
-    setTimeout(() => setToast(null), 3000);
-  };
 
   const handleBackup = async () => {
     setBackupLoading(true);
     try {
-      await backupDB();
-      showToast('Backup completed successfully!');
+      await backupDB(`p2p-${user.username}-${user.userId}-backup.json`);
+      showToast('Backup completed successfully!', 'success');
     } catch (err) {
       console.error(err);
-      alert('Backup failed');
+      showToast('Backup failed', 'error');
     } finally {
       setBackupLoading(false);
     }
   };
 
   const handleErase = async () => {
-    const confirmed = confirm('Are you sure you want to erase all data? This action cannot be undone.');
+    const confirmed = await confirm({
+      title: "Erase Local Data?",
+      message: 'Are you sure you want to erase all data? This action cannot be undone.',
+      confirmText: "Erase",
+      cancelText: "Cancel"
+    });
     if (!confirmed) return;
 
     setEraseLoading(true);
     try {
       await eraseDB();
-      showToast('Erased all data successfully!');
+      showToast('Erased all data successfully!', 'success');
 
-      // Quit signaling server
       const client = await getSignalingClient();
       client.disconnect();
     } catch (err) {
       console.error(err);
-      alert('Erasing data failed');
+      showToast('Erasing data failed', 'error');
     } finally {
       setEraseLoading(false);
-      router.push("/login");
+      router.push('/login');
     }
   };
 
@@ -70,43 +87,38 @@ export default function SettingsPage() {
       const text = await file.text();
       await restoreDB(text);
       refreshRooms();
-      showToast('Database restored successfully!');
+      sessionStorage.clear();
+      showToast('Database restored successfully!', 'success');
     } catch (err) {
       console.error(err);
-      alert('Restoring database failed');
+      showToast('Restoring database failed', 'error');
     } finally {
       setRestoreLoading(false);
-      e.target.value = ''; // reset file input
+      e.target.value = '';
     }
   };
-
-  const handleBlocklist = () => {
-    router.push('/blocked');
-  }
 
   return (
     <div className="p-6 max-w-md mx-auto flex flex-col gap-6">
       <h1 className="text-2xl font-bold">Settings</h1>
 
-      <div className="flex items-center justify-between">
-        <span className="font-medium">Theme</span>
+      <SettingsRow label="Theme">
         <ThemeSwitcher />
-      </div>
+      </SettingsRow>
 
-      <div className="flex items-center justify-between">
-        <span className="font-medium">Backup Data</span>
+      <SettingsRow label="Backup Data">
         <Button
           size="sm"
           variant="outline"
           onClick={handleBackup}
           disabled={backupLoading}
         >
+          <Archive className="mr-1 h-4 w-4" />
           {backupLoading ? 'Backing up...' : 'Backup'}
         </Button>
-      </div>
+      </SettingsRow>
 
-      <div className="flex items-center justify-between">
-        <span className="font-medium">Restore Data</span>
+      <SettingsRow label="Restore Data">
         <Input
           type="file"
           accept="application/json"
@@ -114,44 +126,37 @@ export default function SettingsPage() {
           disabled={restoreLoading}
           className="cursor-pointer"
         />
-      </div>
+      </SettingsRow>
 
-      <div className="flex items-center justify-between">
-        <span className="font-medium">Erase Data</span>
+      <SettingsRow label="Erase Data">
         <Button
           size="sm"
-          variant="outline"
+          variant="destructive"
           onClick={handleErase}
           disabled={eraseLoading}
         >
+          <Trash className="mr-1 h-4 w-4" />
           {eraseLoading ? 'Erasing...' : 'Erase'}
         </Button>
-      </div>
+      </SettingsRow>
 
-      <div className="flex items-center justify-between">
+      <Button
+        className="w-full"
+        variant="outline"
+        onClick={() => router.push('/blocked')}
+      >
+        <ShieldBan className="mr-1 h-4 w-4" /> Block List
+      </Button>
+
+      <div className="block md:hidden">
         <Button
-          className='w-100'
+          className="w-full"
           variant="outline"
-          onClick={handleBlocklist}
+          onClick={() => router.push('/qr')}
         >
-          Block list
+          <QrCode className="mr-1 h-4 w-4" /> QR Scanner
         </Button>
       </div>
-
-      { /*
-      <div className="flex items-center justify-between">
-        <QrScanner onScan={(data) => {
-          console.log("Scanned QR payload:", data);
-        }} />
-      </div>
-      */ }
-
-
-      {toast && (
-        <div className="p-2 bg-green-100 text-green-800 rounded text-sm">
-          {toast}
-        </div>
-      )}
     </div>
   );
 }

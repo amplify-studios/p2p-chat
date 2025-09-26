@@ -30,6 +30,7 @@ export interface InviteType {
 
 export interface BlockType {
   userId: string;
+  username: string;
 }
 
-export type StorageType = MessageType | CredentialsType | RoomType | InviteType | BlockType;
+export type Type = MessageType | CredentialsType | RoomType | InviteType | BlockType;

@@ -1,45 +1,53 @@
 import { useEffect, useState } from "react";
 import { useDB } from "@/hooks/useDB";
-import { BlockType } from "@chat/core";
+import { BlockType, CredentialsType } from "@chat/core";
+import { useAuth } from "./useAuth";
 
 export function useBlocks() {
-    const { db } = useDB();
-    const [blocks, setBlocks] = useState<BlockType[]>([]);
+  const { db, getAllDecr, putEncr } = useDB();
+  const { key } = useAuth();
+  const [blocks, setBlocks] = useState<BlockType[]>([]);
 
-    useEffect(() => {
-        if (!db) return;
+  useEffect(() => {
+    if (!db || !key) return;
 
-        const setup = async () => {
-            const allblocks = await db.getAll("blocks");
-            console.log(allblocks)
-            const mapped = allblocks.map(block => ({ userId: block.userId } as BlockType));
-            setBlocks(mapped);
-        };
+    (async () => {
+      const blocks = (await getAllDecr("blocks", key)) as BlockType[];
+      setBlocks(blocks);
+    })();
+  }, [db, key]);
 
-        setup();
-    }, [db]);
+  const block = async (user: CredentialsType) => {
+    if (!key) return;
+    if (!db) return;
 
-    const unblock = async (block: BlockType) => {
-        if (!db) return;
+    if (!user) return;
 
-        const tx = db.transaction("blocks", "readwrite");
-        const store = tx.objectStore("blocks");
+    const userToBlock: BlockType = { userId: user.userId, username: user.username };
+    await putEncr('blocks', userToBlock, key);
+  };
 
-        let cursor = await store.openCursor();
+  const unblock = async (block: BlockType) => {
+    if (!db || !key) return;
 
-        while(cursor) {
-            const _block = cursor.value;
-            if (_block.userId === block.userId) {
-                await cursor.delete();
-            }
-            cursor = await cursor.continue();
-        }
+    const tx = db.transaction("blocks", "readwrite");
+    const store = tx.objectStore("blocks");
 
-        await tx.done;
-        setBlocks((prev) => prev.filter((b) => b.userId !== block.userId));
-        const allblocks = await db.getAll("blocks");
-        console.log(allblocks)
-    };
+    let cursor = await store.openCursor();
 
-    return { blocks, unblock };
+    while(cursor) {
+      const _block = cursor.value;
+      if (_block.userId === block.userId) {
+        await cursor.delete();
+      }
+      cursor = await cursor.continue();
+    }
+
+    await tx.done;
+    setBlocks((prev) => prev.filter((b) => b.userId !== block.userId));
+    const allblocks = (await getAllDecr("blocks", key)) as BlockType[];
+    console.log(allblocks)
+  };
+
+  return { blocks, block, unblock };
 }
