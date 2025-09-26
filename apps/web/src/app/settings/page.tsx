@@ -67,6 +67,7 @@ export default function SettingsPage() {
       const text = await file.text();
       await restoreDB(text);
       refreshRooms();
+      sessionStorage.clear();
       showToast('Database restored successfully!', "success");
     } catch (err) {
       console.error(err);
