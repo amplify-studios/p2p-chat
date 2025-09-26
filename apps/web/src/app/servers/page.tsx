@@ -6,18 +6,41 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import { X } from 'lucide-react';
+import { useToast } from '@/components/local/ToastContext';
+import { useDB } from '@/hooks/useDB';
+import { ServerSettingsType } from '@chat/core';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function Servers() {
+  const { showToast } = useToast();
+  const { putEncr, getAllDecr } = useDB();
+  const { key } = useAuth();
+
   const [useSelect, setUseSelect] = useState(false);
   const [autoSelectAll, setAutoSelectAll] = useState(false);
   const [useUser, setUseUser] = useState(false);
-
   const [shareFederation, setShareFederation] = useState(false);
   const [selectedServers, setSelectedServers] = useState<string[]>([]);
   const [userServers, setUserServers] = useState<string[]>([]);
   const [newServer, setNewServer] = useState('');
 
   const availableServers = ['Server A', 'Server B', 'Server C'];
+
+  useEffect(() => {
+    if(!key) return;
+    (async () => {
+      const settings = (await getAllDecr('serverSettings', key)) as ServerSettingsType[];
+      const currentSettings = settings.at(0);
+      if(!currentSettings) return;
+
+      setUseSelect(currentSettings.useSelect);
+      setAutoSelectAll(currentSettings.autoSelectAll);
+      setUseUser(currentSettings.useUser);
+      setShareFederation(currentSettings.shareFederation);
+      setSelectedServers(currentSettings.selectedServers);
+      setUserServers(currentSettings.userServers);
+    })();
+  }, [key]);
 
   const toggleSelectedServer = (server: string) => {
     setSelectedServers(prev =>
@@ -138,16 +161,19 @@ export default function Servers() {
       </div>
 
       <Button
-        onClick={() =>
-          console.log({
+        onClick={async () => {
+          if(!key) return;
+          const settings = {
             useSelect,
             autoSelectAll,
             selectedServers,
             useUser,
             userServers,
-            shareFederation,
-          })
-        }
+            shareFederation
+          } as ServerSettingsType;
+          await putEncr("serverSettings", settings, key, 0);
+          showToast("Saved server settings");
+        }}
       >
         Save Settings
       </Button>

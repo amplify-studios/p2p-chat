@@ -16,8 +16,11 @@ import {
   encryptInviteType,
   encryptBlockType,
   EncryptedStorageType,
+  decryptServerSettingsType,
+  EncryptedServerSettingsType,
+  encryptServerSettingsType,
 } from '@chat/crypto';
-import { BlockType, CredentialsType, InviteType, MessageType, RoomType, Type} from '@chat/core';
+import { BlockType, CredentialsType, InviteType, MessageType, RoomType, ServerSettingsType, Type} from '@chat/core';
 
 export function useDB() {
   const [db, setDb] = useState<IDBPDatabase<MyDB> | null>(null);
@@ -35,7 +38,7 @@ export function useDB() {
     };
   }, []);
 
-  async function putEncr(collection: Collection, obj: Type, key: Uint8Array): Promise<EncryptedStorageType | null>{
+  async function putEncr(collection: Collection, obj: Type, key: Uint8Array, collectionKey?: string | number): Promise<EncryptedStorageType | null>{
     if (!db) return null;
 
     let encr: EncryptedStorageType;
@@ -43,7 +46,7 @@ export function useDB() {
     switch (collection) {
       case 'messages':
         encr = encryptMessageType(obj as MessageType, key);
-      break;
+        break;
 
       case 'credentials':
         encr = encryptCredentialsType(obj as CredentialsType, key);
@@ -65,12 +68,16 @@ export function useDB() {
         encr = encryptBlockType(obj as BlockType, key);
         break;
 
+      case 'serverSettings':
+        encr = encryptServerSettingsType(obj as ServerSettingsType, key);
+        break;
+
       default:
         throw new Error(`Unknown collection: ${collection}`);
     }
 
     if (encr) {
-      await db.put(collection, encr as EncryptedStorageType);
+      await db.put(collection, encr as EncryptedStorageType, collectionKey);
       return encr;
     }
     return null;
@@ -95,6 +102,8 @@ export function useDB() {
             return decryptInviteType(e as EncryptedInviteType, key);
           case 'blocks':
             return decryptBlockType(e as EncryptedBlockType, key);
+          case 'serverSettings':
+            return decryptServerSettingsType(e as EncryptedServerSettingsType, key);
           default:
             throw new Error(`Unknown collection: ${collection}`);
         }

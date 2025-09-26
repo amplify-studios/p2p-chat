@@ -1,4 +1,4 @@
-import { BlockType, CredentialsType, InviteType, MessageType, RoomType } from "@chat/core";
+import { BlockType, CredentialsType, InviteType, MessageType, RoomType, ServerSettingsType } from "@chat/core";
 import { AESencrypt, AESdecrypt } from "./AES";
 import BlocklistPage from "@/app/blocked/page";
 
@@ -121,4 +121,22 @@ export function decryptBlockType(enc: EncryptedBlockType, key: Uint8Array): Bloc
   }
 }
 
-export type EncryptedStorageType = EncryptedMessageType | EncryptedCredentialsType | EncryptedRoomType | EncryptedInviteType | EncryptedBlockType;
+export interface EncryptedServerSettingsType extends Omit<ServerSettingsType, "userServers"> {
+  userServers: EncryptedField[]
+}
+
+export function encryptServerSettingsType(settings: ServerSettingsType, key: Uint8Array): EncryptedServerSettingsType {
+  return {
+    ...settings,
+    userServers: settings.userServers.map((s) => encField(key, s))
+  }
+}
+
+export function decryptServerSettingsType(enc: EncryptedServerSettingsType, key: Uint8Array): ServerSettingsType {
+  return {
+    ...enc,
+    userServers: enc.userServers.map((s) => decField(key, s))
+  }
+}
+
+export type EncryptedStorageType = EncryptedMessageType | EncryptedCredentialsType | EncryptedRoomType | EncryptedInviteType | EncryptedBlockType | EncryptedServerSettingsType;

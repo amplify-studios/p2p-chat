@@ -33,4 +33,13 @@ export interface BlockType {
   username: string;
 }
 
-export type Type = MessageType | CredentialsType | RoomType | InviteType | BlockType;
+export interface ServerSettingsType {
+  useSelect: boolean,
+  autoSelectAll: boolean, 
+  selectedServers: string[], // encrypt
+  useUser: boolean, 
+  userServers: string[], 
+  shareFederation: boolean
+}
+
+export type Type = MessageType | CredentialsType | RoomType | InviteType | BlockType | ServerSettingsType;

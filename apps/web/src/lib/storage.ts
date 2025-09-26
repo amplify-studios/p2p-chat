@@ -1,11 +1,11 @@
-import { EncryptedBlockType, EncryptedCredentialsType, EncryptedInviteType, EncryptedMessageType, EncryptedRoomType } from '@chat/crypto';
+import { EncryptedBlockType, EncryptedCredentialsType, EncryptedInviteType, EncryptedMessageType, EncryptedRoomType, EncryptedServerSettingsType } from '@chat/crypto';
 import { openDB, DBSchema, IDBPDatabase } from 'idb';
 
 const DB_NAME = "my-database";
 const DB_VERSION = 8;
 export const PASSWORD_KEY = "vergina"; // FIXME: randomize based on the userId
 
-export type Collection = 'messages' | 'credentials' | 'user' | 'rooms' | 'invites' | 'blocks';
+export type Collection = 'messages' | 'credentials' | 'user' | 'rooms' | 'invites' | 'blocks' | 'serverSettings';
 
 interface MyDB extends DBSchema {
   messages: {
@@ -27,10 +27,14 @@ interface MyDB extends DBSchema {
   invites: {
     key: string;
     value: EncryptedInviteType;
-  }
+  };
   blocks: {
     key: number;
     value: EncryptedBlockType;
+  };
+  serverSettings: {
+    key: number;
+    value: EncryptedServerSettingsType
   }
 }
 
@@ -46,6 +50,7 @@ function getDB() {
         db.createObjectStore('rooms', { keyPath: 'roomId' });
         db.createObjectStore('invites', { keyPath: 'inviteId' });
         db.createObjectStore('blocks', { autoIncrement: true })
+        db.createObjectStore('serverSettings', { autoIncrement: false })
       },
     });
   }
@@ -59,6 +64,7 @@ type Backup = {
   rooms: EncryptedRoomType[];
   invites: EncryptedInviteType[];
   blocks: EncryptedBlockType[]
+  serverSettings: EncryptedServerSettingsType[];
 };
 
 async function backupDB(file: string) {
@@ -69,7 +75,8 @@ async function backupDB(file: string) {
     user: [],
     rooms: [],
     invites: [],
-    blocks: []
+    blocks: [],
+    serverSettings: [],
   };
 
   backup.messages = await db.getAll('messages');
@@ -78,6 +85,7 @@ async function backupDB(file: string) {
   backup.rooms = await db.getAll('rooms');
   backup.invites = await db.getAll('invites');
   backup.blocks = await db.getAll('blocks');
+  backup.serverSettings = await db.getAll('serverSettings');
 
   const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
@@ -92,14 +100,15 @@ async function backupDB(file: string) {
 async function eraseDB() {
   const db = await getDB();
 
-  const tx = db.transaction(['user', 'messages', 'credentials', 'rooms', 'invites', 'blocks'], 'readwrite');
+  const tx = db.transaction(['user', 'messages', 'credentials', 'rooms', 'invites', 'blocks', 'serverSettings'], 'readwrite');
   await Promise.all([
     tx.objectStore('messages').clear(),
     tx.objectStore('credentials').clear(),
     tx.objectStore('user').clear(),
     tx.objectStore('rooms').clear(),
     tx.objectStore('invites').clear(),
-    tx.objectStore('blocks').clear()
+    tx.objectStore('blocks').clear(),
+    tx.objectStore('serverSettings').clear()
   ]);
 
   await tx.done;
@@ -120,7 +129,8 @@ async function restoreDB(jsonString: string) {
     !backup.user ||
     !backup.rooms ||
     !backup.invites ||
-    !backup.blocks
+    !backup.blocks ||
+    !backup.serverSettings
   ) {
     console.error('Backup JSON is missing required fields');
     return;
@@ -129,7 +139,7 @@ async function restoreDB(jsonString: string) {
   const db = await getDB();
 
   const tx = db.transaction(
-    ['messages', 'credentials', 'user', 'rooms', 'invites', 'blocks'],
+    ['messages', 'credentials', 'user', 'rooms', 'invites', 'blocks', 'serverSettings'],
     'readwrite'
   );
 
@@ -139,7 +149,8 @@ async function restoreDB(jsonString: string) {
     tx.objectStore('user').clear(),
     tx.objectStore('rooms').clear(),
     tx.objectStore('invites').clear(),
-    tx.objectStore('blocks').clear()
+    tx.objectStore('blocks').clear(),
+    tx.objectStore('serverSettings').clear(),
   ]);
 
   for (const msg of backup.messages) {
@@ -164,6 +175,10 @@ async function restoreDB(jsonString: string) {
 
   for (const block of backup.blocks) {
     await tx.objectStore('blocks').put(block);
+  }
+
+  for (const settings of backup.serverSettings) {
+    await tx.objectStore('serverSettings').put(settings);
   }
 
   await tx.done;
