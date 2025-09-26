@@ -1,11 +1,11 @@
 import { SignalingClient } from "./SignalingClient";
+import { STUN_SERVERS } from "./stun";
 
 const peers: Record<string, RTCPeerConnection> = {};
 const dataChannels: Record<string, RTCDataChannel> = {};
 
-// NOTE: Basic STUN config (should be expanded)
 const rtcConfig: RTCConfiguration = {
-  iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
+  iceServers: [{ urls: STUN_SERVERS }]
 };
 
 // Utility for creating/returning a peer connection
