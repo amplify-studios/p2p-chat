@@ -18,9 +18,9 @@ interface Toast {
 interface ToastContextType {
   showToast: (
     message: string,
+    type?: ToastType,
     duration?: number,
     position?: ToastPosition,
-    type?: ToastType
   ) => void;
 }
 
@@ -32,9 +32,9 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   const showToast = useCallback(
     (
       message: string,
+      type: ToastType = "info",
       duration = 3000,
       position: ToastPosition = "bottom-right",
-      type: ToastType = "info"
     ) => {
       const id = Date.now();
       setToasts((prev) => [...prev, { id, message, duration, position, type }]);

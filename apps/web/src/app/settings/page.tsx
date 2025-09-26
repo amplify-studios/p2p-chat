@@ -27,11 +27,11 @@ export default function SettingsPage() {
   const handleBackup = async () => {
     setBackupLoading(true);
     try {
-      await backupDB();
-      showToast('Backup completed successfully!');
+      await backupDB(`p2p-${user.username}-${user.userId}-backup.json`);
+      showToast('Backup completed successfully!', "success");
     } catch (err) {
       console.error(err);
-      alert('Backup failed');
+      showToast('Backup failed', "error");
     } finally {
       setBackupLoading(false);
     }
@@ -44,14 +44,14 @@ export default function SettingsPage() {
     setEraseLoading(true);
     try {
       await eraseDB();
-      showToast('Erased all data successfully!');
+      showToast('Erased all data successfully!', "success");
 
       // Quit signaling server
       const client = await getSignalingClient();
       client.disconnect();
     } catch (err) {
       console.error(err);
-      alert('Erasing data failed');
+      showToast('Erasing data failed', "error");
     } finally {
       setEraseLoading(false);
       router.push("/login");
@@ -67,10 +67,10 @@ export default function SettingsPage() {
       const text = await file.text();
       await restoreDB(text);
       refreshRooms();
-      showToast('Database restored successfully!');
+      showToast('Database restored successfully!', "success");
     } catch (err) {
       console.error(err);
-      alert('Restoring database failed');
+      showToast('Restoring database failed', "error");
     } finally {
       setRestoreLoading(false);
       e.target.value = ''; // reset file input

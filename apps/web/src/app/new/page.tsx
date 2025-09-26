@@ -20,6 +20,7 @@ import {
 } from '@chat/core';
 import { InviteMessage, AckMessage } from '@chat/sockets';
 import { refreshRooms } from '@/lib/utils';
+import { useToast } from '@/components/local/ToastContext';
 
 export default function NewRoom() {
   const { user, key } = useAuth();
@@ -28,6 +29,7 @@ export default function NewRoom() {
   const searchParams = useSearchParams();
   const { peers, loading } = usePeers();
   const { client } = useClient();
+  const { showToast } = useToast();
 
   const [name, setName] = useState('');
   const [type, setType] = useState<'single' | 'group'>('single');
@@ -84,7 +86,7 @@ export default function NewRoom() {
         router.push(`/chat?id=${room.roomId}`);
       } catch (err) {
         console.error('Invalid QR invite:', err);
-        alert(`Invalid QR invite: ${err}`);
+        showToast(`Invalid QR invite`, "error");
       }
     };
 
