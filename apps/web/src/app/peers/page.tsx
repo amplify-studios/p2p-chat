@@ -3,8 +3,10 @@
 import { usePeers } from "@/hooks/usePeers";
 import { useAuth } from "@/hooks/useAuth";
 import EmptyState from "@/components/local/EmptyState";
-import Link from "next/link";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import { EllipsisVertical } from "lucide-react";
 
 export default function Peers() {
   const { user } = useAuth();
@@ -37,28 +39,27 @@ export default function Peers() {
               {peers.map((p) => {
                 const isMe = p.id === user?.userId;
                 return (
-                  <Link key={p.id} href={isMe ? "#" : `/new?userId=${p.id}`}>
-                    <li
-                      className={`mb-2 flex justify-between items-center p-3 bg-card rounded shadow transition ${
-                        isMe ? "border-2 border-primary" : "hover:bg-secondary"
+                  <li
+                    key={p.id}
+                    className={`mb-2 flex justify-between items-center p-3 bg-card rounded shadow transition ${
+                      isMe ? "border-2 border-primary" : "hover:bg-secondary"
+                    }`}
+                  >
+                    <div>
+                      <p className="font-medium">
+                        {p.username || "Anonymous"}{" "}
+                        {isMe && <span className="text-xs text-blue-500 ml-2">(You)</span>}
+                      </p>
+                      <p className="text-sm text-gray-500">{p.id}</p>
+                    </div>
+                    <span
+                      className={`text-sm font-semibold ${
+                        isMe ? "text-blue-500" : "text-green-500"
                       }`}
                     >
-                      <div>
-                        <p className="font-medium">
-                          {p.username || "Anonymous"}{" "}
-                          {isMe && <span className="text-xs text-blue-500 ml-2">(You)</span>}
-                        </p>
-                        <p className="text-sm text-gray-500">{p.id}</p>
-                      </div>
-                      <span
-                        className={`text-sm font-semibold ${
-                          isMe ? "text-blue-500" : "text-green-500"
-                        }`}
-                      >
-                        {isMe ? "● Me" : "● Online"}
-                      </span>
-                    </li>
-                  </Link>
+                      {isMe ? "● Me" : "● Online"}
+                    </span>
+                  </li>
                 );
               })}
             </ul>
@@ -72,19 +73,53 @@ export default function Peers() {
           ) : (
             <ul className="space-y-2">
               {friends.map((f) => (
-                <Link key={f.id} href={`/new?userId=${f.id}`}>
-                  <li
-                    className="mb-2 flex justify-between items-center p-3 bg-card rounded shadow hover:bg-secondary"
-                  >
-                    <div>
-                      <p className="font-medium">{f.username || "Anonymous"}</p>
-                      <p className="text-sm text-gray-500">{f.id}</p>
-                    </div>
-                    <span className={`text-sm font-semibold text-${(f.online) ? "green" : "red"}-500`}>
-                      {f.online ? "● Online" : "● Offline" }
-                    </span>
-                  </li>
-                </Link>
+                <li
+                  key={f.id}
+                  className="mb-2 flex justify-between items-center p-3 bg-card rounded shadow hover:bg-secondary"
+                >
+                  <div>
+                    <p className="font-medium">{f.username || "Anonymous"}</p>
+                    <p className="text-sm text-gray-500">{f.id}</p>
+                  </div>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button size="sm" variant="ghost">
+                        <EllipsisVertical />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-40">
+                      <ul className="flex flex-col space-y-2">
+                        <li>
+                          <Button 
+                            variant="ghost" 
+                            className="w-full justify-start"
+                            onClick={() => window.location.href = `/new?userId=${f.id}`}
+                          >
+                            New Chat
+                          </Button>
+                        </li>
+                        <li>
+                          <Button 
+                            variant="ghost" 
+                            className="w-full justify-start text-red-500"
+                            onClick={() => console.log("Remove friend", f.id)}
+                          >
+                            Remove
+                          </Button>
+                        </li>
+                        <li>
+                          <Button 
+                            variant="ghost" 
+                            className="w-full justify-start text-red-500"
+                            onClick={() => console.log("Block friend", f.id)}
+                          >
+                            Block
+                          </Button>
+                        </li>
+                      </ul>
+                    </PopoverContent>
+                  </Popover>
+                </li>
               ))}
             </ul>
           )}
