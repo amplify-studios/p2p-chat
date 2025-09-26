@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { getSignalingClient } from '@/lib/signalingClient';
 import QrScanner from "@/components/local/QrScanner";
 import { useToast } from '@/components/local/ToastContext';
-import { QrCode } from 'lucide-react';
+import { Archive, QrCode, ShieldBan, Trash } from 'lucide-react';
 
 export default function SettingsPage() {
   const { user } = useAuth();
@@ -100,7 +100,7 @@ export default function SettingsPage() {
           onClick={handleBackup}
           disabled={backupLoading}
         >
-          {backupLoading ? 'Backing up...' : 'Backup'}
+          <Archive /> {backupLoading ? 'Backing up...' : 'Backup'}
         </Button>
       </div>
 
@@ -123,7 +123,7 @@ export default function SettingsPage() {
           onClick={handleErase}
           disabled={eraseLoading}
         >
-          {eraseLoading ? 'Erasing...' : 'Erase'}
+          <Trash /> {eraseLoading ? 'Erasing...' : 'Erase'}
         </Button>
       </div>
 
@@ -133,7 +133,7 @@ export default function SettingsPage() {
           variant="outline"
           onClick={handleBlocklist}
         >
-          Block list
+          <ShieldBan /> Block list
         </Button>
       </div>
 
