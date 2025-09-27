@@ -8,6 +8,7 @@ TODO: Home page features
 TODO: Selecting / Defining signaling server/s to use
 TODO: QR scanner decoding and redirecting to url
 TODO: QR scanner better ui
+TODO: Max 3 tries when unlocking
 DONE: IndexedDB
 DONE: ECDH crypto methods
 DONE: AES-256-GCM crypto methods
