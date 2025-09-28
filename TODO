@@ -12,6 +12,7 @@ TODO: Max 3 tries when unlocking
 TODO: forgot password in login
 TODO: Server federation
 TODO: Sync between devices
+TODO: Documentation (code and docs/)
 DONE: IndexedDB
 DONE: ECDH crypto methods
 DONE: AES-256-GCM crypto methods

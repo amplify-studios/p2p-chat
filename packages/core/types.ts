@@ -34,12 +34,18 @@ export interface BlockType {
 }
 
 export interface ServerSettingsType {
-  useSelect: boolean,
-  autoSelectAll: boolean, 
-  selectedServers: string[], // encrypt
-  useUser: boolean, 
-  userServers: string[], // encrypt
-  shareFederation: boolean
+  useSelect: boolean;
+  autoSelectAll: boolean;
+  selectedServers: string[]; // encrypt
+  useUser: boolean;
+  userServers: string[]; // encrypt
+  shareFederation: boolean;
 }
 
-export type Type = MessageType | CredentialsType | RoomType | InviteType | BlockType | ServerSettingsType;
+export type Type =
+  | MessageType
+  | CredentialsType
+  | RoomType
+  | InviteType
+  | BlockType
+  | ServerSettingsType;

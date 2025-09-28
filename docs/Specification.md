@@ -35,9 +35,9 @@
 3. Run the shared secret through HKDF → get an AES-256-GCM session key.
 4. Encrypt the message with AES-256-GCM (random 96-bit IV per message).
 5. Send:
-    - Ciphertext
-    - AuthTag
-    - Ephemeral public key (so recipient can derive the same shared secret)
+   - Ciphertext
+   - AuthTag
+   - Ephemeral public key (so recipient can derive the same shared secret)
 
 #### Receive
 
@@ -62,10 +62,10 @@ Password → strong KDF (e.g., Argon2 or scrypt) → local encryption key.
 ### 5. Registration
 
 1. No central registration.
-    - Each user generates an ECDH key pair on first launch.
-    - Their public key = identity.
-    - Authentication via TOFU or Web of Trust.
+   - Each user generates an ECDH key pair on first launch.
+   - Their public key = identity.
+   - Authentication via TOFU or Web of Trust.
 
 2. Optional nicknames (local only).
-    - Users may assign display names mapped to public keys.
-    - Names are not globally unique or enforced.
+   - Users may assign display names mapped to public keys.
+   - Names are not globally unique or enforced.

@@ -1,3 +1,3 @@
-export * from "./qr";
-export type * from "./types";
+export * from './qr';
+export type * from './types';
 export type * from './messages';

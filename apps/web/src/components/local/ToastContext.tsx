@@ -1,11 +1,11 @@
 'use client';
 
-import { createContext, useContext, useState, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { CheckCircle, AlertTriangle, Info, XCircle } from "lucide-react";
+import { createContext, useContext, useState, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { CheckCircle, AlertTriangle, Info, XCircle } from 'lucide-react';
 
-type ToastPosition = "top-right" | "top-left" | "bottom-right" | "bottom-left";
-type ToastType = "info" | "success" | "warning" | "error";
+type ToastPosition = 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left';
+type ToastType = 'info' | 'success' | 'warning' | 'error';
 
 interface Toast {
   id: number;
@@ -32,9 +32,9 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   const showToast = useCallback(
     (
       message: string,
-      type: ToastType = "info",
+      type: ToastType = 'info',
       duration = 3000,
-      position: ToastPosition = "bottom-right",
+      position: ToastPosition = 'bottom-right',
     ) => {
       const id = Date.now();
       setToasts((prev) => [...prev, { id, message, duration, position, type }]);
@@ -43,7 +43,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         setToasts((prev) => prev.filter((t) => t.id !== id));
       }, duration);
     },
-    []
+    [],
   );
 
   const icons: Record<ToastType, JSX.Element> = {
@@ -54,22 +54,22 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   };
 
   const styles: Record<ToastType, string> = {
-    info: "border-blue-500 bg-blue-50 text-blue-800",
-    success: "border-green-500 bg-green-50 text-green-800",
-    warning: "border-yellow-500 bg-yellow-50 text-yellow-800",
-    error: "border-red-500 bg-red-50 text-red-800",
+    info: 'border-blue-500 bg-blue-50 text-blue-800',
+    success: 'border-green-500 bg-green-50 text-green-800',
+    warning: 'border-yellow-500 bg-yellow-50 text-yellow-800',
+    error: 'border-red-500 bg-red-50 text-red-800',
   };
 
   return (
     <ToastContext.Provider value={{ showToast }}>
       {children}
 
-      {["top-right", "top-left", "bottom-right", "bottom-left"].map((pos) => (
+      {['top-right', 'top-left', 'bottom-right', 'bottom-left'].map((pos) => (
         <div
           key={pos}
           className={`fixed z-50 p-4 space-y-2 pointer-events-none
-            ${pos.includes("top") ? "top-4" : "bottom-4"}
-            ${pos.includes("right") ? "right-4" : "left-4"}
+            ${pos.includes('top') ? 'top-4' : 'bottom-4'}
+            ${pos.includes('right') ? 'right-4' : 'left-4'}
           `}
         >
           <AnimatePresence>
@@ -98,7 +98,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
 export function useToast() {
   const ctx = useContext(ToastContext);
   if (!ctx) {
-    throw new Error("useToast must be used inside a ToastProvider");
+    throw new Error('useToast must be used inside a ToastProvider');
   }
   return ctx;
 }

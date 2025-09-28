@@ -14,9 +14,7 @@ export default function Layout({ children }: { children: ReactNode }) {
   return (
     <ConfirmProvider>
       <ToastProvider>
-        <Sidebar>
-          {children}
-        </Sidebar>
+        <Sidebar>{children}</Sidebar>
       </ToastProvider>
     </ConfirmProvider>
   );

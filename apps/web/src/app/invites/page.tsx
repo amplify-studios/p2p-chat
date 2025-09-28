@@ -1,16 +1,16 @@
 'use client';
 
-import { useInvites } from "@/hooks/useInvites";
-import { Button } from "@/components/ui/button";
-import EmptyState from "@/components/local/EmptyState";
-import { useAuth } from "@/hooks/useAuth";
+import { useInvites } from '@/hooks/useInvites';
+import { Button } from '@/components/ui/button';
+import EmptyState from '@/components/local/EmptyState';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function Invites() {
   useAuth();
   const { invites: currentInvites, acceptInvite, declineInvite } = useInvites();
 
   if (!currentInvites.length) {
-    return <EmptyState msg="No pending invites" />
+    return <EmptyState msg="No pending invites" />;
   }
 
   return (
@@ -26,11 +26,7 @@ export default function Invites() {
             <p className="text-sm text-gray-500">From: {invite.from}</p>
           </div>
           <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => declineInvite(invite)}
-            >
+            <Button size="sm" variant="outline" onClick={() => declineInvite(invite)}>
               Decline
             </Button>
             <Button size="sm" onClick={() => acceptInvite(invite)}>

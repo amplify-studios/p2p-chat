@@ -1,8 +1,8 @@
 'use client';
 
-import EmptyState from "@/components/local/EmptyState";
-import { Button } from "@/components/ui/button";
-import { useBlocks } from "@/hooks/useBlocks";
+import EmptyState from '@/components/local/EmptyState';
+import { Button } from '@/components/ui/button';
+import { useBlocks } from '@/hooks/useBlocks';
 
 export default function BlocklistPage() {
   const { blocks: currentBlocks, unblock } = useBlocks();
@@ -21,7 +21,9 @@ export default function BlocklistPage() {
               className="flex justify-between items-center p-4 bg-muted/50 rounded-lg shadow-sm hover:shadow-md transition-shadow"
             >
               <div className="flex flex-col">
-                <span className="font-semibold text-foreground">{block.username || 'Unknown User'}</span>
+                <span className="font-semibold text-foreground">
+                  {block.username || 'Unknown User'}
+                </span>
                 <span className="text-sm text-gray-500">{block.userId}</span>
               </div>
 

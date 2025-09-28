@@ -21,15 +21,9 @@ export default function ThemeSwitcher() {
   };
 
   return (
-    <Button
-      variant="outline"
-      size="sm"
-      onClick={toggleTheme}
-      className="flex items-center gap-2"
-    >
+    <Button variant="outline" size="sm" onClick={toggleTheme} className="flex items-center gap-2">
       {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
       {theme === 'light' ? 'Dark' : 'Light'}
     </Button>
   );
 }
-

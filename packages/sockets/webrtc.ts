@@ -1,15 +1,19 @@
-import { SignalingClient } from "./SignalingClient";
-import { STUN_SERVERS } from "./stun";
+import { SignalingClient } from './SignalingClient';
+import { STUN_SERVERS } from './stun';
 
 const peers: Record<string, RTCPeerConnection> = {};
 const dataChannels: Record<string, RTCDataChannel> = {};
 
 const rtcConfig: RTCConfiguration = {
-  iceServers: [{ urls: STUN_SERVERS }]
+  iceServers: [{ urls: STUN_SERVERS }],
 };
 
 // Utility for creating/returning a peer connection
-function getPeerConnection(client: SignalingClient, peerId: string, onMessage: (msg: string) => void): RTCPeerConnection {
+function getPeerConnection(
+  client: SignalingClient,
+  peerId: string,
+  onMessage: (msg: string) => void,
+): RTCPeerConnection {
   if (peers[peerId]) return peers[peerId];
 
   const pc = new RTCPeerConnection(rtcConfig);
@@ -38,12 +42,12 @@ function getPeerConnection(client: SignalingClient, peerId: string, onMessage: (
 export async function connectToPeer(
   client: SignalingClient,
   peerId: string,
-  onMessage: (msg: string) => void
+  onMessage: (msg: string) => void,
 ) {
   const pc = getPeerConnection(client, peerId, onMessage);
 
   // Create data channel for chat
-  const channel = pc.createDataChannel("chat");
+  const channel = pc.createDataChannel('chat');
   dataChannels[peerId] = channel;
   channel.onmessage = (ev) => onMessage(ev.data);
 
@@ -60,25 +64,25 @@ export async function handleSignal(
   client: SignalingClient,
   from: string,
   payload: RTCSessionDescriptionInit | RTCIceCandidateInit,
-  onMessage: (msg: string) => void
+  onMessage: (msg: string) => void,
 ) {
   const pc = getPeerConnection(client, from, onMessage);
 
-  if ("sdp" in payload) {
+  if ('sdp' in payload) {
     // Received an SDP
     await pc.setRemoteDescription(new RTCSessionDescription(payload));
-    if (payload.type === "offer") {
+    if (payload.type === 'offer') {
       const answer = await pc.createAnswer();
       await pc.setLocalDescription(answer);
 
       client.sendSignal(from, answer);
     }
-  } else if ("candidate" in payload) {
+  } else if ('candidate' in payload) {
     // Received ICE candidate
     try {
       await pc.addIceCandidate(new RTCIceCandidate(payload));
     } catch (err) {
-      console.error("Error adding ICE candidate:", err);
+      console.error('Error adding ICE candidate:', err);
     }
   }
 }
@@ -88,10 +92,9 @@ export async function handleSignal(
  */
 export function sendMessage(peerId: string, msg: string) {
   const channel = dataChannels[peerId];
-  if (channel && channel.readyState === "open") {
+  if (channel && channel.readyState === 'open') {
     channel.send(msg);
   } else {
-    console.warn("Data channel not ready");
+    console.warn('Data channel not ready');
   }
 }
-

@@ -27,11 +27,11 @@ export default function Servers() {
   const availableServers = ['Server A', 'Server B', 'Server C'];
 
   useEffect(() => {
-    if(!key) return;
+    if (!key) return;
     (async () => {
       const settings = (await getAllDecr('serverSettings', key)) as ServerSettingsType[];
       const currentSettings = settings.at(0);
-      if(!currentSettings) return;
+      if (!currentSettings) return;
 
       setUseSelect(currentSettings.useSelect);
       setAutoSelectAll(currentSettings.autoSelectAll);
@@ -43,22 +43,20 @@ export default function Servers() {
   }, [key]);
 
   const toggleSelectedServer = (server: string) => {
-    setSelectedServers(prev =>
-      prev.includes(server)
-        ? prev.filter(s => s !== server)
-        : [...prev, server]
+    setSelectedServers((prev) =>
+      prev.includes(server) ? prev.filter((s) => s !== server) : [...prev, server],
     );
   };
 
   const addUserServer = () => {
     if (newServer.trim() && !userServers.includes(newServer.trim())) {
-      setUserServers(prev => [...prev, newServer.trim()]);
+      setUserServers((prev) => [...prev, newServer.trim()]);
       setNewServer('');
     }
   };
 
   const removeUserServer = (server: string) => {
-    setUserServers(prev => prev.filter(s => s !== server));
+    setUserServers((prev) => prev.filter((s) => s !== server));
   };
 
   // Handle auto-select behavior
@@ -84,20 +82,14 @@ export default function Servers() {
             {/* Auto-select toggle */}
             <div className="flex items-center justify-between">
               <Label>Automatically select all servers</Label>
-              <Switch
-                checked={autoSelectAll}
-                onCheckedChange={setAutoSelectAll}
-              />
+              <Switch checked={autoSelectAll} onCheckedChange={setAutoSelectAll} />
             </div>
 
             {/* Manual selection if autoSelectAll is off */}
             {!autoSelectAll && (
               <div className="flex flex-col gap-2">
-                {availableServers.map(server => (
-                  <label
-                    key={server}
-                    className="flex items-center gap-2 cursor-pointer"
-                  >
+                {availableServers.map((server) => (
+                  <label key={server} className="flex items-center gap-2 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={selectedServers.includes(server)}
@@ -111,10 +103,7 @@ export default function Servers() {
 
             <div className="flex items-center justify-between mt-4">
               <span className="font-medium">Share information with federation</span>
-              <Switch
-                checked={shareFederation}
-                onCheckedChange={setShareFederation}
-              />
+              <Switch checked={shareFederation} onCheckedChange={setShareFederation} />
             </div>
           </div>
         )}
@@ -140,17 +129,13 @@ export default function Servers() {
             </div>
 
             <ul className="flex flex-col gap-2">
-              {userServers.map(server => (
+              {userServers.map((server) => (
                 <li
                   key={server}
                   className="flex items-center justify-between border rounded px-3 py-2"
                 >
                   <span>{server}</span>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    onClick={() => removeUserServer(server)}
-                  >
+                  <Button size="icon" variant="ghost" onClick={() => removeUserServer(server)}>
                     <X className="h-4 w-4" />
                   </Button>
                 </li>
@@ -162,17 +147,17 @@ export default function Servers() {
 
       <Button
         onClick={async () => {
-          if(!key) return;
+          if (!key) return;
           const settings = {
             useSelect,
             autoSelectAll,
             selectedServers,
             useUser,
             userServers,
-            shareFederation
+            shareFederation,
           } as ServerSettingsType;
-          await putEncr("serverSettings", settings, key, 0);
-          showToast("Saved server settings");
+          await putEncr('serverSettings', settings, key, 0);
+          showToast('Saved server settings');
         }}
       >
         Save Settings

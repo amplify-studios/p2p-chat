@@ -1,11 +1,25 @@
-import { EncryptedBlockType, EncryptedCredentialsType, EncryptedInviteType, EncryptedMessageType, EncryptedRoomType, EncryptedServerSettingsType } from '@chat/crypto';
+import {
+  EncryptedBlockType,
+  EncryptedCredentialsType,
+  EncryptedInviteType,
+  EncryptedMessageType,
+  EncryptedRoomType,
+  EncryptedServerSettingsType,
+} from '@chat/crypto';
 import { openDB, DBSchema, IDBPDatabase } from 'idb';
 
-const DB_NAME = "my-database";
+const DB_NAME = 'my-database';
 const DB_VERSION = 8;
-export const PASSWORD_KEY = "vergina"; // FIXME: randomize based on the userId
+export const PASSWORD_KEY = 'vergina'; // FIXME: randomize based on the userId
 
-export type Collection = 'messages' | 'credentials' | 'user' | 'rooms' | 'invites' | 'blocks' | 'serverSettings';
+export type Collection =
+  | 'messages'
+  | 'credentials'
+  | 'user'
+  | 'rooms'
+  | 'invites'
+  | 'blocks'
+  | 'serverSettings';
 
 interface MyDB extends DBSchema {
   messages: {
@@ -15,7 +29,7 @@ interface MyDB extends DBSchema {
   user: {
     key: number;
     value: EncryptedCredentialsType;
-  }
+  };
   credentials: {
     key: string;
     value: EncryptedCredentialsType;
@@ -34,8 +48,8 @@ interface MyDB extends DBSchema {
   };
   serverSettings: {
     key: number;
-    value: EncryptedServerSettingsType
-  }
+    value: EncryptedServerSettingsType;
+  };
 }
 
 let dbPromise: Promise<IDBPDatabase<MyDB>> | null = null;
@@ -49,8 +63,8 @@ function getDB() {
         db.createObjectStore('credentials', { keyPath: 'userId' });
         db.createObjectStore('rooms', { keyPath: 'roomId' });
         db.createObjectStore('invites', { keyPath: 'inviteId' });
-        db.createObjectStore('blocks', { autoIncrement: true })
-        db.createObjectStore('serverSettings', { autoIncrement: false })
+        db.createObjectStore('blocks', { autoIncrement: true });
+        db.createObjectStore('serverSettings', { autoIncrement: false });
       },
     });
   }
@@ -63,7 +77,7 @@ type Backup = {
   user: EncryptedCredentialsType[];
   rooms: EncryptedRoomType[];
   invites: EncryptedInviteType[];
-  blocks: EncryptedBlockType[]
+  blocks: EncryptedBlockType[];
   serverSettings: EncryptedServerSettingsType[];
 };
 
@@ -100,7 +114,10 @@ async function backupDB(file: string) {
 async function eraseDB() {
   const db = await getDB();
 
-  const tx = db.transaction(['user', 'messages', 'credentials', 'rooms', 'invites', 'blocks', 'serverSettings'], 'readwrite');
+  const tx = db.transaction(
+    ['user', 'messages', 'credentials', 'rooms', 'invites', 'blocks', 'serverSettings'],
+    'readwrite',
+  );
   await Promise.all([
     tx.objectStore('messages').clear(),
     tx.objectStore('credentials').clear(),
@@ -108,7 +125,7 @@ async function eraseDB() {
     tx.objectStore('rooms').clear(),
     tx.objectStore('invites').clear(),
     tx.objectStore('blocks').clear(),
-    tx.objectStore('serverSettings').clear()
+    tx.objectStore('serverSettings').clear(),
   ]);
 
   await tx.done;
@@ -140,7 +157,7 @@ async function restoreDB(jsonString: string) {
 
   const tx = db.transaction(
     ['messages', 'credentials', 'user', 'rooms', 'invites', 'blocks', 'serverSettings'],
-    'readwrite'
+    'readwrite',
   );
 
   await Promise.all([

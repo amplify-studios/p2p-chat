@@ -3,13 +3,13 @@
 // In case of changes to the API these should change as well to avoid conflicts.
 // We should maybe consider using typescript for the server too to have a single point of reference.
 
-import { RoomType } from "@chat/core";
+import { RoomType } from '@chat/core';
 
 // Represents a connected peer
 export interface Client {
-  ws: WebSocket;           // WebSocket connection
-  username: string;        // Peer username
-  pubkey: string | null;   // Optional public key
+  ws: WebSocket; // WebSocket connection
+  username: string; // Peer username
+  pubkey: string | null; // Optional public key
 }
 
 // Basic peer info to send to clients
@@ -26,7 +26,7 @@ export interface BaseMessage {
 
 // Join message sent by a client to register
 export interface JoinMessage extends BaseMessage {
-  type: "join";
+  type: 'join';
   id: string;
   username?: string;
   pubkey?: string | null;
@@ -34,31 +34,31 @@ export interface JoinMessage extends BaseMessage {
 
 // Welcome message sent back to client after join
 export interface WelcomeMessage extends BaseMessage {
-  type: "welcome";
+  type: 'welcome';
   id: string;
   message: string;
 }
 
 // Invite message sent to a peer
 export interface InviteMessage extends BaseMessage {
-  type: "invite";
+  type: 'invite';
   from: string;
   name: string;
-  roomType: "single" | "group";
+  roomType: 'single' | 'group';
   pubkey: string;
   target?: string; // optional when sending
 }
 
 export interface AckMessage extends BaseMessage {
-  type: "ack";
+  type: 'ack';
   from: string;
   to: string;
-  room: RoomType
+  room: RoomType;
 }
 
 // WebRTC signaling messages
 export interface SignalMessage extends BaseMessage {
-  type: "signal" | "offer" | "answer" | "candidate";
+  type: 'signal' | 'offer' | 'answer' | 'candidate';
   from: string;
   target: string;
   payload: any; // could be RTCSessionDescriptionInit or RTCIceCandidateInit
@@ -66,21 +66,12 @@ export interface SignalMessage extends BaseMessage {
 
 // Peers list message
 export interface PeersMessage extends BaseMessage {
-  type: "peers";
+  type: 'peers';
   peers: PeerInfo[];
 }
 
 // Union type for all possible incoming messages from clients
-export type IncomingMessage =
-  | JoinMessage
-  | InviteMessage
-  | SignalMessage
-  | { type: "peers" }; // request for peer list
+export type IncomingMessage = JoinMessage | InviteMessage | SignalMessage | { type: 'peers' }; // request for peer list
 
 // Union type for all possible messages sent to clients
-export type OutgoingMessage =
-  | WelcomeMessage
-  | InviteMessage
-  | SignalMessage
-  | PeersMessage;
-
+export type OutgoingMessage = WelcomeMessage | InviteMessage | SignalMessage | PeersMessage;
