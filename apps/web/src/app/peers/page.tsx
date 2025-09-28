@@ -132,7 +132,6 @@ export default function Peers() {
                             className="w-full justify-start text-red-500"
                             onClick={() => {
                               block({ userId: f.id, username: f.username } as CredentialsType);
-                              showToast(`Blocked friend ${f.username}`)
                             }}
                           >
                             Block
