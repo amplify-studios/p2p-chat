@@ -13,6 +13,7 @@ TODO: forgot password in login
 TODO: Server federation
 TODO: Sync between devices
 TODO: Documentation (code and docs/)
+TODO: Block actions if signaling server is not available
 DONE: IndexedDB
 DONE: ECDH crypto methods
 DONE: AES-256-GCM crypto methods
