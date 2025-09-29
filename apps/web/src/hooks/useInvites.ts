@@ -1,25 +1,24 @@
 import { useEffect, useState } from 'react';
-import { getSignalingClient } from '@/lib/signalingClient';
 import { useDB } from '@/hooks/useDB';
 import { generateBase58Id } from '@chat/crypto';
 import { connectToPeer, InviteMessage, handleSignal, AckMessage } from '@chat/sockets';
 import { CredentialsType, InviteType, RoomType } from '@chat/core';
 import { refreshRooms } from '@/lib/utils';
 import { useAuth } from './useAuth';
+import useClient from './useClient';
 
 export function useInvites() {
   const { db, putEncr, getAllDecr } = useDB();
   const [invites, setInvites] = useState<InviteType[]>([]);
   const { user, key } = useAuth();
+  const client = useClient();
 
   useEffect(() => {
-    if (!db || !key) return;
+    if (!db || !key || !client) return;
 
     let cleanup: (() => void) | undefined;
 
     const setup = async () => {
-      const client = await getSignalingClient();
-
       const handleRoomInvite = async (msg: InviteMessage) => {
         const newInvite: InviteType = {
           inviteId: msg.from,
@@ -57,10 +56,10 @@ export function useInvites() {
     setup();
 
     return () => cleanup?.();
-  }, [db, key]);
+  }, [db, key, client]);
 
   const acceptInvite = async (invite: InviteType) => {
-    if (!db || !key || !user) return;
+    if (!db || !key || !user || !client) return;
 
     // Generate the room
     const roomId = generateBase58Id();
@@ -94,8 +93,6 @@ export function useInvites() {
     await db.delete('invites', invite.inviteId);
     setInvites((prev) => prev.filter((i) => i.inviteId !== invite.inviteId));
     refreshRooms();
-
-    const client = await getSignalingClient();
 
     // Send Ack back to inviter
     const ack = {

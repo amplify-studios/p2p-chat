@@ -1,7 +1,6 @@
 // See https://gist.github.com/mondain/b0ec1cf5f60ae726202e
 
 export const STUN_SERVERS = [
-  '23.21.150.121:3478',
   'iphone-stun.strato-iphone.de:3478',
   'numb.viagenie.ca:3478',
   's1.taraba.net:3478',
@@ -269,7 +268,6 @@ export const STUN_SERVERS = [
   'stun.sipnet.net:3478',
   'stun.sipnet.ru:3478',
   'stun.stunprotocol.org:3478',
-  '124.64.206.224:8800',
   'stun.nextcloud.com:443',
   'relay.webwormhole.io',
   'stun.flashdance.cx:3478',

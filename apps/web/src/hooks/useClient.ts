@@ -24,5 +24,5 @@ export default function useClient() {
     };
   }, []);
 
-  return { client };
+  return client;
 }

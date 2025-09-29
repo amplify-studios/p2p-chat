@@ -14,7 +14,6 @@ import { MessageType } from '@chat/core';
 // TODO: Remove
 import crypto from 'crypto';
 import { createECDHkey } from '@chat/crypto';
-import { getSignalingClient } from '@/lib/signalingClient';
 
 export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);

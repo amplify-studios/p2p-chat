@@ -9,10 +9,10 @@ import { backupDB, eraseDB, restoreDB } from '@/lib/storage';
 import { useRouter } from 'next/navigation';
 import { refreshRooms } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
-import { getSignalingClient } from '@/lib/signalingClient';
 import { useToast } from '@/components/local/ToastContext';
 import { Archive, QrCode, Server, ShieldBan, Trash } from 'lucide-react';
 import { useConfirm } from '@/components/local/ConfirmContext';
+import useClient from '@/hooks/useClient';
 
 function SettingsRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -31,6 +31,7 @@ export default function SettingsPage() {
   const [restoreLoading, setRestoreLoading] = useState(false);
   const { showToast } = useToast();
   const confirm = useConfirm();
+  const client = useClient();
 
   if (!user) return <Loading />;
 
@@ -61,8 +62,8 @@ export default function SettingsPage() {
       await eraseDB();
       showToast('Erased all data successfully!', 'success');
 
-      const client = await getSignalingClient();
-      client.disconnect();
+      if(client)
+        client.disconnect();
     } catch (err) {
       console.error(err);
       showToast('Erasing data failed', 'error');

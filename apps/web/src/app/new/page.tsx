@@ -10,7 +10,6 @@ import { useDB } from '@/hooks/useDB';
 import { useAuth } from '@/hooks/useAuth';
 import { usePeers } from '@/hooks/usePeers';
 import useClient from '@/hooks/useClient';
-import { getSignalingClient } from '@/lib/signalingClient';
 import { generateBase58Id } from '@chat/crypto';
 import { CredentialsType, decodePayload, encodePayload, RoomType } from '@chat/core';
 import { InviteMessage, AckMessage } from '@chat/sockets';
@@ -24,7 +23,7 @@ export default function NewRoom() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { peers, loading } = usePeers();
-  const { client } = useClient();
+  const client = useClient();
   const { showToast } = useToast();
 
   const [name, setName] = useState('');
@@ -126,6 +125,7 @@ export default function NewRoom() {
   const handleCreateRoom = async () => {
     if (loading || pendingInvite) return;
     if (!key) return;
+    if (!client) return;
 
     const validationError = validate();
     if (validationError) {
@@ -152,8 +152,7 @@ export default function NewRoom() {
     } as InviteMessage;
 
     try {
-      const signalingClient = await getSignalingClient();
-      signalingClient.sendRoomInvite(otherUserId, invite);
+      client.sendRoomInvite(otherUserId, invite);
       console.log('Invite sent:', invite);
     } catch (err) {
       console.error('Failed to send invite:', err);
