@@ -36,10 +36,6 @@ export function getAESKeyThroughSharedSecret(sharedKey: Uint8Array, saltUint8?: 
     const salt = saltUint8 && saltUint8.length ? Buffer.from(saltUint8) : crypto.randomBytes(16);
     const info = Buffer.from('aes-256-gcm-session', 'utf8');
     const key = hkdf(sharedKeyBuf, 32, { salt, info, hash: "SHA-256" });
-    
-
-    //const temp = crypto.hkdfSync('sha256', sharedKey, salt, info, 32);
-    //const key = Uint8Array.from(Buffer.from(temp));
 
     return {key, salt}
 }
