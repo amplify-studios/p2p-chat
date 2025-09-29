@@ -37,9 +37,7 @@ export default function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [attempts, setAttempts] = useState(() => {
-    return Number(sessionStorage.getItem('loginAttempts') || 0);
-  });
+  const [attempts, setAttempts] = useState(0);
 
   const router = useRouter();
   const { encryptedUser } = useAuth();
@@ -49,6 +47,11 @@ export default function Login() {
   const [existingUser, setExistingUser] = useState<
     null | CredentialsType | EncryptedCredentialsType
   >(null);
+
+  useEffect(() => {
+    const saved = sessionStorage.getItem('loginAttempts');
+    if (saved) setAttempts(Number(saved));
+  }, []);
 
   useEffect(() => {
     if (!encryptedUser) return;
@@ -176,7 +179,6 @@ export default function Login() {
           showStrength={!existingUser}
           onChange={(e) => setPassword(e.target.value)}
           className="mb-4"
-          disabled={isLocked}
         />
 
         <Button onClick={handleLogin} className="w-full" disabled={isLocked}>
