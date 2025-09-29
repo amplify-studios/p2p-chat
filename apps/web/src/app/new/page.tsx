@@ -265,7 +265,7 @@ export default function NewRoom() {
                 <Button
                   className="w-full"
                   variant={"outline"}
-                  disabled={(peers.length - 1) === 0 || selectedUsernames.length < 2}
+                  disabled={friends.length === 0 || selectedUsernames.length < 2}
                   onClick={() => handleAddParticipants(selectedUsernames)} 
                 >
                   <UserPlus /> Add participants
@@ -273,7 +273,7 @@ export default function NewRoom() {
               </div>
             </div>
             <div className="border-t pt-4">
-              <h2 className="text-lg font-medium text-foreground">Participants{" "}
+              <h2 className="text-lg font-medium text-foreground">Participants
               </h2>
               <div 
                 className="flex flex-col items-start mt-2 mb-2"
@@ -309,7 +309,7 @@ export default function NewRoom() {
               <Button 
                 onClick={handleCreateRoom} 
                 className="flex-1" 
-                disabled={participants.length === 0}
+                disabled={participants.length < 2}
               >
                 Create Group
               </Button>
