@@ -9,7 +9,11 @@ import { ConfirmProvider } from './ConfirmContext';
 export default function Layout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
 
-  if (pathname === '/login') return children;
+  if (pathname === '/login') return (
+    <ConfirmProvider>
+      {children}
+    </ConfirmProvider>
+  );
 
   return (
     <ConfirmProvider>

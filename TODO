@@ -8,12 +8,11 @@ TODO: Home page features
 TODO: Selecting / Defining signaling server/s to use
 TODO: QR scanner decoding and redirecting to url
 TODO: QR scanner better ui
-TODO: Max 3 tries when unlocking
-TODO: forgot password in login
 TODO: Server federation
 TODO: Sync between devices
 TODO: Documentation (code and docs/)
 TODO: Block actions if signaling server is not available
+TODO: Derive the local encryption key from the user’s password using a strong KDF such as Argon2id or scrypt.
 DONE: IndexedDB
 DONE: ECDH crypto methods
 DONE: AES-256-GCM crypto methods
@@ -40,3 +39,5 @@ DONE: Delete connection
 DONE: chat invite (link)
 DONE: Custom confirm component
 DONE: Privacy Policy
+DONE: Max 3 tries when unlocking
+DONE: forgot password in login
