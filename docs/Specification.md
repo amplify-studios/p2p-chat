@@ -2,6 +2,21 @@
 
 > 29-09-2025
 
+<!--toc:start-->
+- [Specification v1.2](#specification-v12)
+  - [Encryption](#encryption)
+  - [Operations](#operations)
+    - [1. User Connection](#1-user-connection)
+    - [2. Send/Receive Message](#2-sendreceive-message)
+      - [Send](#send)
+        - [Send Pseudocode example](#send-pseudocode-example)
+      - [Receive](#receive)
+        - [Receive Pseudocode Example](#receive-pseudocode-example)
+    - [3. Local Storage](#3-local-storage)
+    - [4. Authentication](#4-authentication)
+    - [5. Registration](#5-registration)
+<!--toc:end-->
+
 ---
 
 ## Encryption
@@ -52,7 +67,7 @@ Split KDF_output into: K_enc (32 bytes AES-256 key), K_nonce_seed (16/32 bytes) 
     - authTag
     - protocol_version, senderID, message_seq, timestamp (as needed)
 
-##### Pseudocode example
+##### Send Pseudocode example
 
 ```text
 function SendMessage(recipient_pk, sender_id, recipient_id, plaintext, message_seq):
@@ -103,7 +118,7 @@ function SendMessage(recipient_pk, sender_id, recipient_id, plaintext, message_s
 3. Decrypt the ciphertext with AES-256-GCM.
 4. If authentication passes, display the message.
 
-##### Pseudocode Example
+##### Receive Pseudocode Example
 
 ```text
 function ReceiveMessage(message, recipient_sk):
