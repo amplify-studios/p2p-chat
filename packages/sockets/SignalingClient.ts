@@ -1,4 +1,4 @@
-import { InviteMessage, QrAckMessage } from './signaling';
+import { InviteMessage, AckMessage } from './signaling';
 
 export type SignalHandler = (msg: any) => void;
 
@@ -82,7 +82,7 @@ export class SignalingClient {
     this.send({ type: 'invite', target, payload });
   }
 
-  sendAck(target: string, payload: QrAckMessage) {
+  sendAck(target: string, payload: AckMessage) {
     this.send({ type: 'ack', target, payload });
   }
 

@@ -10,13 +10,13 @@ import { useDB } from '@/hooks/useDB';
 import { useAuth } from '@/hooks/useAuth';
 import { usePeers } from '@/hooks/usePeers';
 import useClient from '@/hooks/useClient';
-import { getSignalingClient } from '@/lib/signalingClient';
 import { generateBase58Id } from '@chat/crypto';
 import { CredentialsType, decodePayload, encodePayload, RoomType } from '@chat/core';
 import { InviteMessage, AckMessage, PeerInfo } from '@chat/sockets';
 import { refreshRooms } from '@/lib/utils';
 import { useToast } from '@/components/local/ToastContext';
 import { CircleMinus, ShieldUser, User, UserPlus } from 'lucide-react';
+import EmptyState from '@/components/local/EmptyState';
 
 export default function NewRoom() {
   const { user, key } = useAuth();
@@ -24,7 +24,7 @@ export default function NewRoom() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { peers, loading } = usePeers();
-  const { client } = useClient();
+  const client = useClient();
   const { showToast } = useToast();
 
   const [name, setName] = useState('');
@@ -105,7 +105,8 @@ export default function NewRoom() {
     handleQrInvite();
   }, [client, db, user, key, searchParams, router, putEncr]);
 
-  if (!client || !user || !db) return <Loading />;
+  if (!user || !db) return <Loading />;
+  if(!client) return <EmptyState msg='No connection to the signaling server' />
 
   const validate = () => {
     if (type === 'group' && !name.trim()) return 'Room name is required';
@@ -142,6 +143,7 @@ export default function NewRoom() {
   const handleCreateRoom = async () => {
     if (loading || pendingInvite) return;
     if (!key) return;
+    if (!client) return;
 
     const validationError = validate();
     if (validationError) {
@@ -168,8 +170,7 @@ export default function NewRoom() {
     } as InviteMessage;
 
     try {
-      const signalingClient = await getSignalingClient();
-      signalingClient.sendRoomInvite(otherUserId, invite);
+      client.sendRoomInvite(otherUserId, invite);
       console.log('Invite sent:', invite);
     } catch (err) {
       console.error('Failed to send invite:', err);

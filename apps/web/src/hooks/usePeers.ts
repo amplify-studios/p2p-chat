@@ -1,11 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getSignalingClient } from '@/lib/signalingClient';
 import type { PeerInfo, PeersMessage } from '@chat/sockets';
 import { CredentialsType } from '@chat/core';
 import { useDB } from './useDB';
 import { useAuth } from './useAuth';
+import useClient from './useClient';
 
 export interface Friend {
   id: string;
@@ -19,9 +19,10 @@ export function usePeers() {
   const [loading, setLoading] = useState(true);
   const { getAllDecr } = useDB();
   const { user, key } = useAuth();
+  const client = useClient();
 
   useEffect(() => {
-    if (!key) {
+    if (!key || !client) {
       setPeers([]);
       setFriends([]);
       setLoading(false);
@@ -32,8 +33,6 @@ export function usePeers() {
 
     const setup = async () => {
       try {
-        const client = await getSignalingClient();
-
         const handlePeers = async (msg: PeersMessage) => {
           if (!isMounted) return;
 
@@ -70,13 +69,12 @@ export function usePeers() {
           isMounted = false;
         };
       } catch (err) {
-        console.error('Signaling client not initialized:', err);
         setLoading(false);
       }
     };
 
     setup();
-  }, [key]);
+  }, [key, client]);
 
   return { peers, friends, setFriends, loading };
 }

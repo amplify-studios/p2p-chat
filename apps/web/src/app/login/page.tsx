@@ -19,7 +19,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { initSignalingClient } from '@/lib/signalingClient';
 import { SignalingClient } from '@chat/sockets';
 import { CredentialsType } from '@chat/core';
-import { PASSWORD_KEY } from '@/lib/storage';
+import { eraseDB, PASSWORD_KEY } from '@/lib/storage';
+import { useConfirm } from '@/components/local/ConfirmContext';
 
 const validateForm = (
   username: string,
@@ -36,13 +37,21 @@ export default function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [attempts, setAttempts] = useState(0);
+
   const router = useRouter();
   const { encryptedUser } = useAuth();
   const { db, putEncr } = useDB();
+  const confirm = useConfirm();
 
   const [existingUser, setExistingUser] = useState<
     null | CredentialsType | EncryptedCredentialsType
   >(null);
+
+  useEffect(() => {
+    const saved = sessionStorage.getItem('loginAttempts');
+    if (saved) setAttempts(Number(saved));
+  }, []);
 
   useEffect(() => {
     if (!encryptedUser) return;
@@ -58,16 +67,19 @@ export default function Login() {
   if (!db) return <Loading />;
 
   const handleLogin = async () => {
+    if (attempts >= 3) return;
+
     setError('');
     const requireUsername = !existingUser;
-    const validationError = validateForm(username, password, requireUsername);
-    if (validationError) {
-      setError(validationError);
-      return;
-    }
 
     if (!existingUser) {
       // --- New user ---
+      const validationError = validateForm(username, password, requireUsername);
+      if (validationError) {
+        setError(validationError);
+        return;
+      }
+
       const id = generateBase58Id(8);
       const keys = createECDHkey();
 
@@ -95,22 +107,29 @@ export default function Login() {
       await client.connect('ws://localhost:8080');
     } else {
       // --- Existing user unlock ---
-      const storedHash = sessionStorage.getItem(PASSWORD_KEY);
-      if (storedHash && storedHash !== hash(password)) {
-        setError('Incorrect password');
-        return;
-      }
-
       const aesKey = generateAESKey(new TextEncoder().encode(hash(password)));
       let decrUser: CredentialsType;
 
       try {
-        decrUser = decryptCredentialsType(existingUser as EncryptedCredentialsType, aesKey);
+        decrUser = decryptCredentialsType(
+          existingUser as EncryptedCredentialsType,
+          aesKey,
+        );
       } catch (err: unknown) {
-        console.error('Could not decrypt credentials: ', err);
         setError('Incorrect password');
+        const next = attempts + 1;
+        setAttempts(next);
+        sessionStorage.setItem('loginAttempts', String(next));
+
+        if (next >= 3) {
+          await eraseDB();
+          sessionStorage.removeItem('loginAttempts');
+          window.location.reload();
+        }
+
         return;
       }
+
       sessionStorage.setItem(PASSWORD_KEY, hash(password));
       setUsername(decrUser.username);
 
@@ -122,7 +141,7 @@ export default function Login() {
     router.push('/');
   };
 
-  console.log(existingUser);
+  const isLocked = attempts >= 3;
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-background">
@@ -132,6 +151,14 @@ export default function Login() {
         </h1>
 
         {error && <p className="text-destructive mb-4">{error}</p>}
+        {attempts > 0 && attempts < 3 && (
+          <p className="text-muted-foreground mb-2">
+            {3 - attempts} attempt(s) remaining
+          </p>
+        )}
+        {isLocked && (
+          <p className="text-muted-foreground mb-2">Erasing data...</p>
+        )}
 
         {!existingUser && (
           <Input
@@ -140,6 +167,7 @@ export default function Login() {
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             className="mb-4"
+            disabled={isLocked}
           />
         )}
 
@@ -153,9 +181,32 @@ export default function Login() {
           className="mb-4"
         />
 
-        <Button onClick={handleLogin} className="w-full">
+        <Button onClick={handleLogin} className="w-full" disabled={isLocked}>
           {existingUser ? 'Unlock' : 'Login'}
         </Button>
+
+        {existingUser && (
+          <p
+            className="w-full flex text-xs text-muted-foreground mt-2 hover:underline hover:cursor-pointer"
+            onClick={async () => {
+              const confirmed = await confirm({
+                title: 'Forgot your password?',
+                message:
+                  'Unfortunately, there is no way for us to reset your password, since all data is local to your machine. Would you like to erase your data and create a new account?',
+                confirmText: 'Erase',
+                cancelText: 'Cancel',
+              });
+
+              if (confirmed) {
+                await eraseDB();
+                sessionStorage.removeItem('loginAttempts');
+                window.location.reload();
+              }
+            }}
+          >
+            Forgot password?
+          </p>
+        )}
       </div>
     </div>
   );

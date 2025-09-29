@@ -14,7 +14,6 @@ import { MessageType } from '@chat/core';
 // TODO: Remove
 import crypto from 'crypto';
 import { createECDHkey } from '@chat/crypto';
-import { getSignalingClient } from '@/lib/signalingClient';
 
 export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -138,7 +137,7 @@ export default function ChatPage() {
       <Chat
         title={room.name}
         messages={messages}
-        href={`/options?id=${room.roomId}`}
+        href={`/chat/options?id=${room.roomId}`}
         onSend={sendMessage}
       />
     </div>
