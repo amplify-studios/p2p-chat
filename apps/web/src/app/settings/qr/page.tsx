@@ -1,6 +1,7 @@
 'use client';
 
 import QrScanner from '@/components/local/QrScanner';
+import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 
 export default function Qr() {
@@ -8,12 +9,9 @@ export default function Qr() {
 
   const router = useRouter();
 
-  return (
-    <QrScanner
-      onScan={(data) => {
-        alert(`scanned: ${data}`);
-        router.push('/');
-      }}
-    />
-  );
+  return (<>
+    <QrScanner onScan={function(data: string): void {
+      router.push(data);
+      } } />
+  </>);
 }

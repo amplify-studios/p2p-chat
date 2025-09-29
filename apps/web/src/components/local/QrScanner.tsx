@@ -24,8 +24,8 @@ export default function QrScanner({ onScan }: QrScannerProps) {
           stopScannerSafely();
         },
         (error) => {
-          // console.warn("QR scan error:", error);
-          alert(`QR scan error: ${error}`);
+          console.warn("QR scan error:", error);
+          // alert(`QR scan error: ${error}`);
         },
       )
       .then(() => {
