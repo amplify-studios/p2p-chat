@@ -7,11 +7,11 @@
   - [Encryption](#encryption)
   - [Operations](#operations)
     - [1. User Connection](#1-user-connection)
-    - [2. Send/Receive Message](#2-sendreceive-message)
-      - [Send](#send)
-        - [Send Pseudocode example](#send-pseudocode-example)
-      - [Receive](#receive)
-        - [Receive Pseudocode Example](#receive-pseudocode-example)
+    - [2. Messaging](#2-messaging)
+      - [Sending](#sending)
+        - [Sending - Pseudocode](#sending-pseudocode)
+      - [Receiving](#receiving)
+        - [Receiving - Pseudocode](#receiving-pseudocode)
     - [3. Local Storage](#3-local-storage)
     - [4. Authentication](#4-authentication)
     - [5. Registration](#5-registration)
@@ -21,85 +21,106 @@
 
 ## Encryption
 
-- AES-256-GCM for encrypting messages.
-- ECDH (Elliptic-Curve Diffie–Hellman) for deriving shared secrets between peers.
-- HKDF (key derivation) to turn shared secrets into symmetric keys.
+* **AES-256-GCM** is used for message confidentiality and integrity.
+* **ECDH (X25519)** is used to derive ephemeral shared secrets between peers.
+* **HKDF (SHA-256)** is used to expand shared secrets into symmetric keys and nonces.
 
 ---
 
 ## Operations
 
+Supported operations include:
+
 1. User Connection
-2. Send/Receive Message
+2. Messaging (Send/Receive)
 3. Local Storage
 4. Authentication
 5. Registration
 
+---
+
 ### 1. User Connection
 
-1. User provides the other user’s ID (public key or fingerprint).
-2. A signaling server is used only for exchanging connection data (similar to WebRTC).
-3. Each peer stores the other’s public key + fingerprint for authentication.
+1. A user obtains another peer’s identifier (public key or fingerprint).
+2. A signaling server is used only to exchange connection metadata (similar to WebRTC).
+3. Each peer stores the other’s public key and fingerprint for authentication purposes.
 
-### 2. Send/Receive Message
+---
 
-#### Send
+### 2. Messaging
 
-1. Generate ephemeral ECDH key pair esk, epk (X25519).
-2. Compute ECDH shared secret Z = ECDH(esk, recipient_longterm_pk).
-3. Compute a random salt (recommended) or derive salt from context (e.g., an ephemeral session id).
+#### Sending
+
+1. Generate an ephemeral ECDH key pair `(esk, epk)` using X25519.
+2. Compute the shared secret:
+
+   ```
+   Z = ECDH(esk, recipient_longterm_pk)
+   ```
+3. Select a salt: either random (recommended) or derived from session context.
 4. Run HKDF-SHA256:
-```ini
-HK = HKDF-Extract(salt, Z)
-KDF_output = HKDF-Expand(HK, info = "MyProto v1 | senderID | recipientID | epk", L)
-```
-Split KDF_output into: K_enc (32 bytes AES-256 key), K_nonce_seed (16/32 bytes) and optionally K_other (for key confirmation).
 
-5. Derive the per-message nonce deterministically, e.g.:
-    - If using per-message ephemeral keys: nonce = HKDF-Expand(K_nonce_seed, "nonce" | message_seq, 12) (12 bytes for AES-GCM), or
-    - Use a 96-bit random nonce but include it in the message and ensure uniqueness.
-6. Choose AAD = concat(protocol_version, senderID, recipientID, timestamp, message_seq) (whatever you need) — this is authenticated but not encrypted.
-7. Encrypt: ciphertext, authTag = AES-256-GCM-Encrypt(K_enc, nonce, plaintext, AAD).
-8. Send the message package:
-    - epk (sender ephemeral public key)
-    - nonce (if you used random nonce, or omit if derived deterministically)
-    - ciphertext
-    - authTag
-    - protocol_version, senderID, message_seq, timestamp (as needed)
+   ```ini
+   HK = HKDF-Extract(salt, Z)
+   KDF_output = HKDF-Expand(HK, info = "MyProto v1 | senderID | recipientID | epk", L)
+   ```
 
-##### Send Pseudocode example
+   Split `KDF_output` into:
+
+   * `K_enc` (32 bytes, AES-256 key)
+   * `K_nonce_seed` (16–32 bytes, for nonce derivation)
+   * `K_other` (optional, e.g., for key confirmation)
+5. Derive a per-message nonce:
+
+   * Deterministic:
+
+     ```
+     nonce = HKDF-Expand(K_nonce_seed, "nonce|" + message_seq, 12)
+     ```
+   * Or random 96-bit value (must be unique; then included in the message).
+6. Construct **Associated Data (AAD)**:
+
+   ```
+   AAD = concat(protocol_version, senderID, recipientID, timestamp, message_seq)
+   ```
+7. Encrypt with AES-256-GCM:
+
+   ```
+   (ciphertext, authTag) = AES-256-GCM-Encrypt(K_enc, nonce, plaintext, AAD)
+   ```
+8. Send the message containing:
+
+   * `epk` (ephemeral public key)
+   * `salt`
+   * `nonce` (if random; omitted if derived deterministically)
+   * `ciphertext`
+   * `authTag`
+   * `protocol_version`, `senderID`, `recipientID`, `message_seq`, `timestamp`
+
+##### Sending - Pseudocode
 
 ```text
 function SendMessage(recipient_pk, sender_id, recipient_id, plaintext, message_seq):
-    # 1. Generate ephemeral ECDH keypair
     (esk, epk) = GenerateEphemeralKeypair()
-
-    # 2. Derive shared secret with recipient’s long-term public key
     Z = ECDH(esk, recipient_pk)
 
-    # 3. Define context for KDF
-    salt = RandomBytes(32)                       # or session-specific
+    salt = RandomBytes(32)
     info = "ProtoV1|" + sender_id + "|" + recipient_id + "|" + epk
 
-    # 4. Run HKDF (Extract + Expand)
-    KDF_output = HKDF(salt, Z, info, L = 48)     # 32 bytes for key, 16 for nonce seed
-    K_enc = First32Bytes(KDF_output)             # AES-256 key
+    KDF_output = HKDF(salt, Z, info, L = 48)
+    K_enc = First32Bytes(KDF_output)
     K_nonce_seed = Last16Bytes(KDF_output)
 
-    # 5. Derive nonce deterministically
     nonce = HKDF_Expand(K_nonce_seed, "nonce|" + message_seq, L = 12)
 
-    # 6. Build Associated Data (AAD)
     AAD = Encode(sender_id, recipient_id, message_seq, "ProtoV1")
 
-    # 7. Encrypt
     (ciphertext, authTag) = AES256_GCM_Encrypt(K_enc, nonce, plaintext, AAD)
 
-    # 8. Package message
     message = {
         "ephemeral_pk": epk,
         "salt": salt,
-        "nonce": nonce,                # include only if not derivable
+        "nonce": nonce,
         "ciphertext": ciphertext,
         "authTag": authTag,
         "sender_id": sender_id,
@@ -111,22 +132,28 @@ function SendMessage(recipient_pk, sender_id, recipient_id, plaintext, message_s
     return message
 ```
 
-#### Receive
+---
 
-1. Use the sender’s ephemeral public key + your own private key to perform ECDH.
-2. Run the shared secret through HKDF → get the AES-256-GCM session key.
-3. Decrypt the ciphertext with AES-256-GCM.
-4. If authentication passes, display the message.
+#### Receiving
 
-##### Receive Pseudocode Example
+1. Extract the message fields.
+2. Compute the shared secret:
+
+   ```
+   Z = ECDH(recipient_sk, epk)
+   ```
+3. Re-run HKDF with the provided salt and same info string to derive `K_enc` and `K_nonce_seed`.
+4. Derive the nonce (unless explicitly included in the message).
+5. Rebuild the AAD exactly as the sender did.
+6. Attempt AES-256-GCM decryption. If authentication fails, reject the message.
+
+##### Receiving - Pseudocode
 
 ```text
 function ReceiveMessage(message, recipient_sk):
-
-    # 1. Extract fields from the incoming message
     epk              = message["ephemeral_pk"]
     salt             = message["salt"]
-    nonce            = message["nonce"]           # may be omitted if derived deterministically
+    nonce            = message["nonce"]
     ciphertext       = message["ciphertext"]
     authTag          = message["authTag"]
     sender_id        = message["sender_id"]
@@ -134,23 +161,18 @@ function ReceiveMessage(message, recipient_sk):
     message_seq      = message["message_seq"]
     protocol_version = message["protocol_version"]
 
-    # 2. Perform ECDH using your private key and the sender’s ephemeral public key
     Z = ECDH(recipient_sk, epk)
 
-    # 3. Re-run HKDF with same parameters
     info = "ProtoV1|" + sender_id + "|" + recipient_id + "|" + epk
-    KDF_output = HKDF(salt, Z, info, L = 48)   # 32 + 16
+    KDF_output = HKDF(salt, Z, info, L = 48)
     K_enc = First32Bytes(KDF_output)
     K_nonce_seed = Last16Bytes(KDF_output)
 
-    # 4. Derive nonce (if not explicitly included in message)
     if nonce == null:
         nonce = HKDF_Expand(K_nonce_seed, "nonce|" + message_seq, L = 12)
 
-    # 5. Rebuild AAD exactly as sender did
     AAD = Encode(sender_id, recipient_id, message_seq, protocol_version)
 
-    # 6. Attempt decryption
     plaintext = AES256_GCM_Decrypt(K_enc, nonce, ciphertext, AAD, authTag)
 
     if plaintext == FAIL:
@@ -159,26 +181,31 @@ function ReceiveMessage(message, recipient_sk):
     return plaintext
 ```
 
+---
+
 ### 3. Local Storage
 
-All sensitive data stored in IndexedDB is encrypted with a key derived from the user’s password.
+* All sensitive data stored locally (e.g., in IndexedDB) must be encrypted.
+* Derive the local encryption key from the user’s password using a strong KDF such as **Argon2id** or **scrypt**.
 
-Password → strong KDF (e.g., Argon2 or scrypt) → local encryption key.
+---
 
 ### 4. Authentication
 
-1. Manual Key Verification (TOFU – Trust on First Use)
-   - On first connection, peers exchange public keys.
-   - Users verify fingerprints out-of-band (QR code, phone call, in person).
-   - Once verified, keys are cached and used for future sessions.
+* **Trust on First Use (TOFU)**:
+
+  * On initial connection, peers exchange long-term public keys.
+  * Users verify key fingerprints out-of-band (QR code, phone call, in person).
+  * Verified keys are cached locally for subsequent sessions.
+
+---
 
 ### 5. Registration
 
-1. No central registration.
-   - Each user generates an ECDH key pair on first launch.
-   - Their public key = identity.
-   - Authentication via TOFU or Web of Trust.
+* No centralized registration service exists.
+* Each user generates an ECDH key pair on first use; the public key is their identity.
+* Authentication relies on TOFU or a Web of Trust.
+* Optional: users may assign local nicknames mapped to public keys.
 
-2. Optional nicknames (local only).
-   - Users may assign display names mapped to public keys.
-   - Names are not globally unique or enforced.
+  * Nicknames are not globally unique or enforced.
+
