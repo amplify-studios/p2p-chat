@@ -11,6 +11,7 @@ import { useToast } from '@/components/local/ToastContext';
 import { useBlocks } from '@/hooks/useBlocks';
 import { CredentialsType } from '@chat/core';
 import { useDB } from '@/hooks/useDB';
+import useClient from '@/hooks/useClient';
 
 export default function Peers() {
   const { user } = useAuth();
@@ -18,6 +19,7 @@ export default function Peers() {
   const { showToast } = useToast();
   const { block } = useBlocks();
   const { db } = useDB();
+  const client = useClient();
 
   if (loading) {
     return (
@@ -26,6 +28,8 @@ export default function Peers() {
       </div>
     );
   }
+  if(!client) return <EmptyState msg='No connection to the signaling server' />
+
 
   return (
     <div className="p-4 max-w-lg mx-auto">

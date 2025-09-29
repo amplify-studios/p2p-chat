@@ -4,14 +4,18 @@ import { useInvites } from '@/hooks/useInvites';
 import { Button } from '@/components/ui/button';
 import EmptyState from '@/components/local/EmptyState';
 import { useAuth } from '@/hooks/useAuth';
+import useClient from '@/hooks/useClient';
 
 export default function Invites() {
   useAuth();
+  const client = useClient();
   const { invites: currentInvites, acceptInvite, declineInvite } = useInvites();
 
+  if(!client) return <EmptyState msg='No connection to the signaling server' />
   if (!currentInvites.length) {
     return <EmptyState msg="No pending invites" />;
   }
+
 
   return (
     <div className="p-6 flex flex-col gap-4">

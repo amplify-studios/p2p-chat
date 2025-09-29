@@ -8,12 +8,15 @@ import { usePeers } from '@/hooks/usePeers';
 import { useDB } from '@/hooks/useDB';
 import { MessageType } from '@chat/core';
 import StatusCard from '@/components/local/StatusCard';
+import useClient from '@/hooks/useClient';
+import EmptyState from '@/components/local/EmptyState';
 
 export default function Home() {
   const { user, key } = useAuth();
   const { db, getAllDecr } = useDB();
   const { invites } = useInvites();
   const { peers, loading: peersLoading, friends } = usePeers();
+  const client = useClient();
 
   const [newMessagesCount, setNewMessagesCount] = useState(0);
 
@@ -59,6 +62,10 @@ export default function Home() {
           <p className="text-sm text-gray-500">{user.userId}</p>
         </div>
       </header>
+
+      {!client && (
+        <EmptyState msg='No connection to the signaling server' />
+      )}
 
       {/* Status Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">

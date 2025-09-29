@@ -11,7 +11,6 @@ TODO: QR scanner better ui
 TODO: Server federation
 TODO: Sync between devices
 TODO: Documentation (code and docs/)
-TODO: Block actions if signaling server is not available
 TODO: Derive the local encryption key from the user’s password using a strong KDF such as Argon2id or scrypt.
 DONE: IndexedDB
 DONE: ECDH crypto methods
@@ -41,3 +40,4 @@ DONE: Custom confirm component
 DONE: Privacy Policy
 DONE: Max 3 tries when unlocking
 DONE: forgot password in login
+DONE: Block actions if signaling server is not available

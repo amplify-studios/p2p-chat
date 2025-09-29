@@ -16,6 +16,7 @@ import { InviteMessage, AckMessage } from '@chat/sockets';
 import { refreshRooms } from '@/lib/utils';
 import { useToast } from '@/components/local/ToastContext';
 import { ShieldUser, User, UserPlus } from 'lucide-react';
+import EmptyState from '@/components/local/EmptyState';
 
 export default function NewRoom() {
   const { user, key } = useAuth();
@@ -88,7 +89,8 @@ export default function NewRoom() {
     handleQrInvite();
   }, [client, db, user, key, searchParams, router, putEncr]);
 
-  if (!client || !user || !db) return <Loading />;
+  if (!user || !db) return <Loading />;
+  if(!client) return <EmptyState msg='No connection to the signaling server' />
 
   const validate = () => {
     if (type === 'group' && !name.trim()) return 'Room name is required';
