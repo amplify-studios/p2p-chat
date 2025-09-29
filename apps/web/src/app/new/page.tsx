@@ -13,10 +13,10 @@ import useClient from '@/hooks/useClient';
 import { getSignalingClient } from '@/lib/signalingClient';
 import { generateBase58Id } from '@chat/crypto';
 import { CredentialsType, decodePayload, encodePayload, RoomType } from '@chat/core';
-import { InviteMessage, AckMessage } from '@chat/sockets';
+import { InviteMessage, AckMessage, PeerInfo } from '@chat/sockets';
 import { refreshRooms } from '@/lib/utils';
 import { useToast } from '@/components/local/ToastContext';
-import { ShieldUser, User, UserPlus } from 'lucide-react';
+import { CircleMinus, ShieldUser, User, UserPlus } from 'lucide-react';
 
 export default function NewRoom() {
   const { user, key } = useAuth();
@@ -33,8 +33,24 @@ export default function NewRoom() {
   const [error, setError] = useState('');
   const [qrValue, setQrValue] = useState<string | null>(null);
   const [pendingInvite, setPendingInvite] = useState(false);
+  const [selectedUsernames, setSelectedUsernames] = useState<string[]>([]);
+  //const [participants, setParticipants] = useState<PeerInfo[]>([]);
+  const [participants, setParticipants] = useState<string[]>([]);
+  const [availablePeers, setAvailablePeers] = useState(
+    () => peers.filter((p) => p.id !== user?.userId)
+  );
 
   const handledQr = useRef(false);
+  
+  useEffect(() => {
+    if (!user) return;
+    setAvailablePeers(peers.filter((p) => p.id !== user.userId));
+  }, [peers, user, user?.userId]);
+
+  useEffect(() => {
+    if (!user) return;
+    //setParticipants(peers.filter((p) => p.id !== user.userId));
+  }, [peers, user, user?.userId]);
 
   useEffect(() => {
     const userIdParam = searchParams.get('userId');
@@ -180,8 +196,20 @@ export default function NewRoom() {
     setQrValue(url);
   };
 
-  const handleAddParticipants = () => {
-    
+  const handleSelected = (username:string) => {
+    setSelectedUsernames((prev: string[]) =>
+      prev.includes(username) ? prev.filter((name) => name !== username) : [...prev, username]
+    );
+  };
+
+  const handleAddParticipants = (newSelectedUsernames: string[]) => {
+    const newParticipants = newSelectedUsernames.filter((name) => !participants.includes(name));
+    setParticipants((prev) => [...prev, ...newParticipants]);
+    setSelectedUsernames([]);
+  }
+
+  const handleRemoveParticipant = (id: string) => {
+    setParticipants((prev) => prev.filter((p) => p !== id));
   }
 
   return (
@@ -225,10 +253,39 @@ export default function NewRoom() {
               </div>
             </div>
             <div className="border-t pt-4">
+              <h2 className="text-lg font-medium text-foreground">{peers.length - 1 === 0 ? "No available peers" : `Available peers (${peers.length - 1})`}
+              </h2>
+              <span className="text-sm text-muted-foreground">{peers.length - 1 === 0 ? "" : "Select at least one peer"}</span>
+              <div 
+                className="flex flex-col items-start mt-2 mb-2"
+              >
+                {/* Peers */}
+                {availablePeers.map((p) => (
+                  <Button
+                    key={p.id}
+                    variant={"ghost"}
+                    onClick={() => handleSelected(p.username)}
+                    className={`w-fit flex items-center mb-2 transition-all duration-50 
+                      ${selectedUsernames.includes(p.username) ? "border-2 border-green-500" : ""
+                    }`}
+                  >
+                    <User /> {p.username}
+                  </Button>
+                ))}
+              </div>
+              <div className="flex items-center justify-between pt-2">
+                <Button
+                  className="w-full"
+                  variant={"outline"}
+                  disabled={(peers.length - 1) === 0 || selectedUsernames.length === 0}
+                  onClick={() => handleAddParticipants(selectedUsernames)} 
+                >
+                  <UserPlus /> Add participants
+                </Button>
+              </div>
+            </div>
+            <div className="border-t pt-4">
               <h2 className="text-lg font-medium text-foreground">Participants{" "}
-                <span className="text-sm text-muted-foreground">
-                  ({peers.length - 1} available)
-                </span>
               </h2>
               <div 
                 className="flex flex-col items-start mt-2 mb-2"
@@ -239,30 +296,25 @@ export default function NewRoom() {
                 >
                   <ShieldUser /> {user.username} (Me)
                 </Button>
-                <Button
-                  className="w-auto mb-2"
-                  variant={"outline"}
-                >
-                  <User /> User 2
-                </Button>
-                <Button
-                  className="w-auto mb-2"
-                  variant={"outline"}
-                >
-                  <User /> User 3
-                </Button>
+                {/* Participants */}
+                {participants.map((p) => (
+                  <Button
+                    key={p}
+                    className="w-fit flex items-center mb-2"
+                    variant={"outline"}
+                  >
+                    <User /> {p}
+                    <Button 
+                      className='ml-2 w-auto'
+                      variant='ghost'
+                      onClick={() => handleRemoveParticipant(p)}
+                    >
+                      <CircleMinus />
+                    </Button>
+                  </Button>
+                ))}
               </div>
               <div className="border-t pt-4 mt-4">
-                <div className="flex items-center justify-between pt-2">
-                  <Button
-                    className="w-full"
-                    variant={"outline"}
-                    disabled={(peers.length - 1) === 0}
-                    onClick={handleAddParticipants} 
-                  >
-                    <UserPlus /> Add participants
-                  </Button>
-                </div>
               </div>
             </div>
             <div className="flex gap-2">
