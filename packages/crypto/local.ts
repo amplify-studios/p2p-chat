@@ -7,7 +7,6 @@ import {
   ServerSettingsType,
 } from '@chat/core';
 import { AESencrypt, AESdecrypt } from './AES';
-import BlocklistPage from '@/app/blocked/page';
 
 export interface EncryptedField {
   encryptedMessage: string;
