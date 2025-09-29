@@ -16,6 +16,7 @@ import { CredentialsType, decodePayload, encodePayload, RoomType } from '@chat/c
 import { InviteMessage, AckMessage } from '@chat/sockets';
 import { refreshRooms } from '@/lib/utils';
 import { useToast } from '@/components/local/ToastContext';
+import { ShieldUser, User, UserPlus } from 'lucide-react';
 
 export default function NewRoom() {
   const { user, key } = useAuth();
@@ -179,22 +180,16 @@ export default function NewRoom() {
     setQrValue(url);
   };
 
+  const handleAddParticipants = () => {
+    
+  }
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
       <div className="bg-card p-8 rounded-lg shadow-md w-full max-w-md">
         <h1 className="text-2xl font-bold mb-6 text-center text-foreground">Create New Room</h1>
 
         {error && <p className="text-destructive mb-4">{error}</p>}
-
-        {type === 'group' && (
-          <Input
-            type="text"
-            placeholder="Room Name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="mb-4"
-          />
-        )}
 
         <div className="mb-4 flex gap-4">
           <label className="flex items-center gap-2">
@@ -213,38 +208,112 @@ export default function NewRoom() {
               name="type"
               value="group"
               checked={type === 'group'}
-              onChange={() => setType('group')}
+              onChange={() => {
+                setType('group')
+                setError('')
+              }}
             />
             Group
           </label>
         </div>
 
-        {type === 'single' && (
-          <Input
-            type="text"
-            placeholder="Other User ID"
-            value={otherUserId}
-            onChange={(e) => setOtherUserId(e.target.value)}
-            className="mb-4"
-          />
+        {type === 'group' && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-4">
+              <div className="flex-1">
+                <Input placeholder="Room name" value={name} onChange={(e) => setName(e.target.value)} className="mb-2" />
+              </div>
+            </div>
+            <div className="border-t pt-4">
+              <h2 className="text-lg font-medium text-foreground">Participants{" "}
+                <span className="text-sm text-muted-foreground">
+                  ({peers.length - 1} available)
+                </span>
+              </h2>
+              <div 
+                className="flex flex-col items-start mt-2 mb-2"
+              >
+                <Button
+                  className="w-auto mb-2"
+                  variant={"outline"} 
+                >
+                  <ShieldUser /> {user.username} (Me)
+                </Button>
+                <Button
+                  className="w-auto mb-2"
+                  variant={"outline"}
+                >
+                  <User /> User 2
+                </Button>
+                <Button
+                  className="w-auto mb-2"
+                  variant={"outline"}
+                >
+                  <User /> User 3
+                </Button>
+              </div>
+              <div className="border-t pt-4 mt-4">
+                <div className="flex items-center justify-between pt-2">
+                  <Button
+                    className="w-full"
+                    variant={"outline"}
+                    disabled={(peers.length - 1) === 0}
+                    onClick={handleAddParticipants} 
+                  >
+                    <UserPlus /> Add participants
+                  </Button>
+                </div>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button 
+                onClick={handleCreateRoom} 
+                className="flex-1" 
+                disabled={pendingInvite}
+              >
+                {pendingInvite ? 'Creating...' : 'Create Group'}
+              </Button>
+              {/*<Button 
+                onClick={handleGenerateQR} 
+                className=""
+              >
+                Generate QR
+              </Button>*/}
+            </div>
+          </div>
         )}
 
-        <Button onClick={handleCreateRoom} className="w-full mb-2" disabled={pendingInvite}>
-          {pendingInvite ? 'Invite Pending...' : 'Send Invite'}
-        </Button>
+        {type === 'single' && (
+          <div>
+            <Input
+              type="text"
+              placeholder="Other User ID"
+              value={otherUserId}
+              onChange={(e) => setOtherUserId(e.target.value)}
+              className="mb-4"
+            />
+            <Button
+              onClick={handleCreateRoom}
+              className="w-full mb-2"
+              disabled={pendingInvite}
+            >
+              {pendingInvite ? 'Invite Pending...' : 'Send Invite'}
+            </Button>
 
-        <Button onClick={handleGenerateQR} className="w-full mb-2">
-          Generate QR Invite
-        </Button>
+            <Button onClick={handleGenerateQR} className="w-full mb-2">
+              Generate QR Invite
+            </Button>
 
         {qrValue && (
           <div className="flex flex-col items-center mt-4 gap-2">
             <p className="text-sm text-muted-foreground">Scan to join instantly:</p>
             <ResponsiveQr qrValue={qrValue} />
 
-            <Button onClick={handleShare} className="mt-2">
-              Share Invite
-            </Button>
+                <Button onClick={handleShare} className="mt-2">
+                  Share Invite
+                </Button>
+              </div>
+            )}
           </div>
         )}
       </div>
