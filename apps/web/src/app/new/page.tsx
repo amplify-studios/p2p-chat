@@ -227,7 +227,7 @@ export default function NewRoom() {
             <div className="border-t pt-4">
               <h2 className="text-lg font-medium text-foreground">Participants{" "}
                 <span className="text-sm text-muted-foreground">
-                  ({peers.length} available)
+                  ({peers.length - 1} available)
                 </span>
               </h2>
               <div 
@@ -257,6 +257,7 @@ export default function NewRoom() {
                   <Button
                     className="w-full"
                     variant={"outline"}
+                    disabled={(peers.length - 1) === 0}
                     onClick={handleAddParticipants} 
                   >
                     <UserPlus /> Add participants
