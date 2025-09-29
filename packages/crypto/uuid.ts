@@ -7,11 +7,11 @@ export function generateUUID(): string {
 }
 
 export function generateBase58Id(length: number = 16): string {
-  const alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+  const alphabet = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
   const array = new Uint8Array(length);
   crypto.getRandomValues(array);
 
-  let id = "";
+  let id = '';
   for (let i = 0; i < length; i++) {
     id += alphabet[array[i] % alphabet.length];
   }

@@ -42,9 +42,9 @@ export function Chat({ title, messages, onSend, href, isTyping = false }: ChatPr
   return (
     <Card className="w-full flex-1 flex flex-col">
       <CardHeader className="flex justify-between items-center">
-        <div className='flex row gap-2'>
-        <User />
-        <h2 className="text-lg font-bold">{title}</h2>
+        <div className="flex row gap-2">
+          <User />
+          <h2 className="text-lg font-bold">{title}</h2>
         </div>
         <Link href={href}>
           <EllipsisVertical />
@@ -55,7 +55,7 @@ export function Chat({ title, messages, onSend, href, isTyping = false }: ChatPr
         ref={scrollRef}
         className="flex-1 overflow-y-auto space-y-2 p-2 bg-gray-50 dark:bg-gray-900"
       >
-        {(messages.length == 0) ? (<EmptyState msg="Start the conversation!" />) : <></>}
+        {messages.length == 0 ? <EmptyState msg="Start the conversation!" /> : <></>}
         {messages.map((msg) => (
           <div
             key={msg.id}
@@ -91,7 +91,9 @@ export function Chat({ title, messages, onSend, href, isTyping = false }: ChatPr
             if (e.key === 'Enter') sendMessage();
           }}
         />
-        <Button onClick={sendMessage}><Send /></Button>
+        <Button onClick={sendMessage}>
+          <Send />
+        </Button>
       </CardFooter>
     </Card>
   );

@@ -1,6 +1,13 @@
-import { BlockType, CredentialsType, InviteType, MessageType, RoomType, ServerSettingsType } from "@chat/core";
-import { AESencrypt, AESdecrypt } from "./AES";
-import BlocklistPage from "@/app/blocked/page";
+import {
+  BlockType,
+  CredentialsType,
+  InviteType,
+  MessageType,
+  RoomType,
+  ServerSettingsType,
+} from '@chat/core';
+import { AESencrypt, AESdecrypt } from './AES';
+import BlocklistPage from '@/app/blocked/page';
 
 export interface EncryptedField {
   encryptedMessage: string;
@@ -16,7 +23,7 @@ function decField(key: Uint8Array, payload: EncryptedField): string {
   return AESdecrypt(key, payload.encryptedMessage, payload.authTag, payload.iv);
 }
 
-export interface EncryptedMessageType extends Omit<MessageType, "roomId" | "senderId" | "message"> {
+export interface EncryptedMessageType extends Omit<MessageType, 'roomId' | 'senderId' | 'message'> {
   roomId: EncryptedField;
   senderId: EncryptedField;
   message: EncryptedField;
@@ -40,12 +47,15 @@ export function decryptMessageType(enc: EncryptedMessageType, key: Uint8Array): 
   };
 }
 
-export interface EncryptedCredentialsType extends Omit<CredentialsType, "private" | "username"> {
+export interface EncryptedCredentialsType extends Omit<CredentialsType, 'private' | 'username'> {
   username: EncryptedField;
   private?: EncryptedField;
 }
 
-export function encryptCredentialsType(creds: CredentialsType, key: Uint8Array): EncryptedCredentialsType {
+export function encryptCredentialsType(
+  creds: CredentialsType,
+  key: Uint8Array,
+): EncryptedCredentialsType {
   return {
     ...creds,
     username: encField(key, creds.username),
@@ -53,7 +63,10 @@ export function encryptCredentialsType(creds: CredentialsType, key: Uint8Array):
   };
 }
 
-export function decryptCredentialsType(enc: EncryptedCredentialsType, key: Uint8Array): CredentialsType {
+export function decryptCredentialsType(
+  enc: EncryptedCredentialsType,
+  key: Uint8Array,
+): CredentialsType {
   return {
     ...enc,
     username: decField(key, enc.username),
@@ -61,7 +74,7 @@ export function decryptCredentialsType(enc: EncryptedCredentialsType, key: Uint8
   };
 }
 
-export interface EncryptedRoomType extends Omit<RoomType, "name" | "keys"> {
+export interface EncryptedRoomType extends Omit<RoomType, 'name' | 'keys'> {
   name: EncryptedField;
   keys: EncryptedCredentialsType[];
 }
@@ -70,7 +83,7 @@ export function encryptRoomType(room: RoomType, key: Uint8Array): EncryptedRoomT
   return {
     ...room,
     name: encField(key, room.name),
-    keys: room.keys.map(k => encryptCredentialsType(k, key)),
+    keys: room.keys.map((k) => encryptCredentialsType(k, key)),
   };
 }
 
@@ -78,11 +91,11 @@ export function decryptRoomType(enc: EncryptedRoomType, key: Uint8Array): RoomTy
   return {
     ...enc,
     name: decField(key, enc.name),
-    keys: enc.keys.map(k => decryptCredentialsType(k, key)),
+    keys: enc.keys.map((k) => decryptCredentialsType(k, key)),
   };
 }
 
-export interface EncryptedInviteType extends Omit<InviteType, "from" | "name"> {
+export interface EncryptedInviteType extends Omit<InviteType, 'from' | 'name'> {
   from: EncryptedField;
   name: EncryptedField;
 }
@@ -103,43 +116,56 @@ export function decryptInviteType(enc: EncryptedInviteType, key: Uint8Array): In
   } as InviteType;
 }
 
-export interface EncryptedBlockType extends Omit<BlockType, "username"> {
+export interface EncryptedBlockType extends Omit<BlockType, 'username'> {
   username: EncryptedField;
-};
+}
 
 export function encryptBlockType(block: BlockType, key: Uint8Array): EncryptedBlockType {
   return {
     ...block,
-    username: encField(key, block.username)
-  }
+    username: encField(key, block.username),
+  };
 }
 
 export function decryptBlockType(enc: EncryptedBlockType, key: Uint8Array): BlockType {
   return {
     ...enc,
-    username: decField(key, enc.username)
-  }
+    username: decField(key, enc.username),
+  };
 }
 
-export interface EncryptedServerSettingsType extends Omit<ServerSettingsType, "selectedServers" | "userServers"> {
+export interface EncryptedServerSettingsType
+  extends Omit<ServerSettingsType, 'selectedServers' | 'userServers'> {
   selectedServers: EncryptedField[];
   userServers: EncryptedField[];
 }
 
-export function encryptServerSettingsType(settings: ServerSettingsType, key: Uint8Array): EncryptedServerSettingsType {
+export function encryptServerSettingsType(
+  settings: ServerSettingsType,
+  key: Uint8Array,
+): EncryptedServerSettingsType {
   return {
     ...settings,
     selectedServers: settings.selectedServers.map((s) => encField(key, s)),
-    userServers: settings.userServers.map((s) => encField(key, s))
-  }
+    userServers: settings.userServers.map((s) => encField(key, s)),
+  };
 }
 
-export function decryptServerSettingsType(enc: EncryptedServerSettingsType, key: Uint8Array): ServerSettingsType {
+export function decryptServerSettingsType(
+  enc: EncryptedServerSettingsType,
+  key: Uint8Array,
+): ServerSettingsType {
   return {
     ...enc,
     selectedServers: enc.selectedServers.map((s) => decField(key, s)),
-    userServers: enc.userServers.map((s) => decField(key, s))
-  }
+    userServers: enc.userServers.map((s) => decField(key, s)),
+  };
 }
 
-export type EncryptedStorageType = EncryptedMessageType | EncryptedCredentialsType | EncryptedRoomType | EncryptedInviteType | EncryptedBlockType | EncryptedServerSettingsType;
+export type EncryptedStorageType =
+  | EncryptedMessageType
+  | EncryptedCredentialsType
+  | EncryptedRoomType
+  | EncryptedInviteType
+  | EncryptedBlockType
+  | EncryptedServerSettingsType;

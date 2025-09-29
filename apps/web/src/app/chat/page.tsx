@@ -28,9 +28,9 @@ export default function ChatPage() {
   const roomId = useMemo(() => searchParams?.get('id') ?? null, [searchParams]);
 
   const { rooms } = useRooms();
-  const room = useMemo(() => rooms?.find(r => r.roomId === roomId) ?? null, [rooms, roomId]);
+  const room = useMemo(() => rooms?.find((r) => r.roomId === roomId) ?? null, [rooms, roomId]);
 
-  const otherUserPublic = room?.keys.find(k => k.userId !== user?.userId)?.public;
+  const otherUserPublic = room?.keys.find((k) => k.userId !== user?.userId)?.public;
   const otherUserPublicKey: string = useMemo(() => {
     return otherUserPublic?.toString() ?? '';
     // if (!otherUserPublic) return new Uint8Array();
@@ -54,21 +54,23 @@ export default function ChatPage() {
       try {
         const allMessages = (await getAllDecr('messages', key)) as MessageType[];
         const roomMessages = allMessages
-          .filter(m => m.roomId === roomId)
+          .filter((m) => m.roomId === roomId)
           .sort((a, b) => a.timestamp - b.timestamp)
           .map((m, idx) => ({
             id: idx + 1,
             text: m.message,
-            sender: m.senderId === user.userId ? 'me' : 'other' as 'me' | 'other',
+            sender: m.senderId === user.userId ? 'me' : ('other' as 'me' | 'other'),
           }));
 
         if (!mounted) return;
 
         // Avoid setting state if nothing changed (shallow content check)
-        setMessages(prev => {
+        setMessages((prev) => {
           if (
             prev.length === roomMessages.length &&
-            prev.every((p, i) => p.text === roomMessages[i].text && p.sender === roomMessages[i].sender)
+            prev.every(
+              (p, i) => p.text === roomMessages[i].text && p.sender === roomMessages[i].sender,
+            )
           ) {
             return prev;
           }
@@ -79,30 +81,39 @@ export default function ChatPage() {
       }
     })();
 
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, [db, roomId, key, user?.userId]);
 
   const logMessage = useCallback((text: string, sender: 'me' | 'other') => {
     msgId.current += 1;
-    setMessages(prev => [...prev, { id: msgId.current, text, sender }]);
+    setMessages((prev) => [...prev, { id: msgId.current, text, sender }]);
   }, []);
 
-  const sendMessage = useCallback(async (text: string) => {
-    if (!key || !user?.userId) return;
-    logMessage(text, 'me');
+  const sendMessage = useCallback(
+    async (text: string) => {
+      if (!key || !user?.userId) return;
+      logMessage(text, 'me');
 
-    // prepareSendMessagePackage expects a Uint8Array
-    const sendData = prepareSendMessagePackage(otherUserPublicKey, text);
-    console.log('sendData', sendData);
+      // prepareSendMessagePackage expects a Uint8Array
+      const sendData = prepareSendMessagePackage(otherUserPublicKey, text);
+      console.log('sendData', sendData);
 
-    // persist locally
-    await putEncr('messages', {
-      roomId,
-      senderId: user.userId,
-      message: text,
-      timestamp: Date.now(),
-    } as MessageType, key);
-  }, [key, otherUserPublicKey, roomId, user?.userId, putEncr, logMessage]);
+      // persist locally
+      await putEncr(
+        'messages',
+        {
+          roomId,
+          senderId: user.userId,
+          message: text,
+          timestamp: Date.now(),
+        } as MessageType,
+        key,
+      );
+    },
+    [key, otherUserPublicKey, roomId, user?.userId, putEncr, logMessage],
+  );
 
   useEffect(() => {
     console.log('ChatPage render debug', {
@@ -117,7 +128,6 @@ export default function ChatPage() {
       otherUserPublic: otherUserPublicKey,
     });
   }, [roomId, user, !!key, !!db, rooms?.length, otherUserPublicKey, messages.length]);
-
 
   if (!db || !rooms || !user) return <Loading />;
   if (!roomId) return <EmptyState msg="No room selected" />;

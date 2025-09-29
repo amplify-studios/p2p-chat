@@ -1,4 +1,4 @@
-import LZString from "lz-string";
+import LZString from 'lz-string';
 
 // Compress your payload
 export function encodePayload(payload: object): string {
@@ -9,7 +9,6 @@ export function encodePayload(payload: object): string {
 // Decompress your payload
 export function decodePayload(encoded: string) {
   const json = LZString.decompressFromEncodedURIComponent(encoded);
-  if (!json) throw new Error("Invalid compressed payload");
+  if (!json) throw new Error('Invalid compressed payload');
   return JSON.parse(json);
 }
-

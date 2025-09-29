@@ -12,12 +12,7 @@ import { usePeers } from '@/hooks/usePeers';
 import useClient from '@/hooks/useClient';
 import { getSignalingClient } from '@/lib/signalingClient';
 import { generateBase58Id } from '@chat/crypto';
-import {
-  CredentialsType,
-  decodePayload,
-  encodePayload,
-  RoomType,
-} from '@chat/core';
+import { CredentialsType, decodePayload, encodePayload, RoomType } from '@chat/core';
 import { InviteMessage, AckMessage } from '@chat/sockets';
 import { refreshRooms } from '@/lib/utils';
 import { useToast } from '@/components/local/ToastContext';
@@ -87,7 +82,7 @@ export default function NewRoom() {
         router.push(`/chat?id=${room.roomId}`);
       } catch (err) {
         console.error('Invalid QR invite:', err);
-        showToast(`Invalid QR invite`, "error");
+        showToast(`Invalid QR invite`, 'error');
       }
     };
 
@@ -98,8 +93,7 @@ export default function NewRoom() {
 
   const validate = () => {
     if (type === 'group' && !name.trim()) return 'Room name is required';
-    if (type === 'single' && !otherUserId.trim())
-      return 'User ID is required for single chat';
+    if (type === 'single' && !otherUserId.trim()) return 'User ID is required for single chat';
     return '';
   };
 
@@ -109,22 +103,22 @@ export default function NewRoom() {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: "Join my chat room",
-          text: "Here’s an invite to join my chat room:",
+          title: 'Join my chat room',
+          text: 'Here’s an invite to join my chat room:',
           url: qrValue,
         });
-        showToast("Invite shared!", "success");
+        showToast('Invite shared!', 'success');
       } catch (err) {
-        console.error("Share failed:", err);
-        showToast("Failed to share", "error");
+        console.error('Share failed:', err);
+        showToast('Failed to share', 'error');
       }
     } else {
       try {
         await navigator.clipboard.writeText(qrValue);
-        showToast("Link copied to clipboard", "info");
+        showToast('Link copied to clipboard', 'info');
       } catch (err) {
-        console.error("Clipboard write failed:", err);
-        showToast("Failed to copy link", "error");
+        console.error('Clipboard write failed:', err);
+        showToast('Failed to copy link', 'error');
       }
     }
   };
@@ -193,9 +187,7 @@ export default function NewRoom() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
       <div className="bg-card p-8 rounded-lg shadow-md w-full max-w-md">
-        <h1 className="text-2xl font-bold mb-6 text-center text-foreground">
-          Create New Room
-        </h1>
+        <h1 className="text-2xl font-bold mb-6 text-center text-foreground">Create New Room</h1>
 
         {error && <p className="text-destructive mb-4">{error}</p>}
 
@@ -311,12 +303,10 @@ export default function NewRoom() {
               Generate QR Invite
             </Button>
 
-            {qrValue && (
-              <div className="flex flex-col items-center mt-4 gap-2">
-                <p className="text-sm text-muted-foreground">
-                  Scan to join instantly:
-                </p>
-                <ResponsiveQr qrValue={qrValue} />
+        {qrValue && (
+          <div className="flex flex-col items-center mt-4 gap-2">
+            <p className="text-sm text-muted-foreground">Scan to join instantly:</p>
+            <ResponsiveQr qrValue={qrValue} />
 
                 <Button onClick={handleShare} className="mt-2">
                   Share Invite

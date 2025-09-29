@@ -19,24 +19,24 @@ export async function getSignalingClient(): Promise<SignalingClient> {
   if (singletonClient) return singletonClient;
 
   const db = await getDB();
-  const encrCreds = (await db.getAll("user")) as EncryptedCredentialsType[];
+  const encrCreds = (await db.getAll('user')) as EncryptedCredentialsType[];
   if (!encrCreds || encrCreds.length === 0) {
-    throw new Error("No credentials available in DB");
+    throw new Error('No credentials available in DB');
   }
 
   const storedPass = sessionStorage.getItem(PASSWORD_KEY);
   if (!storedPass) {
-    throw new Error("Password not found in sessionStorage. User must unlock first.");
+    throw new Error('Password not found in sessionStorage. User must unlock first.');
   }
 
   const aesKey = generateAESKey(new TextEncoder().encode(storedPass));
-  if (!aesKey) throw new Error("Failed to generate AES key from stored password");
+  if (!aesKey) throw new Error('Failed to generate AES key from stored password');
 
   const creds = decryptCredentialsType(encrCreds[0], aesKey);
-  if (!creds) throw new Error("Failed to decrypt user credentials");
+  if (!creds) throw new Error('Failed to decrypt user credentials');
 
   singletonClient = new SignalingClient(creds.userId, creds.username, creds.public);
-  await singletonClient.connect("ws://192.168.1.8:8080"); // TODO: change to config
+  await singletonClient.connect('ws://localhost:8080'); // TODO: change to config
 
   return singletonClient;
 }

@@ -20,8 +20,9 @@ export default function Home() {
   useEffect(() => {
     if (!db || !key) return;
     const fetchMessages = async () => {
-      const allMessages = await getAllDecr('messages', key) as MessageType[];
-      const unread = allMessages?.filter((m: MessageType) => m.senderId != user?.userId && !m.read)?.length || 0;
+      const allMessages = (await getAllDecr('messages', key)) as MessageType[];
+      const unread =
+        allMessages?.filter((m: MessageType) => m.senderId != user?.userId && !m.read)?.length || 0;
       setNewMessagesCount(unread);
     };
     fetchMessages();
@@ -32,21 +33,21 @@ export default function Home() {
   const info = [
     {
       value: newMessagesCount,
-      description: "New Messages"
+      description: 'New Messages',
     },
     {
       value: invites.length,
-      description: 'Pending Invites'
+      description: 'Pending Invites',
     },
     {
-      value: (peersLoading) ? "Loading..." : peers.length,
-      description: 'Peers Online'
+      value: peersLoading ? 'Loading...' : peers.length,
+      description: 'Peers Online',
     },
     {
-      value: friends.filter(f => peers.some(p => p.id === f.id)).length,
-      description: 'Friends Online'
+      value: friends.filter((f) => peers.some((p) => p.id === f.id)).length,
+      description: 'Friends Online',
     },
-  ]
+  ];
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
@@ -62,10 +63,7 @@ export default function Home() {
       {/* Status Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
         {info.map((i, index) => (
-          <StatusCard
-            key={index}
-            {...i}
-          />
+          <StatusCard key={index} {...i} />
         ))}
       </div>
     </div>

@@ -4,12 +4,17 @@ import { useEffect, useState } from 'react';
 import type { Collection, MyDB } from '@/lib/storage';
 import { getDB } from '@/lib/storage';
 import { IDBPDatabase } from 'idb';
-import { 
-  decryptMessageType, EncryptedMessageType,
-  decryptCredentialsType, EncryptedCredentialsType,
-  decryptRoomType, EncryptedRoomType,
-  decryptInviteType, EncryptedInviteType,
-  decryptBlockType, EncryptedBlockType,
+import {
+  decryptMessageType,
+  EncryptedMessageType,
+  decryptCredentialsType,
+  EncryptedCredentialsType,
+  decryptRoomType,
+  EncryptedRoomType,
+  decryptInviteType,
+  EncryptedInviteType,
+  decryptBlockType,
+  EncryptedBlockType,
   encryptMessageType,
   encryptCredentialsType,
   encryptRoomType,
@@ -20,7 +25,15 @@ import {
   EncryptedServerSettingsType,
   encryptServerSettingsType,
 } from '@chat/crypto';
-import { BlockType, CredentialsType, InviteType, MessageType, RoomType, ServerSettingsType, Type} from '@chat/core';
+import {
+  BlockType,
+  CredentialsType,
+  InviteType,
+  MessageType,
+  RoomType,
+  ServerSettingsType,
+  Type,
+} from '@chat/core';
 
 export function useDB() {
   const [db, setDb] = useState<IDBPDatabase<MyDB> | null>(null);
@@ -38,7 +51,12 @@ export function useDB() {
     };
   }, []);
 
-  async function putEncr(collection: Collection, obj: Type, key: Uint8Array, collectionKey?: string | number): Promise<EncryptedStorageType | null>{
+  async function putEncr(
+    collection: Collection,
+    obj: Type,
+    key: Uint8Array,
+    collectionKey?: string | number,
+  ): Promise<EncryptedStorageType | null> {
     if (!db) return null;
 
     let encr: EncryptedStorageType;

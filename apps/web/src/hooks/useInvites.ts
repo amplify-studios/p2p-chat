@@ -1,11 +1,11 @@
-import { useEffect, useState } from "react";
-import { getSignalingClient } from "@/lib/signalingClient";
-import { useDB } from "@/hooks/useDB";
-import { generateBase58Id } from "@chat/crypto";
-import { connectToPeer, InviteMessage, handleSignal, AckMessage } from "@chat/sockets";
-import { CredentialsType, InviteType, RoomType } from "@chat/core";
-import { refreshRooms } from "@/lib/utils";
-import { useAuth } from "./useAuth";
+import { useEffect, useState } from 'react';
+import { getSignalingClient } from '@/lib/signalingClient';
+import { useDB } from '@/hooks/useDB';
+import { generateBase58Id } from '@chat/crypto';
+import { connectToPeer, InviteMessage, handleSignal, AckMessage } from '@chat/sockets';
+import { CredentialsType, InviteType, RoomType } from '@chat/core';
+import { refreshRooms } from '@/lib/utils';
+import { useAuth } from './useAuth';
 
 export function useInvites() {
   const { db, putEncr, getAllDecr } = useDB();
@@ -29,28 +29,28 @@ export function useInvites() {
           public: msg.pubkey,
         };
 
-        await putEncr("invites", newInvite, key);
+        await putEncr('invites', newInvite, key);
         setInvites((prev) => [...prev, newInvite]);
 
         console.log(`Received room invite from ${msg.from} with name ${msg.name}`);
       };
 
-      client.on("invite", handleRoomInvite);
+      client.on('invite', handleRoomInvite);
 
-      const storedInvites = await getAllDecr("invites", key) as InviteType[];
+      const storedInvites = (await getAllDecr('invites', key)) as InviteType[];
       if (storedInvites) {
         const normalized = storedInvites.map((i: InviteType) => ({
           inviteId: i.inviteId ?? generateBase58Id(),
-          from: i.from ?? "",
-          name: i.name ?? "Anonymous",
+          from: i.from ?? '',
+          name: i.name ?? 'Anonymous',
           type: i.type,
-          public: i.public
+          public: i.public,
         }));
         setInvites(normalized);
       }
 
       cleanup = () => {
-        client.off("invite", handleRoomInvite);
+        client.off('invite', handleRoomInvite);
       };
     };
 
@@ -68,7 +68,7 @@ export function useInvites() {
     const creds = {
       userId: invite.from,
       public: invite.public,
-      username: invite.name
+      username: invite.name,
     } as CredentialsType;
 
     const room: RoomType = {
@@ -79,19 +79,19 @@ export function useInvites() {
         {
           userId: user.userId,
           public: user.public,
-          username: user.username
+          username: user.username,
         },
-        creds
+        creds,
       ],
     };
 
     // Save room
-    await putEncr("rooms", room, key);
+    await putEncr('rooms', room, key);
 
-    await putEncr("credentials", creds, key);
+    await putEncr('credentials', creds, key);
 
     // Delete the invite
-    await db.delete("invites", invite.inviteId);
+    await db.delete('invites', invite.inviteId);
     setInvites((prev) => prev.filter((i) => i.inviteId !== invite.inviteId));
     refreshRooms();
 
@@ -101,9 +101,9 @@ export function useInvites() {
     const ack = {
       from: user.userId,
       to: invite.from,
-      room: { 
+      room: {
         ...room,
-        name: (room.type === "single") ? user.username || user.userId : room.name
+        name: room.type === 'single' ? user.username || user.userId : room.name,
       },
     } as AckMessage;
     client.sendAck(invite.from, ack);
@@ -113,15 +113,15 @@ export function useInvites() {
       client,
       invite.from, // inviter’s peer id
       (msg) => {
-        console.log("Message from peer:", msg);
+        console.log('Message from peer:', msg);
         // TODO: push into message store
-      }
+      },
     );
 
-    client.on("signal", (msg) => {
+    client.on('signal', (msg) => {
       const { from, payload } = msg;
       handleSignal(client, from, payload, (m) => {
-        console.log("Message from", from, ":", m);
+        console.log('Message from', from, ':', m);
       });
     });
   };
@@ -129,7 +129,7 @@ export function useInvites() {
   const declineInvite = async (invite: InviteType) => {
     if (!db) return;
 
-    await db.delete("invites", invite.inviteId);
+    await db.delete('invites', invite.inviteId);
     setInvites((prev) => prev.filter((i) => i.inviteId !== invite.inviteId));
   };
 

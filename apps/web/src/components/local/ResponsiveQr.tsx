@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { QRCodeCanvas } from "qrcode.react";
+import { useState, useEffect } from 'react';
+import { QRCodeCanvas } from 'qrcode.react';
 
 export default function ResponsiveQr({ qrValue }: { qrValue: string }) {
   const [size, setSize] = useState(400);
@@ -14,11 +14,10 @@ export default function ResponsiveQr({ qrValue }: { qrValue: string }) {
     };
 
     updateSize();
-    window.addEventListener("resize", updateSize);
+    window.addEventListener('resize', updateSize);
 
-    return () => window.removeEventListener("resize", updateSize);
+    return () => window.removeEventListener('resize', updateSize);
   }, []);
 
   return <QRCodeCanvas value={qrValue} size={size} />;
 }
-

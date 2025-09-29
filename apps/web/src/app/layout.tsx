@@ -5,7 +5,6 @@ import Layout from '@/components/local/Layout';
 import { ThemeProvider } from '@/components/theme-provider';
 import { getNotificationPermission } from '@chat/notifications';
 
-
 const robotoMono = Roboto_Mono({
   subsets: ['latin'],
   variable: '--font-mono',
@@ -21,7 +20,6 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-
   // (async () => {
   //   const notificationsPermission = await getNotificationPermission();
   //   console.log(notificationsPermission);
@@ -30,15 +28,14 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${robotoMono.variable} antialiased`}>
-
-      <ThemeProvider
-        attribute="class"
-        defaultTheme="system"
-        enableSystem
-        disableTransitionOnChange
-      >
-        <Layout>{children}</Layout>
-      </ThemeProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <Layout>{children}</Layout>
+        </ThemeProvider>
       </body>
     </html>
   );

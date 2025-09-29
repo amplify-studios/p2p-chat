@@ -14,13 +14,7 @@ import { useToast } from '@/components/local/ToastContext';
 import { Archive, QrCode, Server, ShieldBan, Trash } from 'lucide-react';
 import { useConfirm } from '@/components/local/ConfirmContext';
 
-function SettingsRow({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
+function SettingsRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex items-center justify-between">
       <span className="font-medium">{label}</span>
@@ -55,10 +49,10 @@ export default function SettingsPage() {
 
   const handleErase = async () => {
     const confirmed = await confirm({
-      title: "Erase Local Data?",
+      title: 'Erase Local Data?',
       message: 'Are you sure you want to erase all data? This action cannot be undone.',
-      confirmText: "Erase",
-      cancelText: "Cancel"
+      confirmText: 'Erase',
+      cancelText: 'Cancel',
     });
     if (!confirmed) return;
 
@@ -107,12 +101,7 @@ export default function SettingsPage() {
       </SettingsRow>
 
       <SettingsRow label="Backup Data">
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={handleBackup}
-          disabled={backupLoading}
-        >
+        <Button size="sm" variant="outline" onClick={handleBackup} disabled={backupLoading}>
           <Archive className="mr-1 h-4 w-4" />
           {backupLoading ? 'Backing up...' : 'Backup'}
         </Button>
@@ -129,39 +118,22 @@ export default function SettingsPage() {
       </SettingsRow>
 
       <SettingsRow label="Erase Data">
-        <Button
-          size="sm"
-          variant="destructive"
-          onClick={handleErase}
-          disabled={eraseLoading}
-        >
+        <Button size="sm" variant="destructive" onClick={handleErase} disabled={eraseLoading}>
           <Trash className="mr-1 h-4 w-4" />
           {eraseLoading ? 'Erasing...' : 'Erase'}
         </Button>
       </SettingsRow>
 
-      <Button
-        className="w-full"
-        variant="outline"
-        onClick={() => router.push('/blocked')}
-      >
+      <Button className="w-full" variant="outline" onClick={() => router.push('/blocked')}>
         <ShieldBan className="mr-1 h-4 w-4" /> Block List
       </Button>
 
-      <Button
-        className="w-full"
-        variant="outline"
-        onClick={() => router.push('/servers')}
-      >
+      <Button className="w-full" variant="outline" onClick={() => router.push('/servers')}>
         <Server className="mr-1 h-4 w-4" /> Servers
       </Button>
 
       <div className="block md:hidden">
-        <Button
-          className="w-full"
-          variant="outline"
-          onClick={() => router.push('/qr')}
-        >
+        <Button className="w-full" variant="outline" onClick={() => router.push('/qr')}>
           <QrCode className="mr-1 h-4 w-4" /> QR Scanner
         </Button>
       </div>

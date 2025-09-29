@@ -25,28 +25,28 @@ export default function ChatOptionsPage() {
 
   if (!db || !rooms) return <Loading />;
 
-  if (!roomId) return <EmptyState msg='No room selected' />;
+  if (!roomId) return <EmptyState msg="No room selected" />;
 
   const room = rooms.find((room) => room.roomId === roomId);
-  if (!room) return <EmptyState msg='Room not found' />;
+  if (!room) return <EmptyState msg="Room not found" />;
 
   const deleteChat = async () => {
     const confirmed = await confirm({
-      title: "Delete Room?",
+      title: 'Delete Room?',
       message: 'Are you sure you want to delete this room? This action cannot be undone.',
-      confirmText: "Delete",
-      cancelText: "Cancel"
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
     });
     if (!confirmed) return;
     if (!key) return;
 
     await db.delete('rooms', room.roomId);
 
-    const tx = db.transaction("messages", "readwrite");
-    const store = tx.objectStore("messages");
+    const tx = db.transaction('messages', 'readwrite');
+    const store = tx.objectStore('messages');
 
     let cursor = await store.openCursor();
-    while(cursor) {
+    while (cursor) {
       const encrMsg = cursor.value;
       const message = decryptMessageType(encrMsg, key);
 
@@ -64,16 +64,16 @@ export default function ChatOptionsPage() {
 
   const blockUser = async () => {
     const confirmed = await confirm({
-      title: "Block User?",
+      title: 'Block User?',
       message: 'Are you sure you want to block this user?',
-      confirmText: "Block",
-      cancelText: "Cancel"
+      confirmText: 'Block',
+      cancelText: 'Cancel',
     });
     if (!confirmed) return;
     if (!key) return;
 
     const otherUser = room.keys.find((k) => k.userId !== user?.userId);
-    if(!otherUser) return;
+    if (!otherUser) return;
     block(otherUser);
     await db.delete('rooms', room.roomId);
 
@@ -86,20 +86,12 @@ export default function ChatOptionsPage() {
       <h1 className="text-2xl font-bold text-center text-foreground">Chat Options</h1>
 
       <div className="flex flex-col gap-4">
-        <Button
-          className="w-full"
-          variant="outline"
-          onClick={blockUser}
-        >
+        <Button className="w-full" variant="outline" onClick={blockUser}>
           Block This User
         </Button>
 
-        <Button
-        className="w-full"
-        variant="destructive"
-        onClick={deleteChat}
-        >
-        Delete Chat
+        <Button className="w-full" variant="destructive" onClick={deleteChat}>
+          Delete Chat
         </Button>
       </div>
     </div>

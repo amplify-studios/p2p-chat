@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect, useState } from "react";
-import { getSignalingClient } from "@/lib/signalingClient";
-import type { PeerInfo, PeersMessage } from "@chat/sockets";
-import { CredentialsType } from "@chat/core";
-import { useDB } from "./useDB";
-import { useAuth } from "./useAuth";
+import { useEffect, useState } from 'react';
+import { getSignalingClient } from '@/lib/signalingClient';
+import type { PeerInfo, PeersMessage } from '@chat/sockets';
+import { CredentialsType } from '@chat/core';
+import { useDB } from './useDB';
+import { useAuth } from './useAuth';
 
 export interface Friend {
   id: string;
@@ -39,7 +39,7 @@ export function usePeers() {
 
           const peersList = msg.peers;
           if (!Array.isArray(peersList)) {
-            console.warn("Received peers is not an array", peersList);
+            console.warn('Received peers is not an array', peersList);
             setPeers([]);
             setFriends([]);
             setLoading(false);
@@ -48,7 +48,7 @@ export function usePeers() {
 
           setPeers(peersList);
 
-          const creds = (await getAllDecr("credentials", key)) as CredentialsType[];
+          const creds = (await getAllDecr('credentials', key)) as CredentialsType[];
 
           const friendList: Friend[] = creds
             .filter((c) => c.userId !== user?.userId)
@@ -62,15 +62,15 @@ export function usePeers() {
           setLoading(false);
         };
 
-        client.on("peers", handlePeers);
+        client.on('peers', handlePeers);
         client.requestPeers();
 
         return () => {
-          client.off("peers", handlePeers);
+          client.off('peers', handlePeers);
           isMounted = false;
         };
       } catch (err) {
-        console.error("Signaling client not initialized:", err);
+        console.error('Signaling client not initialized:', err);
         setLoading(false);
       }
     };

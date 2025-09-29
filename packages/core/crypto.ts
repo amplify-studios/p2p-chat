@@ -1,4 +1,4 @@
-export interface EncryptedMessageType extends Omit<MessageType, "roomId" | "senderId" | "message"> {
+export interface EncryptedMessageType extends Omit<MessageType, 'roomId' | 'senderId' | 'message'> {
   roomId: EncryptedField;
   senderId: EncryptedField;
   message: EncryptedField;
@@ -21,5 +21,3 @@ export function decryptMessageType(enc: EncryptedMessageType, key: Uint8Array): 
     message: decField(key, enc.message),
   };
 }
-
-

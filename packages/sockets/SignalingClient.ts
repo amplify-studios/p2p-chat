@@ -1,4 +1,4 @@
-import { InviteMessage, QrAckMessage } from "./signaling";
+import { InviteMessage, QrAckMessage } from './signaling';
 
 export type SignalHandler = (msg: any) => void;
 
@@ -21,7 +21,7 @@ export class SignalingClient {
 
       this.ws.onopen = () => {
         this.send({
-          type: "join",
+          type: 'join',
           id: this.id,
           username: this.username,
           pubkey: this.pubkey,
@@ -37,7 +37,7 @@ export class SignalingClient {
           console.log(msg);
           this.dispatch(msg.type, msg);
         } catch (e) {
-          console.error("Invalid signaling message", event.data);
+          console.error('Invalid signaling message', event.data);
         }
       };
     });
@@ -59,46 +59,46 @@ export class SignalingClient {
   }
 
   sendSignal(target: string, signal: RTCSessionDescriptionInit | RTCIceCandidate) {
-    this.send({ type: "signal", target, payload: signal});
+    this.send({ type: 'signal', target, payload: signal });
   }
 
   sendOffer(target: string, offer: RTCSessionDescriptionInit) {
-    this.send({ type: "offer", target, payload: offer });
+    this.send({ type: 'offer', target, payload: offer });
   }
 
   sendAnswer(target: string, answer: RTCSessionDescriptionInit) {
-    this.send({ type: "answer", target, payload: answer });
+    this.send({ type: 'answer', target, payload: answer });
   }
 
   sendCandidate(target: string, candidate: RTCIceCandidate) {
-    this.send({ type: "candidate", target, payload: candidate });
+    this.send({ type: 'candidate', target, payload: candidate });
   }
 
   requestPeers() {
-    this.send({ type: "peers" });
+    this.send({ type: 'peers' });
   }
 
   sendRoomInvite(target: string, payload: InviteMessage) {
-    this.send({ type: "invite", target, payload });
+    this.send({ type: 'invite', target, payload });
   }
 
   sendAck(target: string, payload: QrAckMessage) {
-    this.send({ type: "ack", target, payload });
+    this.send({ type: 'ack', target, payload });
   }
 
   onRoomInvite(handler: (invite: InviteMessage) => void) {
-    this.on("invite", (msg) => handler(msg.payload));
+    this.on('invite', (msg) => handler(msg.payload));
   }
 
   offRoomInvite(handler: (invite: InviteMessage) => void) {
-    this.off("invite", handler as SignalHandler);
+    this.off('invite', handler as SignalHandler);
   }
 
   private send(msg: any) {
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify(msg));
     } else {
-      console.warn("WebSocket not connected, dropping message:", msg);
+      console.warn('WebSocket not connected, dropping message:', msg);
     }
   }
 
@@ -112,6 +112,6 @@ export class SignalingClient {
       this.ws = null;
     }
 
-    console.log("SignalingClient disconnected");
+    console.log('SignalingClient disconnected');
   }
 }

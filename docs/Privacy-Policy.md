@@ -19,6 +19,7 @@ We do not collect, store, or process any of the following on our servers:
 ### 3. Local Data
 
 Some data may be stored locally on your device after encryption, such as:
+
 - Your settings and preferences
 - Encryption keys (for secure communication)
 - Messages

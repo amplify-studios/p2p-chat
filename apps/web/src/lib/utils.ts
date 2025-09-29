@@ -15,8 +15,8 @@ export function hexToUint8Array(hex: string): Uint8Array {
 }
 
 export function refreshRooms() {
-    localStorage.setItem('rooms_updated', Date.now().toString());
-    window.dispatchEvent(new StorageEvent('storage', { key: 'rooms_updated' }));
+  localStorage.setItem('rooms_updated', Date.now().toString());
+  window.dispatchEvent(new StorageEvent('storage', { key: 'rooms_updated' }));
 }
 
 /**
@@ -37,7 +37,7 @@ export function parseBytes(str: string): Uint8Array {
     if (!part) return 0;
 
     // Detect hex format
-    if (part.startsWith("0x") || part.startsWith("0X")) {
+    if (part.startsWith('0x') || part.startsWith('0X')) {
       return parseInt(part, 16);
     }
 
@@ -47,4 +47,3 @@ export function parseBytes(str: string): Uint8Array {
 
   return new Uint8Array(bytes);
 }
-

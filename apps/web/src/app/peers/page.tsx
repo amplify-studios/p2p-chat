@@ -1,20 +1,20 @@
 'use client';
 
-import { usePeers } from "@/hooks/usePeers";
-import { useAuth } from "@/hooks/useAuth";
-import EmptyState from "@/components/local/EmptyState";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
-import { EllipsisVertical } from "lucide-react";
-import { useToast } from "@/components/local/ToastContext";
-import { useBlocks } from "@/hooks/useBlocks";
-import { CredentialsType } from "@chat/core";
-import { useDB } from "@/hooks/useDB";
+import { usePeers } from '@/hooks/usePeers';
+import { useAuth } from '@/hooks/useAuth';
+import EmptyState from '@/components/local/EmptyState';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
+import { Button } from '@/components/ui/button';
+import { EllipsisVertical } from 'lucide-react';
+import { useToast } from '@/components/local/ToastContext';
+import { useBlocks } from '@/hooks/useBlocks';
+import { CredentialsType } from '@chat/core';
+import { useDB } from '@/hooks/useDB';
 
 export default function Peers() {
   const { user } = useAuth();
-  const { peers, friends, setFriends, loading } = usePeers(); 
+  const { peers, friends, setFriends, loading } = usePeers();
   const { showToast } = useToast();
   const { block } = useBlocks();
   const { db } = useDB();
@@ -26,7 +26,7 @@ export default function Peers() {
       </div>
     );
   }
-  
+
   return (
     <div className="p-4 max-w-lg mx-auto">
       <h1 className="text-2xl font-bold mb-4 text-center text-foreground">Peers</h1>
@@ -49,23 +49,23 @@ export default function Peers() {
                   <li
                     key={p.id}
                     className={`mb-2 flex justify-between items-center p-3 bg-card rounded shadow transition ${
-                      isMe ? "border-2 border-primary" : "hover:bg-secondary"
+                      isMe ? 'border-2 border-primary' : 'hover:bg-secondary'
                     }`}
-                    onClick={() => window.location.href = `/new?userId=${p.id}`}
+                    onClick={() => (window.location.href = `/new?userId=${p.id}`)}
                   >
                     <div>
                       <p className="font-medium">
-                        {p.username || "Anonymous"}{" "}
+                        {p.username || 'Anonymous'}{' '}
                         {isMe && <span className="text-xs text-blue-500 ml-2">(You)</span>}
                       </p>
                       <p className="text-sm text-gray-500">{p.id}</p>
                     </div>
                     <span
                       className={`text-sm font-semibold ${
-                        isMe ? "text-blue-500" : "text-green-500"
+                        isMe ? 'text-blue-500' : 'text-green-500'
                       }`}
                     >
-                      {isMe ? "● Me" : "● Online"}
+                      {isMe ? '● Me' : '● Online'}
                     </span>
                   </li>
                 );
@@ -76,7 +76,7 @@ export default function Peers() {
 
         {/* Friends only */}
         <TabsContent value="friends">
-          {(!friends || friends.length === 0) ? (
+          {!friends || friends.length === 0 ? (
             <EmptyState msg="No friends added yet" />
           ) : (
             <ul className="space-y-2">
@@ -86,7 +86,7 @@ export default function Peers() {
                   className="mb-2 flex justify-between items-center p-3 bg-card rounded shadow hover:bg-secondary"
                 >
                   <div>
-                    <p className="font-medium">{f.username || "Anonymous"}</p>
+                    <p className="font-medium">{f.username || 'Anonymous'}</p>
                     <p className="text-sm text-gray-500">{f.id}</p>
                   </div>
                   <Popover>
@@ -98,27 +98,27 @@ export default function Peers() {
                     <PopoverContent className="w-40">
                       <ul className="flex flex-col space-y-2">
                         <li>
-                          <Button 
-                            variant="ghost" 
+                          <Button
+                            variant="ghost"
                             className="w-full justify-start"
                             onClick={() => {
                               // TODO: instantly create a new room since invitation and connection have already happened
-                              window.location.href = `/new?userId=${f.id}`
+                              window.location.href = `/new?userId=${f.id}`;
                             }}
                           >
                             New Chat
                           </Button>
                         </li>
                         <li>
-                          <Button 
-                            variant="ghost" 
+                          <Button
+                            variant="ghost"
                             className="w-full justify-start text-red-500"
                             onClick={() => {
-                              try { 
-                                db?.delete("credentials", f.id); 
+                              try {
+                                db?.delete('credentials', f.id);
                                 setFriends((prev) => prev.filter((b) => b.id !== f.id));
-                              } catch(err: unknown) {
-                                showToast(`Failed to remove friend ${f.username}`)
+                              } catch (err: unknown) {
+                                showToast(`Failed to remove friend ${f.username}`);
                               }
                               showToast(`Removed friend ${f.username}`);
                             }}
@@ -127,8 +127,8 @@ export default function Peers() {
                           </Button>
                         </li>
                         <li>
-                          <Button 
-                            variant="ghost" 
+                          <Button
+                            variant="ghost"
                             className="w-full justify-start text-red-500"
                             onClick={() => {
                               block({ userId: f.id, username: f.username } as CredentialsType);
