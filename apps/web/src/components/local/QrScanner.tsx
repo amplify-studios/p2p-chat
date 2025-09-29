@@ -18,18 +18,17 @@ export default function QrScanner({ onScan }: QrScannerProps) {
     scanner
       .start(
         { facingMode: 'environment' },
-        { fps: 10, qrbox: 250 },
+        { fps: 20, qrbox: 250 },
         (decodedText) => {
           onScan(decodedText);
           stopScannerSafely();
         },
         (error) => {
-          // console.warn("QR scan error:", error);
-          alert(`QR scan error: ${error}`);
+          console.warn("QR scan error:", error);
         },
       )
       .then(() => {
-        startedRef.current = true; // mark as started
+        startedRef.current = true;
       })
       .catch((err) => {
         console.error('Failed to start scanner:', err);
