@@ -4,7 +4,7 @@ import { ReactNode } from 'react';
 interface SidebarItemProps {
   icon?: ReactNode;
   name?: string;
-  href?: string;
+  href: string;
   type: 'small' | 'default';
 }
 
