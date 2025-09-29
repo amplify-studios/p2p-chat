@@ -137,7 +137,7 @@ export default function ChatPage() {
       <Chat
         title={room.name}
         messages={messages}
-        href={`/options?id=${room.roomId}`}
+        href={`/chat/options?id=${room.roomId}`}
         onSend={sendMessage}
       />
     </div>

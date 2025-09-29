@@ -125,16 +125,16 @@ export default function SettingsPage() {
         </Button>
       </SettingsRow>
 
-      <Button className="w-full" variant="outline" onClick={() => router.push('/blocked')}>
+      <Button className="w-full" variant="outline" onClick={() => router.push('/settings/blocked')}>
         <ShieldBan className="mr-1 h-4 w-4" /> Block List
       </Button>
 
-      <Button className="w-full" variant="outline" onClick={() => router.push('/servers')}>
+      <Button className="w-full" variant="outline" onClick={() => router.push('/settings/servers')}>
         <Server className="mr-1 h-4 w-4" /> Servers
       </Button>
 
       <div className="block md:hidden">
-        <Button className="w-full" variant="outline" onClick={() => router.push('/qr')}>
+        <Button className="w-full" variant="outline" onClick={() => router.push('/settings/qr')}>
           <QrCode className="mr-1 h-4 w-4" /> QR Scanner
         </Button>
       </div>
