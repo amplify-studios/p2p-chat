@@ -34,23 +34,10 @@ export default function NewRoom() {
   const [qrValue, setQrValue] = useState<string | null>(null);
   const [pendingInvite, setPendingInvite] = useState(false);
   const [selectedUsernames, setSelectedUsernames] = useState<string[]>([]);
-  //const [participants, setParticipants] = useState<PeerInfo[]>([]);
   const [participants, setParticipants] = useState<string[]>([]);
-  const [availablePeers, setAvailablePeers] = useState(
-    () => peers.filter((p) => p.id !== user?.userId)
-  );
+  const { friends, setFriends } = usePeers();
 
   const handledQr = useRef(false);
-  
-  useEffect(() => {
-    if (!user) return;
-    setAvailablePeers(peers.filter((p) => p.id !== user.userId));
-  }, [peers, user, user?.userId]);
-
-  useEffect(() => {
-    if (!user) return;
-    //setParticipants(peers.filter((p) => p.id !== user.userId));
-  }, [peers, user, user?.userId]);
 
   useEffect(() => {
     const userIdParam = searchParams.get('userId');
@@ -254,14 +241,14 @@ export default function NewRoom() {
               </div>
             </div>
             <div className="border-t pt-4">
-              <h2 className="text-lg font-medium text-foreground">{peers.length - 1 === 0 ? "No available peers" : `Available peers (${peers.length - 1})`}
+              <h2 className="text-lg font-medium text-foreground">{friends.length === 0 ? "No friends" : `Available friends (${friends.length})`}
               </h2>
-              <span className="text-sm text-muted-foreground">{peers.length - 1 === 0 ? "" : "Select at least one peer"}</span>
+              <span className="text-sm text-muted-foreground">{friends.length === 0 ? "" : "Select at least two friends"}</span>
               <div 
                 className="flex flex-col items-start mt-2 mb-2"
               >
-                {/* Peers */}
-                {availablePeers.map((p) => (
+                {/* Friends */}
+                {friends.map((p) => (
                   <Button
                     key={p.id}
                     variant={"ghost"}
@@ -322,9 +309,9 @@ export default function NewRoom() {
               <Button 
                 onClick={handleCreateRoom} 
                 className="flex-1" 
-                disabled={pendingInvite}
+                disabled={participants.length === 0}
               >
-                {pendingInvite ? 'Creating...' : 'Create Group'}
+                Create Group
               </Button>
               {/*<Button 
                 onClick={handleGenerateQR} 
