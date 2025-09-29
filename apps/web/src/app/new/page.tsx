@@ -241,7 +241,7 @@ export default function NewRoom() {
               </div>
             </div>
             <div className="border-t pt-4">
-              <h2 className="text-lg font-medium text-foreground">{friends.length === 0 ? "No friends" : `Available friends (${friends.length})`}
+              <h2 className="text-lg font-medium text-foreground">{friends.length === 0 ? "No friends" : `All friends (${friends.length})`}
               </h2>
               <span className="text-sm text-muted-foreground">{friends.length === 0 ? "" : "Select at least two friends"}</span>
               <div 
@@ -265,7 +265,7 @@ export default function NewRoom() {
                 <Button
                   className="w-full"
                   variant={"outline"}
-                  disabled={(peers.length - 1) === 0 || selectedUsernames.length === 0}
+                  disabled={(peers.length - 1) === 0 || selectedUsernames.length < 2}
                   onClick={() => handleAddParticipants(selectedUsernames)} 
                 >
                   <UserPlus /> Add participants
