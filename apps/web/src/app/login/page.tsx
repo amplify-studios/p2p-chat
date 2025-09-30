@@ -135,6 +135,7 @@ export default function Login() {
       }
 
       sessionStorage.setItem(PASSWORD_KEY, hash(password));
+      sessionStorage.removeItem("loginAttempts");
       setUsername(decrUser.username);
 
       setUser(decrUser);
