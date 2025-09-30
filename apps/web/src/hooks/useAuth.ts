@@ -27,7 +27,6 @@ export function useAuth() {
 
 
   useEffect(() => {
-    console.log("PATH: ", window.location.pathname + window.location.search + window.location.hash);
     if (!db) return;
 
     let cancelled = false;

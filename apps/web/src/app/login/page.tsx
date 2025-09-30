@@ -109,7 +109,12 @@ export default function Login() {
 
       const client = new SignalingClient(id, username, user.public);
       initSignalingClient(client);
-      await client.connect('ws://localhost:8080');
+      try {
+        await client.connect('ws://192.168.1.8:8080');
+      } catch(err: unknown) {
+        console.error(err);
+        setError(err instanceof Error ? err.message : JSON.stringify(err));
+      }
     } else {
       // --- Existing user unlock ---
       const aesKey = generateAESKey(new TextEncoder().encode(hash(password)));
@@ -142,7 +147,7 @@ export default function Login() {
 
       const client = new SignalingClient(decrUser.userId, decrUser.username, decrUser.public);
       initSignalingClient(client);
-      await client.connect('ws://localhost:8080');
+      await client.connect('ws://192.168.1.8:8080');
     }
 
     router.replace(redirect);
