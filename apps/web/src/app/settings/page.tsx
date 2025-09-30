@@ -10,9 +10,10 @@ import { useRouter } from 'next/navigation';
 import { refreshRooms } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/local/ToastContext';
-import { Archive, LogOut, QrCode, Server, ShieldBan, Trash } from 'lucide-react';
+import { Archive, LogOut, QrCode, Server, ShieldBan, TestTube, Trash } from 'lucide-react';
 import { useConfirm } from '@/components/local/ConfirmContext';
 import useClient from '@/hooks/useClient';
+import { sendNotification } from '@chat/notifications';
 
 function SettingsRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -31,7 +32,7 @@ export default function SettingsPage() {
   const [restoreLoading, setRestoreLoading] = useState(false);
   const { showToast } = useToast();
   const confirm = useConfirm();
-  const client = useClient();
+  const { client } = useClient();
 
   if (!user) return <Loading />;
 
@@ -144,6 +145,16 @@ export default function SettingsPage() {
         router.push('/login')
       }}>
         <LogOut className="mr-1 h-4 w-4" /> Logout
+      </Button>
+
+      <Button className="w-full" variant="outline" onClick={() => {
+        try {
+          sendNotification("Test", "Hello World");
+        } catch (err: unknown){
+          alert(err instanceof Error ? err.message : JSON.stringify(err));
+        }
+      }}>
+        <TestTube className="mr-1 h-4 w-4" /> Test
       </Button>
     </div>
   );

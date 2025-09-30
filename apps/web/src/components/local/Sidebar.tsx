@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Home, MessageSquareDot, Plus, Settings, Users } from 'lucide-react';
 import { useRooms } from '@/hooks/useRooms';
@@ -10,6 +10,7 @@ import useClient from '@/hooks/useClient';
 import { useInvites } from '@/hooks/useInvites';
 import { useAuth } from '@/hooks/useAuth';
 import { useAcks } from '@/hooks/useAcks';
+import { getNotificationPermission } from '@chat/notifications';
 
 interface SidebarProps {
   children: ReactNode;
@@ -18,11 +19,24 @@ interface SidebarProps {
 export default function Sidebar({ children }: SidebarProps) {
   useAuth(); // NOTE: used to always check whether the user credentials are present
   useInvites(); // NOTE: used to always check for invites
-  const client = useClient(); // NOTE: used to set status to online immediately
+  const { client, status } = useClient(); // NOTE: used to set status to online immediately
   useAcks({ client }); // NOTE: Always check for ACKs
   const { rooms, activeRoomId } = useRooms();
 
+  const [connected, setConnected] = useState<boolean>(false);
+
+  useEffect(() => {
+    setConnected(status === "connected");
+  }, [status]);
+
   if (!rooms) return <Loading />;
+
+  useEffect(() => {
+    (async () => {
+      const notificationsPermission = await getNotificationPermission();
+      console.log(notificationsPermission);
+    })();
+  }, []);
 
   return (
     <div className="flex flex-col md:flex-row md:h-screen">
@@ -55,15 +69,28 @@ export default function Sidebar({ children }: SidebarProps) {
 
         {/* Fixed bottom items */}
         <div className="p-4 flex flex-col gap-2 border-t border-secondary">
-          <SidebarItem name="New Room" href="/new" icon={<Plus size={19} />} type="default" />
+          <SidebarItem 
+            name="New Room" 
+            href="/new" 
+            icon={<Plus size={19} />} 
+            type="default" 
+            disabled={!connected}
+          />
 
           <SidebarItem
             name="Invites"
             href="/invites"
             icon={<MessageSquareDot size={20} />}
             type="default"
+            disabled={!connected}
           />
-          <SidebarItem name="Peers" href="/peers" icon={<Users size={20} />} type="default" />
+          <SidebarItem 
+            name="Peers" 
+            href="/peers" 
+            icon={<Users size={20} />} 
+            type="default" 
+            disabled={!connected}
+          />
           <SidebarItem
             name="Settings"
             href="/settings"
@@ -89,20 +116,39 @@ export default function Sidebar({ children }: SidebarProps) {
                 {room.name}
               </Link>
             ))}
-            <Link
-              href="/new"
-              className="flex-shrink-0 px-3 py-2 rounded hover:bg-secondary flex items-center gap-1"
-            >
-              <Plus size={16} />
-            </Link>
+            <SidebarItem 
+              href="/new" 
+              type="small" 
+              icon={<Plus size={16} />} 
+              disabled={!connected}
+            /> 
+
           </div>
 
           {/* Fixed right icons */}
           <div className="flex gap-2 ml-2">
-            <SidebarItem href="/" type="small" icon={<Home size={16} />} />
-            <SidebarItem href="/invites" type="small" icon={<MessageSquareDot size={16} />} />
-            <SidebarItem href="/peers" type="small" icon={<Users size={16} />} />
-            <SidebarItem href="/settings" type="small" icon={<Settings size={16} />} />
+            <SidebarItem 
+              href="/" 
+              type="small" 
+              icon={<Home size={16} />} 
+            /> 
+            <SidebarItem 
+              href="/invites" 
+              type="small" 
+              icon={<MessageSquareDot size={16} />}
+              disabled={!connected}
+              />
+            <SidebarItem 
+              href="/peers" 
+              type="small" 
+              icon={<Users size={16} />}
+              disabled={!connected}
+            />
+            <SidebarItem 
+              href="/settings" 
+              type="small" 
+              icon={<Settings size={16} />}
+            />
           </div>
         </nav>
 

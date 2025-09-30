@@ -1,35 +1,36 @@
-// import { Notification } from 'notifications';
+export async function getNotificationPermission(): Promise<boolean> {
+  if (!('Notification' in window)) return false;
 
-export function getNotificationPermission() {
-  return new Promise((resolve, reject) => {
-    if (Notification.permission === 'granted') {
-      resolve(true);
-      return;
-    } else if (Notification.permission === 'denied') {
-      resolve(false);
-      return;
-    }
+  if (Notification.permission === 'granted') return true;
+  if (Notification.permission === 'denied') return false;
 
-    Notification.requestPermission().then((permission) => {
-      if (permission === 'granted') {
-        resolve(true);
-      } else {
-        resolve(false);
-      }
-    });
-  });
+  const permission = await Notification.requestPermission();
+  return permission === 'granted';
 }
 
-export function sendNotification(title: string, body: string) {
-  if (Notification.permission !== 'granted') {
+// send a notification using the Service Worker
+export async function sendNotification(title: string, body: string) {
+  if (!('serviceWorker' in navigator)) {
+    console.warn('Service Worker not supported, fallback to normal Notification');
+    if (Notification.permission === 'granted') {
+      new Notification(title, { body });
+    }
     return;
   }
 
-  const notification = new Notification(title, {
+  const registration = await navigator.serviceWorker.ready;
+
+  if (!registration.showNotification) {
+    console.warn('showNotification not available, fallback to normal Notification');
+    if (Notification.permission === 'granted') {
+      new Notification(title, { body });
+    }
+    return;
+  }
+
+  registration.showNotification(title, {
     body,
+    tag: 'chat-notification',
+    // icon: '/icon.png',
   });
-  notification.onclick = () => {
-    window.focus();
-    notification.close();
-  };
 }
