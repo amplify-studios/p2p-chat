@@ -148,7 +148,11 @@ export default function SettingsPage() {
       </Button>
 
       <Button className="w-full" variant="outline" onClick={() => {
-        sendNotification("Test", "Hello World");
+        try {
+          sendNotification("Test", "Hello World");
+        } catch (err: unknown){
+          alert(err instanceof Error ? err.message : JSON.stringify(err));
+        }
       }}>
         <TestTube className="mr-1 h-4 w-4" /> Test
       </Button>
