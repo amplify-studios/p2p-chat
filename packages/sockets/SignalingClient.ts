@@ -3,7 +3,7 @@ import { InviteMessage, AckMessage } from './signaling';
 export type SignalHandler = (msg: any) => void;
 
 export class SignalingClient {
-  private ws: WebSocket | null = null;
+  public ws: WebSocket | null = null;
   private id: string;
   private username: string;
   private pubkey: string;

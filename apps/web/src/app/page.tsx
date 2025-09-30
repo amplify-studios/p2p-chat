@@ -16,7 +16,7 @@ export default function Home() {
   const { db, getAllDecr } = useDB();
   const { invites } = useInvites();
   const { peers, loading: peersLoading, friends } = usePeers();
-  const client = useClient();
+  const { client, status } = useClient();
 
   const [newMessagesCount, setNewMessagesCount] = useState(0);
 
@@ -63,7 +63,7 @@ export default function Home() {
         </div>
       </header>
 
-      {!client && (
+      {status !== "connected" && (
         <EmptyState msg='No connection to the signaling server' />
       )}
 

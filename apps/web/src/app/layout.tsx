@@ -22,11 +22,6 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // (async () => {
-  //   const notificationsPermission = await getNotificationPermission();
-  //   console.log(notificationsPermission);
-  // })();
-
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${robotoMono.variable} antialiased`}>

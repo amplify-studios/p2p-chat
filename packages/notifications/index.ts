@@ -1,33 +1,41 @@
-// import { Notification } from 'notifications';
+export async function getNotificationPermission(): Promise<boolean> {
+  if (!('Notification' in window)) return false;
 
-export function getNotificationPermission() {
-  return new Promise((resolve, reject) => {
-    if (Notification.permission === 'granted') {
-      resolve(true);
-      return;
-    } else if (Notification.permission === 'denied') {
-      resolve(false);
-      return;
-    }
+  if (Notification.permission === 'granted') return true;
+  if (Notification.permission === 'denied') return false;
 
-    Notification.requestPermission().then((permission) => {
-      if (permission === 'granted') {
-        resolve(true);
-      } else {
-        resolve(false);
-      }
-    });
-  });
+  const permission = await Notification.requestPermission();
+  return permission === 'granted';
 }
 
-export function sendNotification(title: string, body: string) {
-  if (Notification.permission !== 'granted') {
-    return;
+export async function sendNotification(title: string, body: string) {
+  if (!('Notification' in window)) {
+    throw new Error('Notifications not supported');
   }
 
-  const notification = new Notification(title, {
-    body,
-  });
+  if (Notification.permission !== 'granted') {
+    throw new Error('Notification permissions not granted');
+  }
+
+  // Try to use Service Worker if available
+  if ('serviceWorker' in navigator) {
+    try {
+      const registration = await navigator.serviceWorker.getRegistration();
+      if (registration?.showNotification) {
+        registration.showNotification(title, {
+          body,
+          icon: '/icon.png', // optional
+          tag: 'chat-notification',
+        });
+        return;
+      }
+    } catch (err) {
+      throw new Error('SW notification failed, falling back to page notification', err);
+    }
+  }
+
+  // Fallback to normal Notification (foreground)
+  const notification = new Notification(title, { body, icon: '/icon.png' });
   notification.onclick = () => {
     window.focus();
     notification.close();

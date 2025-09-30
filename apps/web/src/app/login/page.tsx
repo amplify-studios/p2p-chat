@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import PasswordField from '@/components/local/PasswordField';
@@ -40,9 +40,12 @@ export default function Login() {
   const [attempts, setAttempts] = useState(0);
 
   const router = useRouter();
-  const { encryptedUser } = useAuth();
+  const { encryptedUser, setUser } = useAuth();
   const { db, putEncr } = useDB();
   const confirm = useConfirm();
+
+  const searchParams = useSearchParams();
+  const redirect = searchParams.get("redirect") ?? "/";
 
   const [existingUser, setExistingUser] = useState<
     null | CredentialsType | EncryptedCredentialsType
@@ -58,11 +61,11 @@ export default function Login() {
 
     const storedPass = sessionStorage.getItem(PASSWORD_KEY);
     if (storedPass) {
-      router.push('/');
+      router.replace(redirect);
     } else {
       setExistingUser(encryptedUser);
     }
-  }, [encryptedUser, router]);
+  }, [encryptedUser, router, redirect]);
 
   if (!db) return <Loading />;
 
@@ -73,7 +76,7 @@ export default function Login() {
     const requireUsername = !existingUser;
 
     if (!existingUser) {
-      // --- New user ---
+      // --- New user registration ---
       const validationError = validateForm(username, password, requireUsername);
       if (validationError) {
         setError(validationError);
@@ -102,9 +105,16 @@ export default function Login() {
         return;
       }
 
+      setUser(user);
+
       const client = new SignalingClient(id, username, user.public);
       initSignalingClient(client);
-      await client.connect('ws://localhost:8080');
+      try {
+        await client.connect('ws://192.168.1.8:8080');
+      } catch(err: unknown) {
+        console.error(err);
+        setError(err instanceof Error ? err.message : JSON.stringify(err));
+      }
     } else {
       // --- Existing user unlock ---
       const aesKey = generateAESKey(new TextEncoder().encode(hash(password)));
@@ -124,21 +134,23 @@ export default function Login() {
         if (next >= 3) {
           await eraseDB();
           sessionStorage.removeItem('loginAttempts');
-          window.location.reload();
+          setExistingUser(null);
         }
-
         return;
       }
 
       sessionStorage.setItem(PASSWORD_KEY, hash(password));
+      sessionStorage.removeItem("loginAttempts");
       setUsername(decrUser.username);
+
+      setUser(decrUser);
 
       const client = new SignalingClient(decrUser.userId, decrUser.username, decrUser.public);
       initSignalingClient(client);
-      await client.connect('ws://localhost:8080');
+      await client.connect('ws://192.168.1.8:8080');
     }
 
-    router.push('/');
+    router.replace(redirect);
   };
 
   const isLocked = attempts >= 3;
@@ -200,7 +212,8 @@ export default function Login() {
               if (confirmed) {
                 await eraseDB();
                 sessionStorage.removeItem('loginAttempts');
-                window.location.reload();
+                setExistingUser(null);
+                setUser(null);
               }
             }}
           >

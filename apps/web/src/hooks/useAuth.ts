@@ -1,11 +1,22 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { redirect, useRouter } from 'next/navigation';
 import { useDB } from '@/hooks/useDB';
 import { CredentialsType } from '@chat/core';
 import { decryptCredentialsType, EncryptedCredentialsType, generateAESKey } from '@chat/crypto';
 import { PASSWORD_KEY } from '@/lib/storage';
+import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
+
+function redirectToLogin(router: AppRouterInstance) {
+  const fullPath = window.location.pathname + window.location.search + window.location.hash;
+
+  if (window.location.pathname.startsWith("/login")) {
+    return;
+ }
+
+  router.push(`/login?redirect=${encodeURIComponent(fullPath)}`);
+}
 
 export function useAuth() {
   const [user, setUser] = useState<CredentialsType | null>(null);
@@ -13,6 +24,7 @@ export function useAuth() {
   const [key, setKey] = useState<Uint8Array | null>(null);
   const { db } = useDB();
   const router = useRouter();
+
 
   useEffect(() => {
     if (!db) return;
@@ -39,7 +51,7 @@ export function useAuth() {
         // Unlock mode: user exists but no password in sessionStorage
         setUser(null);
         setKey(null);
-        router.push('/login');
+        redirectToLogin(router);
         return;
       }
 
@@ -47,7 +59,7 @@ export function useAuth() {
       if (!aesKey) {
         setUser(null);
         setKey(null);
-        router.push('/login');
+        redirectToLogin(router);
         return;
       }
 
@@ -55,7 +67,7 @@ export function useAuth() {
       if (!decrypted) {
         setUser(null);
         setKey(aesKey);
-        router.push('/login');
+        redirectToLogin(router);
         return;
       }
 
@@ -70,5 +82,5 @@ export function useAuth() {
     };
   }, [db, router]);
 
-  return { user, encryptedUser, key };
+  return { user, setUser, encryptedUser, key };
 }

@@ -19,7 +19,7 @@ export function usePeers() {
   const [loading, setLoading] = useState(true);
   const { getAllDecr } = useDB();
   const { user, key } = useAuth();
-  const client = useClient();
+  const { client } = useClient();
 
   useEffect(() => {
     if (!key || !client) {

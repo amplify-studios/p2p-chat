@@ -5,8 +5,9 @@ import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card'
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { EllipsisVertical, Send, User } from 'lucide-react';
+import { EllipsisVertical, Send, User, Users } from 'lucide-react';
 import EmptyState from './EmptyState';
+import { RoomType } from '@chat/core/types';
 
 export interface Message {
   id: number;
@@ -20,9 +21,10 @@ interface ChatProps {
   onSend: (msg: string) => void;
   href: string;
   isTyping?: boolean;
+  room: RoomType;
 }
 
-export function Chat({ title, messages, onSend, href, isTyping = false }: ChatProps) {
+export function Chat({ title, messages, onSend, href, isTyping = false, room }: ChatProps) {
   const [input, setInput] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -43,7 +45,7 @@ export function Chat({ title, messages, onSend, href, isTyping = false }: ChatPr
     <Card className="w-full flex-1 flex flex-col">
       <CardHeader className="flex justify-between items-center">
         <div className="flex row gap-2">
-          <User />
+          {room.type === 'single' ? <User /> : <Users />}
           <h2 className="text-lg font-bold">{title}</h2>
         </div>
         <Link href={href}>

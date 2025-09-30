@@ -11,7 +11,7 @@ export function useInvites() {
   const { db, putEncr, getAllDecr } = useDB();
   const [invites, setInvites] = useState<InviteType[]>([]);
   const { user, key } = useAuth();
-  const client = useClient();
+  const { client } = useClient();
 
   useEffect(() => {
     if (!db || !key || !client) return;
