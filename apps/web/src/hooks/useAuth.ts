@@ -76,5 +76,5 @@ export function useAuth() {
     };
   }, [db, router]);
 
-  return { user, encryptedUser, key };
+  return { user, setUser, encryptedUser, key };
 }

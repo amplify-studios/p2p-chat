@@ -40,7 +40,7 @@ export default function Login() {
   const [attempts, setAttempts] = useState(0);
 
   const router = useRouter();
-  const { encryptedUser } = useAuth();
+  const { encryptedUser, setUser } = useAuth();
   const { db, putEncr } = useDB();
   const confirm = useConfirm();
 
@@ -61,11 +61,11 @@ export default function Login() {
 
     const storedPass = sessionStorage.getItem(PASSWORD_KEY);
     if (storedPass) {
-      router.push(redirect);
+      router.replace(redirect);
     } else {
       setExistingUser(encryptedUser);
     }
-  }, [encryptedUser, router]);
+  }, [encryptedUser, router, redirect]);
 
   if (!db) return <Loading />;
 
@@ -76,7 +76,7 @@ export default function Login() {
     const requireUsername = !existingUser;
 
     if (!existingUser) {
-      // --- New user ---
+      // --- New user registration ---
       const validationError = validateForm(username, password, requireUsername);
       if (validationError) {
         setError(validationError);
@@ -105,6 +105,8 @@ export default function Login() {
         return;
       }
 
+      setUser(user);
+
       const client = new SignalingClient(id, username, user.public);
       initSignalingClient(client);
       await client.connect('ws://localhost:8080');
@@ -127,21 +129,22 @@ export default function Login() {
         if (next >= 3) {
           await eraseDB();
           sessionStorage.removeItem('loginAttempts');
-          window.location.reload();
+          setExistingUser(null);
         }
-
         return;
       }
 
       sessionStorage.setItem(PASSWORD_KEY, hash(password));
       setUsername(decrUser.username);
 
+      setUser(decrUser);
+
       const client = new SignalingClient(decrUser.userId, decrUser.username, decrUser.public);
       initSignalingClient(client);
       await client.connect('ws://localhost:8080');
     }
 
-    router.push(redirect);
+    router.replace(redirect);
   };
 
   const isLocked = attempts >= 3;
@@ -203,7 +206,8 @@ export default function Login() {
               if (confirmed) {
                 await eraseDB();
                 sessionStorage.removeItem('loginAttempts');
-                window.location.reload();
+                setExistingUser(null);
+                setUser(null);
               }
             }}
           >
