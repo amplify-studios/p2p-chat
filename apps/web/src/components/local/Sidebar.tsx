@@ -10,6 +10,7 @@ import useClient from '@/hooks/useClient';
 import { useInvites } from '@/hooks/useInvites';
 import { useAuth } from '@/hooks/useAuth';
 import { useAcks } from '@/hooks/useAcks';
+import { getNotificationPermission } from '@chat/notifications';
 
 interface SidebarProps {
   children: ReactNode;
@@ -29,6 +30,13 @@ export default function Sidebar({ children }: SidebarProps) {
   }, [status]);
 
   if (!rooms) return <Loading />;
+
+  useEffect(() => {
+    (async () => {
+      const notificationsPermission = await getNotificationPermission();
+      console.log(notificationsPermission);
+    })();
+  }, []);
 
   return (
     <div className="flex flex-col md:flex-row md:h-screen">

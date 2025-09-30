@@ -22,6 +22,7 @@ export function getNotificationPermission() {
 
 export function sendNotification(title: string, body: string) {
   if (Notification.permission !== 'granted') {
+    console.warn("Notification persmissions not granted");
     return;
   }
 
