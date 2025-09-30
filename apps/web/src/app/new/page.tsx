@@ -12,11 +12,12 @@ import { Friend, usePeers } from '@/hooks/usePeers';
 import useClient from '@/hooks/useClient';
 import { generateBase58Id } from '@chat/crypto';
 import { CredentialsType, decodePayload, encodePayload, RoomType } from '@chat/core';
-import { InviteMessage, AckMessage, PeerInfo } from '@chat/sockets';
+import { InviteMessage, AckMessage } from '@chat/sockets';
 import { refreshRooms } from '@/lib/utils';
 import { useToast } from '@/components/local/ToastContext';
 import { CircleMinus, ShieldUser, User, UserPlus } from 'lucide-react';
 import EmptyState from '@/components/local/EmptyState';
+import { getSignalingClient } from '@/lib/signalingClient';
 
 export default function NewRoom() {
   const { user, key } = useAuth();
@@ -163,29 +164,57 @@ export default function NewRoom() {
         setPendingInvite(false);
       }
     } else {
-      const roomId = generateBase58Id();
-      
-      const localCreds = await getAllDecr('credentials', key) as CredentialsType[];
-      const creds = participants.map((p) => localCreds.find(c => c.userId === p.id)) as CredentialsType[];
-      
-      const room: RoomType = {
-        roomId,
-        name: name,
-        type: 'group',
-        keys: [
-          {
-            userId: user.userId,
-            public: user.public,
-            username: user.username,
-          },
-          ...creds
-        ],
-      };
+      setPendingInvite(true);
+      try {
+        const roomId = generateBase58Id();
+  
+        const localCreds = await getAllDecr('credentials', key) as CredentialsType[];
+        const creds = participants.map((p) => localCreds.find(c => c.userId === p.id)) as CredentialsType[];
+        
+        const room: RoomType = {
+          roomId,
+          name: name,
+          type: 'group',
+          keys: [
+            {
+              userId: user.userId,
+              public: user.public,
+              username: user.username,
+            },
+            ...creds
+          ],
+        };
+  
+        // Save room
+        await putEncr('rooms', room, key);
+        
+        try {
+          const client = await getSignalingClient();
 
-      // Save room
-      await putEncr('rooms', room, key);
+          console.log("Participants: ", participants);
+          const notifyParticipants = participants.map((participant) => {
+            const ack = {
+              from: user.userId,
+              to: participant.id,
+              room: room
+            } as AckMessage;
+            return client.sendAck(participant.id, ack);
+          });        
+          await Promise.allSettled(notifyParticipants);
+        } catch (sigErr) {
+          console.warn('Failed to notify participants via signaling:', sigErr);
+        }
 
-      console.log(room);
+        refreshRooms();
+        router.push(`/chat?id=${roomId}`);
+  
+        console.log(room);
+
+      } catch (err) {
+        console.error('Error creating group:', err);
+        setPendingInvite(false);
+        return;
+      }
     }
   };
 
