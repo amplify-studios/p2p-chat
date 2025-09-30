@@ -1,3 +1,5 @@
+"use client";
+
 import { SignalingClient } from '@chat/sockets';
 import { getDB, PASSWORD_KEY } from './storage';
 import { decryptCredentialsType, EncryptedCredentialsType, generateAESKey } from '@chat/crypto';
