@@ -8,7 +8,7 @@ import Loading from '@/components/local/Loading';
 import ResponsiveQr from '@/components/local/ResponsiveQr';
 import { useDB } from '@/hooks/useDB';
 import { useAuth } from '@/hooks/useAuth';
-import { usePeers } from '@/hooks/usePeers';
+import { Friend, usePeers } from '@/hooks/usePeers';
 import useClient from '@/hooks/useClient';
 import { generateBase58Id } from '@chat/crypto';
 import { CredentialsType, decodePayload, encodePayload, RoomType } from '@chat/core';
@@ -20,7 +20,7 @@ import EmptyState from '@/components/local/EmptyState';
 
 export default function NewRoom() {
   const { user, key } = useAuth();
-  const { db, putEncr } = useDB();
+  const { db, putEncr, getAllDecr } = useDB();
   const router = useRouter();
   const searchParams = useSearchParams();
   const { peers, loading } = usePeers();
@@ -33,8 +33,8 @@ export default function NewRoom() {
   const [error, setError] = useState('');
   const [qrValue, setQrValue] = useState<string | null>(null);
   const [pendingInvite, setPendingInvite] = useState(false);
-  const [selectedUsernames, setSelectedUsernames] = useState<string[]>([]);
-  const [participants, setParticipants] = useState<string[]>([]);
+  const [selectedParticipants, setSelectedParticipants] = useState<Friend[]>([]);
+  const [participants, setParticipants] = useState<Friend[]>([]);
   const { friends, setFriends } = usePeers();
 
   const handledQr = useRef(false);
@@ -139,29 +139,55 @@ export default function NewRoom() {
     }
 
     setError('');
-    setPendingInvite(true);
+    if(type === 'single') {
+      setPendingInvite(true);
+  
+      const peer = peers.find((p) => p.id === otherUserId);
+      if (!peer) {
+        console.error(`Peer ${otherUserId} not found`);
+        setPendingInvite(false);
+        return;
+      }
+  
+      const invite = {
+        from: user.userId,
+        name: type === 'single' ? user.username || user.userId : name,
+        target: otherUserId,
+        pubkey: user.public,
+        roomType: type,
+      } as InviteMessage;
+  
+      try {
+        client.sendRoomInvite(otherUserId, invite);
+        console.log('Invite sent:', invite);
+      } catch (err) {
+        console.error('Failed to send invite:', err);
+        setPendingInvite(false);
+      }
+    } else {
+      const roomId = generateBase58Id();
+      
+      const localCreds = await getAllDecr('credentials', key) as CredentialsType[];
+      const creds = participants.map((p) => localCreds.find(c => c.userId === p.id)) as CredentialsType[];
+      
+      const room: RoomType = {
+        roomId,
+        name: name,
+        type: 'group',
+        keys: [
+          {
+            userId: user.userId,
+            public: user.public,
+            username: user.username,
+          },
+          ...creds
+        ],
+      };
 
-    const peer = peers.find((p) => p.id === otherUserId);
-    if (!peer) {
-      console.error(`Peer ${otherUserId} not found`);
-      setPendingInvite(false);
-      return;
-    }
+      // Save room
+      await putEncr('rooms', room, key);
 
-    const invite = {
-      from: user.userId,
-      name: type === 'single' ? user.username || user.userId : name,
-      target: otherUserId,
-      pubkey: user.public,
-      roomType: type,
-    } as InviteMessage;
-
-    try {
-      client.sendRoomInvite(otherUserId, invite);
-      console.log('Invite sent:', invite);
-    } catch (err) {
-      console.error('Failed to send invite:', err);
-      setPendingInvite(false);
+      console.log(room);
     }
   };
 
@@ -184,20 +210,20 @@ export default function NewRoom() {
     setQrValue(url);
   };
 
-  const handleSelected = (username:string) => {
-    setSelectedUsernames((prev: string[]) =>
-      prev.includes(username) ? prev.filter((name) => name !== username) : [...prev, username]
+  const handleSelected = (selectedParticipant:Friend) => {
+    setSelectedParticipants((prev: Friend[]) =>
+      prev.includes(selectedParticipant) ? prev.filter((friend) => friend !== selectedParticipant) : [...prev, selectedParticipant]
     );
   };
 
-  const handleAddParticipants = (newSelectedUsernames: string[]) => {
-    const newParticipants = newSelectedUsernames.filter((name) => !participants.includes(name));
+  const handleAddParticipants = (newSelectedParticipant: Friend[]) => {
+    const newParticipants = newSelectedParticipant.filter((name) => !participants.includes(name));
     setParticipants((prev) => [...prev, ...newParticipants]);
-    setSelectedUsernames([]);
+    setSelectedParticipants([]);
   }
 
   const handleRemoveParticipant = (id: string) => {
-    setParticipants((prev) => prev.filter((p) => p !== id));
+    setParticipants((prev) => prev.filter((p) => p.id !== id));
   }
 
   return (
@@ -252,9 +278,9 @@ export default function NewRoom() {
                   <Button
                     key={p.id}
                     variant={"ghost"}
-                    onClick={() => handleSelected(p.username)}
+                    onClick={() => handleSelected(p)}
                     className={`w-fit flex items-center mb-2 transition-all duration-50 
-                      ${selectedUsernames.includes(p.username) ? "border-2 border-green-500" : ""
+                      ${selectedParticipants.includes(p) ? "border-2 border-green-500" : ""
                     }`}
                   >
                     <User /> {p.username}
@@ -265,8 +291,8 @@ export default function NewRoom() {
                 <Button
                   className="w-full"
                   variant={"outline"}
-                  disabled={friends.length === 0 || selectedUsernames.length < 2}
-                  onClick={() => handleAddParticipants(selectedUsernames)} 
+                  disabled={friends.length === 0 || selectedParticipants.length < 2}
+                  onClick={() => handleAddParticipants(selectedParticipants)} 
                 >
                   <UserPlus /> Add participants
                 </Button>
@@ -287,15 +313,15 @@ export default function NewRoom() {
                 {/* Participants */}
                 {participants.map((p) => (
                   <Button
-                    key={p}
+                    key={p.id}
                     className="w-fit flex items-center mb-2"
                     variant={"outline"}
                   >
-                    <User /> {p}
+                    <User /> {p.username}
                     <Button 
                       className='ml-2 w-auto'
                       variant='ghost'
-                      onClick={() => handleRemoveParticipant(p)}
+                      onClick={() => handleRemoveParticipant(p.id)}
                     >
                       <CircleMinus />
                     </Button>

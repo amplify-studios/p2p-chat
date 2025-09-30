@@ -46,7 +46,7 @@ export default function Sidebar({ children }: SidebarProps) {
                     room.roomId === activeRoomId ? 'bg-secondary font-semibold' : ''
                   }`}
                 >
-                  {room.name}
+                  {room.type === 'group' ? <Users size={20} /> : null} {room.name}
                 </Link>
               </li>
             ))}
