@@ -31,7 +31,7 @@ export default function SettingsPage() {
   const [restoreLoading, setRestoreLoading] = useState(false);
   const { showToast } = useToast();
   const confirm = useConfirm();
-  const client = useClient();
+  const { client } = useClient();
 
   if (!user) return <Loading />;
 

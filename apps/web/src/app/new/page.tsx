@@ -23,8 +23,8 @@ export default function NewRoom() {
   const { db, putEncr, getAllDecr } = useDB();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { peers, loading } = usePeers();
-  const client = useClient();
+  const { peers, loading, friends, setFriends } = usePeers();
+  const { client } = useClient();
   const { showToast } = useToast();
 
   const [name, setName] = useState('');
@@ -35,7 +35,6 @@ export default function NewRoom() {
   const [pendingInvite, setPendingInvite] = useState(false);
   const [selectedParticipants, setSelectedParticipants] = useState<Friend[]>([]);
   const [participants, setParticipants] = useState<Friend[]>([]);
-  const { friends, setFriends } = usePeers();
 
   const handledQr = useRef(false);
 
@@ -90,10 +89,9 @@ export default function NewRoom() {
     };
 
     handleQrInvite();
-  }, [client, db, user, key, searchParams, router, putEncr]);
+  }, [client, db, user, key, searchParams, router]);
 
   if (!user || !db) return <Loading />;
-  if(!client) return <EmptyState msg='No connection to the signaling server' />
 
   const validate = () => {
     if (type === 'group' && !name.trim()) return 'Room name is required';
