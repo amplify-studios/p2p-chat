@@ -1,3 +1,4 @@
+import { MessagePackage } from '@chat/core/messages';
 import { SignalingClient } from './SignalingClient';
 import { STUN_SERVERS } from './stun';
 
@@ -22,8 +23,17 @@ function getPeerConnection(
   pc.ondatachannel = (e) => {
     const channel = e.channel;
     dataChannels[peerId] = channel;
-    channel.onmessage = (ev) => onMessage(ev.data);
+
+    channel.onmessage = (ev) => onMessage("data " +ev.data);
+    channel.onopen = () => { console.log('Data channel open'); };
+    channel.onclose = () => console.log(peerId, 'Data channel CLOSED');
+    channel.onerror = (err) => console.log(peerId, 'Data channel ERROR', err);
   };
+
+  pc.oniceconnectionstatechange = () => {
+    console.log(peerId, 'ICE state:', pc.iceConnectionState);
+  };
+
 
   // ICE candidates
   pc.onicecandidate = async (e) => {
@@ -43,18 +53,20 @@ export async function connectToPeer(
   client: SignalingClient,
   peerId: string,
   onMessage: (msg: string) => void,
-) {
+): Promise<RTCPeerConnection> {
   const pc = getPeerConnection(client, peerId, onMessage);
 
   // Create data channel for chat
   const channel = pc.createDataChannel('chat');
   dataChannels[peerId] = channel;
-  channel.onmessage = (ev) => onMessage(ev.data);
+  channel.onmessage = (ev) => onMessage("data 2" + ev.data);
 
   const offer = await pc.createOffer();
   await pc.setLocalDescription(offer);
 
   client.sendSignal(peerId, offer);
+
+  return pc;
 }
 
 /**
@@ -90,10 +102,14 @@ export async function handleSignal(
 /**
  * Send a chat message over the data channel
  */
-export function sendMessage(peerId: string, msg: string) {
+export function sendMessage(peerId: string, msg: string | MessagePackage ) {
   const channel = dataChannels[peerId];
   if (channel && channel.readyState === 'open') {
-    channel.send(msg);
+    if (typeof msg === 'string') {
+      channel.send(msg);
+    } else {
+      channel.send(JSON.stringify(msg));
+    }
   } else {
     console.warn('Data channel not ready');
   }
