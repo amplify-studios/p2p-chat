@@ -139,6 +139,7 @@ export default function ChatPage() {
         messages={messages}
         href={`/chat/options?id=${room.roomId}`}
         onSend={sendMessage}
+        roomType={room.type}
       />
     </div>
   );
