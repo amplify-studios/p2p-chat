@@ -12,6 +12,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { decryptMessageType } from '@chat/crypto';
 import { useBlocks } from '@/hooks/useBlocks';
 import { useConfirm } from '@/components/local/ConfirmContext';
+import { Circle, CircleMinus, LogOut, Trash, User } from 'lucide-react';
 
 export default function ChatOptionsPage() {
   const { db, putEncr } = useDB();
@@ -40,6 +41,9 @@ export default function ChatOptionsPage() {
     if (!confirmed) return;
     if (!key) return;
 
+    if(room.type === 'group') {
+      room.keys = []
+    }
     await db.delete('rooms', room.roomId);
 
     const tx = db.transaction('messages', 'readwrite');
@@ -81,18 +85,61 @@ export default function ChatOptionsPage() {
     refreshRooms();
   };
 
+  const leaveGroup = async () => {
+    const confirmed = await confirm({
+      title: 'Leave Group?',
+      message: 'Are you sure you want to leave this group?',
+      confirmText: 'Leave',
+      cancelText: 'Cancel',
+    });
+    if (!confirmed) return;
+    if (!key) return;
+
+    room.keys = room.keys.filter((k) => k.userId !== user?.userId);
+    await putEncr('rooms', room, key);
+
+    await db.delete('rooms', room.roomId);
+
+    router.push('/');
+    refreshRooms();
+
+    console.log(room);
+  }
+
   return (
     <div className="p-6 max-w-md mx-auto flex flex-col gap-6">
       <h1 className="text-2xl font-bold text-center text-foreground">Chat Options</h1>
 
       <div className="flex flex-col gap-4">
-        <Button className="w-full" variant="outline" onClick={blockUser}>
-          Block This User
-        </Button>
-
-        <Button className="w-full" variant="destructive" onClick={deleteChat}>
-          Delete Chat
-        </Button>
+        {room.type == 'single' && (
+          <>
+            <Button className="w-full" variant="outline" onClick={blockUser}>
+              Block This User
+            </Button>
+            <Button className="w-full" variant="destructive" onClick={deleteChat}>
+              <Trash />Delete Chat
+            </Button>
+          </>
+        )}
+        {room.type == 'group' && (
+          <div className="rounded">
+            <h2 className="text-lg font-semibold mb-2 text-foreground">Participants</h2>
+            <div className="max-h-100 overflow-y-auto mb-4 border p-2 rounded">
+              {room.keys.map((k) => (
+                <div key={k.userId} className="p-2 border-b last:border-0 flex items-center justify-start gap-2">
+                  <div className="font-medium text-foreground flex flex-row gap-2">
+                    <User />{k.username}
+                  </div>
+                  {/*<CircleMinus />*/}
+                  {/* <p className="text-sm text-muted-foreground break-all">{k.userId}</p> */}
+                </div>
+              ))}
+            </div>
+            <Button className="mt-5 w-full" variant="destructive" onClick={leaveGroup}>
+              <LogOut />Leave group
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );
