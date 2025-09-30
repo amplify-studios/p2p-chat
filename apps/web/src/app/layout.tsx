@@ -5,6 +5,8 @@ import Layout from '@/components/local/Layout';
 import { ThemeProvider } from '@/components/theme-provider';
 import { getNotificationPermission } from '@chat/notifications';
 
+import WDYRWrapper from '@/components/debug/WDYRWrapper';
+
 const robotoMono = Roboto_Mono({
   subsets: ['latin'],
   variable: '--font-mono',
@@ -30,6 +32,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <Layout>
+            {/* <WDYRWrapper>{children}</WDYRWrapper> */}
             {children}
           </Layout>
         </ThemeProvider>
