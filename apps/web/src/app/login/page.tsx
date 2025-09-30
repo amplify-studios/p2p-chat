@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import PasswordField from '@/components/local/PasswordField';
@@ -44,6 +44,9 @@ export default function Login() {
   const { db, putEncr } = useDB();
   const confirm = useConfirm();
 
+  const searchParams = useSearchParams();
+  const redirect = searchParams.get("redirect") ?? "/";
+
   const [existingUser, setExistingUser] = useState<
     null | CredentialsType | EncryptedCredentialsType
   >(null);
@@ -58,7 +61,7 @@ export default function Login() {
 
     const storedPass = sessionStorage.getItem(PASSWORD_KEY);
     if (storedPass) {
-      router.push('/');
+      router.push(redirect);
     } else {
       setExistingUser(encryptedUser);
     }
@@ -138,7 +141,7 @@ export default function Login() {
       await client.connect('ws://localhost:8080');
     }
 
-    router.push('/');
+    router.push(redirect);
   };
 
   const isLocked = attempts >= 3;
