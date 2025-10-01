@@ -18,9 +18,18 @@ import { sendMessage as webrtcSendMessage } from '@chat/sockets/webrtc';
 
 // TODO: Remove
 
+type SignalMessage =
+  | { sdp: RTCSessionDescriptionInit }
+  | { candidate: RTCIceCandidateInit };
+
 export default function ChatPage() {
   let prevDebug: any;
   let debug: any;
+  const pcRef = useRef<RTCPeerConnection | null>(null);
+  const dcRef = useRef<RTCDataChannel | null>(null);
+  const socketRef = useRef<WebSocket | null>(null);
+
+
   const [messages, setMessages] = useState<Message[]>([]);
   const msgId = useRef(0);
 
@@ -62,7 +71,7 @@ export default function ChatPage() {
   useEffect(() => {
     let mounted = true;
     // if (!db || !roomId || !key || !user?.userId) return;
-    if (!db || !roomId || !key || !user?.userId || !otherUser) return;
+    if (!db || !roomId || !key || !user?.userId) return;
     
     (async () => {
       try {
@@ -95,6 +104,45 @@ export default function ChatPage() {
         console.error('failed loading messages', err);
       }
       
+      // if (peerConnectionRef.current) return;
+      
+      // try {
+      //   const client = await getSignalingClient();
+      //   const pc = await connectToPeer(client, otherUser.userId, (msg) => {
+      //     console.log("📩 Message from peer:", msg);
+      //     if (!mounted) return;
+      //     console.log("📩 Message from peer:", msg);
+      //     // msgId.current += 1;
+      //     // setMessages((prev) => [
+      //     //   ...prev,
+      //     //   { id: msgId.current, text: msg, sender: "other" },
+      //     // ]);
+
+      //   });
+
+      //   if (mounted) peerConnectionRef.current = pc;
+
+      // } catch (err) {
+      //   console.error('Failed to connect to peer', err);
+      // }
+    })();
+    
+
+
+    return () => {
+      mounted = false;
+      // peerConnectionRef.current?.close();
+      // peerConnectionRef.current = null;
+    };
+  // }, [db, roomId, key, user?.userId]);
+  }, [db, roomId, key, user?.userId]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    if (!otherUser?.userId) return;
+
+    (async () => {
       if (peerConnectionRef.current) return;
       
       try {
@@ -118,14 +166,16 @@ export default function ChatPage() {
       }
     })();
 
-
     return () => {
       mounted = false;
       peerConnectionRef.current?.close();
       peerConnectionRef.current = null;
     };
-  // }, [db, roomId, key, user?.userId]);
-  }, [db, roomId, key, user?.userId, otherUser?.userId]);
+  }, [otherUser?.userId]);
+// -----------------------------------------------------------------------------
+
+// -----------------------------------------------------------------------------
+
 
   const logMessage = useCallback((text: string, sender: 'me' | 'other') => {
     msgId.current += 1;

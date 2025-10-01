@@ -38,12 +38,38 @@ function getPeerConnection(
   // ICE candidates
   pc.onicecandidate = async (e) => {
     if (e.candidate) {
-      client.sendSignal(peerId, e.candidate);
+      client.sendCandidate(peerId, e.candidate);
     }
   };
 
   peers[peerId] = pc;
   return pc;
+
+  // setup peer connection
+  // const  pcRef = new RTCPeerConnection();
+
+  // pcRef.onicecandidate = (e) => {
+  //   if (e.candidate) {
+  //     client.sendCandidate(peerId, e.candidate);
+  //   }
+  //   // if (e.candidate) {
+  //   //   socketRef?.send(JSON.stringify({ candidate: e.candidate }));
+  //   // }
+  // };
+
+  //   // create data channel
+  //   const dc = pcRef.current.createDataChannel("chat");
+  //   dcRef.current = dc;
+  //   dc.onmessage = (e) => {
+  //     logMessage(e.data, "other");
+  //   };
+
+  //   // if the other peer creates a channel
+  //   pcRef.current.ondatachannel = (event) => {
+  //     event.channel.onmessage = (e) => {
+  //       logMessage(e.data, "other");
+  //     };
+  //   };
 }
 
 /**
@@ -87,7 +113,7 @@ export async function handleSignal(
       const answer = await pc.createAnswer();
       await pc.setLocalDescription(answer);
 
-      client.sendSignal(from, answer);
+      client.sendSDP(from, pc.localDescription!);
     }
   } else if ('candidate' in payload) {
     // Received ICE candidate

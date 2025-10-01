@@ -71,7 +71,13 @@ export class SignalingClient {
   }
 
   sendCandidate(target: string, candidate: RTCIceCandidate) {
-    this.send({ type: 'candidate', target, payload: candidate });
+    // this.send({ type: 'candidate', target, payload: candidate });
+    this.send(JSON.stringify({ candidate: candidate }));
+  }
+
+  sendSDP(target: string, sessionDescription: RTCSessionDescription) {
+    // this.send({ type: 'candidate', target, payload: candidate });
+    this.send(JSON.stringify({ sdp: sessionDescription }));
   }
 
   requestPeers() {
