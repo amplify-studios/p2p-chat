@@ -24,7 +24,7 @@ function getPeerConnection(
     const channel = e.channel;
     dataChannels[peerId] = channel;
 
-    channel.onmessage = (ev) => onMessage("data " +ev.data);
+    channel.onmessage = (ev) => onMessage(ev.data);
     channel.onopen = () => { console.log('Data channel open'); };
     channel.onclose = () => console.log(peerId, 'Data channel CLOSED');
     channel.onerror = (err) => console.log(peerId, 'Data channel ERROR', err);
@@ -85,7 +85,7 @@ export async function connectToPeer(
   // Create data channel for chat
   const channel = pc.createDataChannel('chat');
   dataChannels[peerId] = channel;
-  channel.onmessage = (ev) => onMessage("data 2" + ev.data);
+  channel.onmessage = (ev) => onMessage(ev.data);
 
   const offer = await pc.createOffer();
   await pc.setLocalDescription(offer);

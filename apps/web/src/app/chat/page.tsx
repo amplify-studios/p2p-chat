@@ -15,6 +15,7 @@ import crypto from 'crypto';
 import { getSignalingClient } from '@/lib/signalingClient';
 import { connectToPeer } from '@chat/sockets';
 import { sendMessage as webrtcSendMessage } from '@chat/sockets/webrtc';
+import { setupPeerConnection, startConnection } from '@chat/sockets/webrtc2';
 
 // TODO: Remove
 
@@ -64,7 +65,7 @@ export default function ChatPage() {
     userECDHRef.current.setPrivateKey(user.private, 'hex');
   }, [user?.private]);
 
-  const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
+  // const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
   // const [peerConnection, setPeerConnection] = useState<RTCPeerConnection>();
   
   // Load messages once when relevant primitives change
@@ -137,42 +138,53 @@ export default function ChatPage() {
   // }, [db, roomId, key, user?.userId]);
   }, [db, roomId, key, user?.userId]);
 
-  useEffect(() => {
-    let mounted = true;
+  // useEffect(() => {
+  //   let mounted = true;
 
-    if (!otherUser?.userId) return;
+  //   if (!otherUser?.userId) return;
 
-    (async () => {
-      if (peerConnectionRef.current) return;
+  //   (async () => {
+  //     if (peerConnectionRef.current) return;
       
-      try {
-        const client = await getSignalingClient();
-        const pc = await connectToPeer(client, otherUser.userId, (msg) => {
-          console.log("📩 Message from peer:", msg);
-          if (!mounted) return;
-          console.log("📩 Message from peer:", msg);
-          // msgId.current += 1;
-          // setMessages((prev) => [
-          //   ...prev,
-          //   { id: msgId.current, text: msg, sender: "other" },
-          // ]);
+  //     try {
+  //       const client = await getSignalingClient();
+  //       const pc = await connectToPeer(client, otherUser.userId, (msg) => {
+  //         console.log("📩 Message from peer:", msg);
+  //         if (!mounted) return;
+  //         console.log("📩 Message from peer:", msg);
+  //         // msgId.current += 1;
+  //         // setMessages((prev) => [
+  //         //   ...prev,
+  //         //   { id: msgId.current, text: msg, sender: "other" },
+  //         // ]);
 
-        });
+  //       });
 
-        if (mounted) peerConnectionRef.current = pc;
+  //       if (mounted) peerConnectionRef.current = pc;
 
-      } catch (err) {
-        console.error('Failed to connect to peer', err);
-      }
-    })();
+  //     } catch (err) {
+  //       console.error('Failed to connect to peer', err);
+  //     }
+  //   })();
 
-    return () => {
-      mounted = false;
-      peerConnectionRef.current?.close();
-      peerConnectionRef.current = null;
-    };
-  }, [otherUser?.userId]);
+  //   return () => {
+  //     mounted = false;
+  //     peerConnectionRef.current?.close();
+  //     peerConnectionRef.current = null;
+  //   };
+  // }, [otherUser?.userId]);
 // -----------------------------------------------------------------------------
+
+useEffect(() => {
+  (async () => {
+    const peerdata = setupPeerConnection();
+    await startConnection(peerdata.pcRef, peerdata.socketRef);
+    dcRef.current = peerdata.dcRef.current;
+    pcRef.current = peerdata.pcRef.current;
+    socketRef.current = peerdata.socketRef.current;
+  });
+}, [dcRef, pcRef, socketRef]);
+
 
 // -----------------------------------------------------------------------------
 
@@ -197,7 +209,9 @@ export default function ChatPage() {
         try {
           const sendData = prepareSendMessagePackage(otherUser.public, text);
           console.log('sendData', sendData);
-          webrtcSendMessage(otherUser.userId, sendData);
+          if (!dcRef.current || dcRef.current.readyState !== "open") return;
+          dcRef.current.send(text);
+          // webrtcSendMessage(otherUser.userId, sendData);
       } catch (err) {
         console.error('Failed to send message over WebRTC', err);
       }
