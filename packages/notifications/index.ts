@@ -29,8 +29,8 @@ export async function sendNotification(title: string, body: string) {
         });
         return;
       }
-    } catch (err) {
-      throw new Error('SW notification failed, falling back to page notification', err);
+    } catch (err: unknown) {
+      throw new Error(`SW notification failed, falling back to page notification ${err instanceof Error ? err.message : JSON.stringify(err)}`);
     }
   }
 
