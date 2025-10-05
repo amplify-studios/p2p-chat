@@ -1,10 +1,12 @@
-import { STUN_SERVERS } from "./stun";
+import { STUN_SERVERS, TURN_SERVERS } from "./stun";
 
 export interface WebRTCOptions {
   ws: WebSocket;
+  myId: string;
   peerId: string;
   onMessage?: (msg: string) => void;
   onLog?: (msg: string) => void;
+  maxRetries?: number;
 }
 
 export interface WebRTCConnection {
@@ -14,72 +16,142 @@ export interface WebRTCConnection {
   close: () => void;
 }
 
-/**
- * Create a WebRTC peer connection and handle offer/answer exchange via WebSocket signaling.
- */
-export function createPeerConnection({ ws, peerId, myId, onMessage, onLog }: WebRTCOptions & { myId: string }): Promise<WebRTCConnection> {
-  return new Promise(async (resolve) => {
-    const pc = new RTCPeerConnection({ iceServers: [
-      { urls: STUN_SERVERS },
-      // TODO: use our own self-hosted TURN Server. See https://github.com/coturn/coturn
-      // {
-      //   urls: 'turn:YOUR_TURN_SERVER:3478',
-      //   username: 'TURN_USERNAME',
-      //   credential: 'TURN_PASSWORD',
-      // },
-    ] });
-    let dataChannel: RTCDataChannel | null = null;
+export async function createPeerConnection({
+  ws,
+  myId,
+  peerId,
+  onMessage,
+  onLog,
+  maxRetries = 5,
+}: WebRTCOptions): Promise<WebRTCConnection> {
+  let retryCount = 0;
+  let dataChannel: RTCDataChannel | null = null;
 
-    const log = (msg: string) => onLog?.(msg);
+  const log = (msg: string) => onLog?.(msg);
 
-    const handleDataChannel = (channel: RTCDataChannel) => {
-      dataChannel = channel;
-      dataChannel.onmessage = (e) => onMessage?.(e.data);
-      dataChannel.onopen = () => log("Data channel open");
+  const pc = new RTCPeerConnection({
+    iceServers: [{ urls: STUN_SERVERS }, ...TURN_SERVERS]
+  });
+
+  const queuedMessages: string[] = [];
+
+  const sendQueued = () => {
+    if (dataChannel?.readyState === "open") {
+      queuedMessages.forEach((msg) => dataChannel!.send(msg));
+      queuedMessages.length = 0;
+    }
+  };
+
+  // Deterministic offerer: lower ID always offers
+  const amOfferer = myId < peerId;
+
+  const setupDataChannel = () => {
+    dataChannel = pc.createDataChannel("chat");
+    dataChannel.onopen = () => {
+      log("Data channel open (offerer)");
+      sendQueued();
+    };
+    dataChannel.onmessage = (e) => onMessage?.(e.data);
+    dataChannel.onclose = () => log("Data channel closed");
+
+    pc.ondatachannel = (e) => {
+      dataChannel = e.channel;
+      dataChannel.onmessage = (ev) => onMessage?.(ev.data);
+      dataChannel.onopen = () => {
+        log("Data channel open (answerer)");
+        sendQueued();
+      };
       dataChannel.onclose = () => log("Data channel closed");
     };
+  };
 
-    // Only create a data channel if myId > peerId (deterministic role)
-    if (myId > peerId) {
-      dataChannel = pc.createDataChannel("chat");
-      handleDataChannel(dataChannel);
-    } else {
-      pc.ondatachannel = (e) => handleDataChannel(e.channel);
-    }
+  setupDataChannel();
 
-    // ICE candidate handling
-    pc.onicecandidate = (e) => {
-      if (e.candidate) ws.send(JSON.stringify({ type: "signal", target: peerId, payload: e.candidate }));
-    };
+  pc.onicecandidate = (e) => {
+    if (!e.candidate) return;
+    ws.send(
+      JSON.stringify({
+        type: "signal",
+        target: peerId,
+        from: myId,
+        payload: e.candidate,
+      })
+    );
+  };
 
-    // Signaling messages
-    ws.addEventListener("message", async (event) => {
-      const msg = JSON.parse(event.data);
-      if (msg.type !== "signal" || msg.from !== peerId) return;
+  const handleSignal = async (msg: any) => {
+    if (msg.type !== "signal" || msg.from !== peerId) return;
 
-      if (msg.payload.sdp) {
-        await pc.setRemoteDescription(msg.payload);
-        if (msg.payload.type === "offer" && myId < peerId) {
-          const answer = await pc.createAnswer();
-          await pc.setLocalDescription(answer);
-          ws.send(JSON.stringify({ type: "signal", target: peerId, payload: answer }));
-        }
-      } else if (msg.payload.candidate) {
-        try { await pc.addIceCandidate(msg.payload); } catch {}
+    if (msg.payload.sdp) {
+      await pc.setRemoteDescription(msg.payload);
+
+      if (msg.payload.type === "offer") {
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
+        ws.send(
+          JSON.stringify({
+            type: "signal",
+            target: peerId,
+            from: myId,
+            payload: answer,
+          })
+        );
       }
-    });
-
-    if (myId > peerId) {
-      const offer = await pc.createOffer();
-      await pc.setLocalDescription(offer);
-      ws.send(JSON.stringify({ type: "signal", target: peerId, payload: offer }));
+    } else if (msg.payload.candidate) {
+      try {
+        await pc.addIceCandidate(msg.payload);
+      } catch (err) {
+        log("Failed to add ICE candidate: " + err);
+      }
     }
+  };
 
-    resolve({
-      pc,
-      dataChannel,
-      send: (msg) => dataChannel?.readyState === "open" && dataChannel.send(msg),
-      close: () => { pc.close(); dataChannel?.close(); },
-    });
+  ws.addEventListener("message", (event) => {
+    try {
+      const msg = JSON.parse(event.data);
+      handleSignal(msg);
+    } catch {}
   });
+
+  const establishConnection = async () => {
+    try {
+      if (amOfferer) {
+        const offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
+        ws.send(
+          JSON.stringify({
+            type: "signal",
+            target: peerId,
+            from: myId,
+            payload: offer,
+          })
+        );
+      }
+    } catch (err) {
+      log(`Connection attempt failed: ${err}`);
+      if (retryCount < maxRetries) {
+        retryCount++;
+        setTimeout(establishConnection, 2000 * retryCount);
+      }
+    }
+  };
+
+  await establishConnection();
+
+  return {
+    pc,
+    dataChannel,
+    send: (message: string) => {
+      if (!dataChannel || dataChannel.readyState !== "open") {
+        queuedMessages.push(message);
+      } else {
+        dataChannel.send(message);
+      }
+    },
+    close: () => {
+      pc.close();
+      dataChannel?.close();
+      log("Connection closed");
+    },
+  };
 }

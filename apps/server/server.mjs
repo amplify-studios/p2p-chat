@@ -19,6 +19,14 @@ wss.on("connection", (ws) => {
     switch (data.type) {
       case "join": {
         clientId = data.id;
+
+        // Close old WS if exists
+        const existing = clients.get(clientId);
+        if (existing && existing.ws !== ws) {
+          console.log(`Closing old WS for ${clientId}`);
+          existing.ws.close();
+        }
+
         clients.set(clientId, {
           ws,
           username: data.username || "Anonymous",
