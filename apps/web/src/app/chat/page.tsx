@@ -30,9 +30,10 @@ export default function P2PChatPage() {
     [rooms, roomId]
   );
 
-  const otherUser = useMemo(() => {
-    return room?.keys.find((k) => k.userId !== user?.userId) ?? null;
-  }, [room, user?.userId]);
+  const otherUser = useMemo(
+    () => room?.keys.find((k) => k.userId !== user?.userId) ?? null,
+    [room, user?.userId]
+  );
 
   useEffect(() => {
     if (!db || !roomId || !key || !user?.userId) return;
@@ -57,19 +58,22 @@ export default function P2PChatPage() {
     })();
   }, [db, roomId, key, user?.userId]);
 
+  // ---- Track signaling WebSocket ----
   useEffect(() => {
-    if(!client || status != "connected") return;
-
-    if(client.ws) setWs(client.ws);
+    if (!client || status !== 'connected') return;
+    if (client.ws) setWs(client.ws);
   }, [client, status]);
 
-  // ---- Setup WebRTC via signaling ----
+  // ---- Setup WebRTC via signaling with automatic retries ----
   useEffect(() => {
-    let mounted = true;
-    if (!otherUser?.userId || !user?.userId) return;
-    if (!ws) return;
+    if (!ws || !otherUser?.userId || !user?.userId) return;
 
-    (async () => {
+    let mounted = true;
+    let retryTimer: NodeJS.Timeout | null = null;
+
+    const setupConnection = async () => {
+      if (!mounted) return;
+
       try {
         const conn = await createPeerConnection({
           ws,
@@ -77,41 +81,45 @@ export default function P2PChatPage() {
           peerId: otherUser.userId,
           onMessage: (msg) => {
             if (!mounted) return;
-            if (!key) return;
-            console.log('📩 Message from peer:', msg);
             msgId.current += 1;
             setMessages((prev) => [
               ...prev,
               { id: msgId.current, text: msg, sender: 'other' },
             ]);
 
-            // await putEncr(
-            //   'messages',
-            //   {
-            //     roomId,
-            //     senderId: otherUser.userId,
-            //     message: msg,
-            //     timestamp: Date.now(),
-            //   } as MessageType,
-            //   key
-            // );
+            if(!key) return;
+
+            putEncr(
+              'messages',
+              {
+                roomId,
+                senderId: otherUser.userId,
+                message: msg,
+                timestamp: Date.now(),
+              } as MessageType,
+              key
+            );
           },
           onLog: (m) => console.log('[WebRTC]', m),
         });
 
-        connectionRef.current = conn;
-        console.log('✅ WebRTC connection established');
+          connectionRef.current = conn;
+          console.log('WebRTC connection established');
       } catch (err) {
-        console.error('❌ WebRTC setup failed', err);
+        console.error('WebRTC setup failed, retrying in 3s...', err);
+        retryTimer = setTimeout(() => setupConnection, 3000);
       }
-    })();
+    };
+
+    setupConnection();
 
     return () => {
       mounted = false;
       connectionRef.current?.close();
       connectionRef.current = null;
+      if (retryTimer) clearTimeout(retryTimer);
     };
-  }, [user?.userId, otherUser?.userId]);
+  }, [ws, user?.userId, otherUser?.userId]);
 
   // ---- Log message locally ----
   const logMessage = useCallback((text: string, sender: 'me' | 'other') => {
@@ -150,7 +158,6 @@ export default function P2PChatPage() {
   if (!roomId) return <EmptyState msg="No room selected" />;
   if (!room) return <EmptyState msg="Room not found" />;
 
-  // ---- Render ----
   return (
     <div className="flex flex-col h-full min-h-screen">
       <Chat
