@@ -56,6 +56,8 @@ export function createPeerConnection({
     };
 
     // Handle incoming signaling
+    const pendingCandidates: RTCIceCandidateInit[] = [];
+
     ws.addEventListener("message", async (event) => {
       const msg = JSON.parse(event.data);
       if (msg.type !== "signal") return;
@@ -63,22 +65,31 @@ export function createPeerConnection({
 
       if (msg.payload.sdp) {
         await pc.setRemoteDescription(new RTCSessionDescription(msg.payload));
+
+        // If it's an offer, create and send answer
         if (msg.payload.type === "offer") {
           const answer = await pc.createAnswer();
           await pc.setLocalDescription(answer);
           ws.send(
-            JSON.stringify({
-              type: "signal",
-              target: msg.from,
-              payload: answer,
-            })
+            JSON.stringify({ type: "signal", target: msg.from, payload: answer })
           );
         }
+
+        // Drain pending ICE candidates
+        for (const c of pendingCandidates) {
+          await pc.addIceCandidate(c);
+        }
+        pendingCandidates.length = 0;
       } else if (msg.payload.candidate) {
-        try {
-          await pc.addIceCandidate(msg.payload);
-        } catch (err) {
-          console.error("Error adding candidate", err);
+        if (!pc.remoteDescription) {
+          // Queue if remoteDescription not yet set
+          pendingCandidates.push(msg.payload);
+        } else {
+          try {
+            await pc.addIceCandidate(msg.payload);
+          } catch (err) {
+            console.error("Error adding candidate", err);
+          }
         }
       }
     });

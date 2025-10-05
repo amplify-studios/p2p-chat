@@ -6,12 +6,14 @@ import { CredentialsType, InviteType, RoomType } from '@chat/core';
 import { refreshRooms } from '@/lib/utils';
 import { useAuth } from './useAuth';
 import useClient from './useClient';
+import { useRouter } from 'next/navigation';
 
 export function useInvites() {
   const { db, putEncr, getAllDecr } = useDB();
   const [invites, setInvites] = useState<InviteType[]>([]);
   const { user, key } = useAuth();
   const { client } = useClient();
+  const router = useRouter();
 
   useEffect(() => {
     if (!db || !key || !client) return;
@@ -105,7 +107,7 @@ export function useInvites() {
     } as AckMessage;
     client.sendAck(invite.from, ack);
 
-    // TODO: WebRTC flow
+    router.push(`/chat?id=${user.userId}`);
   }
 
   const declineInvite = async (invite: InviteType) => {

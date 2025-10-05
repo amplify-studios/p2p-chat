@@ -7,12 +7,12 @@ import { useRooms } from '@/hooks/useRooms';
 import { Button } from '@/components/ui/button';
 import EmptyState from '@/components/local/EmptyState';
 import { refreshRooms } from '@/lib/utils';
-import { BlockType } from '@chat/core';
 import { useAuth } from '@/hooks/useAuth';
 import { decryptMessageType } from '@chat/crypto';
 import { useBlocks } from '@/hooks/useBlocks';
 import { useConfirm } from '@/components/local/ConfirmContext';
-import { Circle, CircleMinus, LogOut, Trash, User } from 'lucide-react';
+import { LogOut, Trash, User } from 'lucide-react';
+import { useToast } from '@/components/local/ToastContext';
 
 export default function ChatOptionsPage() {
   const { db, putEncr } = useDB();
@@ -23,6 +23,7 @@ export default function ChatOptionsPage() {
   const router = useRouter();
   const { block } = useBlocks();
   const confirm = useConfirm();
+  const { showToast } = useToast();
 
   if (!db || !rooms) return <Loading />;
 
@@ -46,21 +47,7 @@ export default function ChatOptionsPage() {
     }
     await db.delete('rooms', room.roomId);
 
-    const tx = db.transaction('messages', 'readwrite');
-    const store = tx.objectStore('messages');
-
-    let cursor = await store.openCursor();
-    while (cursor) {
-      const encrMsg = cursor.value;
-      const message = decryptMessageType(encrMsg, key);
-
-      if (message.roomId === roomId) {
-        await cursor.delete();
-      }
-      cursor = await cursor.continue();
-    }
-
-    await tx.done;
+    eraseMessages(room.roomId);
 
     router.push('/');
     refreshRooms();
@@ -84,6 +71,25 @@ export default function ChatOptionsPage() {
     router.push('/');
     refreshRooms();
   };
+
+  const eraseMessages = async (roomId: string) => {
+    if(!key) return;
+    const tx = db.transaction('messages', 'readwrite');
+    const store = tx.objectStore('messages');
+
+    let cursor = await store.openCursor();
+    while (cursor) {
+      const encrMsg = cursor.value;
+      const message = decryptMessageType(encrMsg, key);
+
+      if (message.roomId === roomId) {
+        await cursor.delete();
+      }
+      cursor = await cursor.continue();
+    }
+
+    await tx.done;
+  }
 
   const leaveGroup = async () => {
     const confirmed = await confirm({
@@ -116,6 +122,14 @@ export default function ChatOptionsPage() {
             <Button className="w-full" variant="outline" onClick={blockUser}>
               Block This User
             </Button>
+
+            <Button className="w-full" variant="outline" onClick={async () => { 
+              eraseMessages(room.roomId) 
+              showToast("Messages erased", "info");
+            }}>
+              Erase All Messages
+            </Button>
+
             <Button className="w-full" variant="destructive" onClick={deleteChat}>
               <Trash />Delete Chat
             </Button>
