@@ -4,6 +4,11 @@ import { decryptCredentialsType, EncryptedCredentialsType, generateAESKey } from
 
 let singletonClient: SignalingClient | null = null;
 
+const SERVER_URL = "ws://localhost:8080";
+
+/**
+ * Initialize the singleton manually (optional).
+ */
 export function initSignalingClient(client: SignalingClient) {
   if (!singletonClient) singletonClient = client;
   return singletonClient;
@@ -11,13 +16,19 @@ export function initSignalingClient(client: SignalingClient) {
 
 /**
  * Returns the singleton signaling client.
- * If the client is not initialized yet, it tries to create one
- * using the stored user credentials and password in sessionStorage.
- * Throws an error if credentials are missing or cannot be decrypted.
+ * If not initialized, creates one from stored credentials.
+ * Handles reconnects and prevents duplicate joins.
  */
 export async function getSignalingClient(): Promise<SignalingClient> {
-  if (singletonClient) return singletonClient;
+  if (singletonClient) {
+    // If the existing WS is closed, attempt reconnect
+    if (!singletonClient.ws || singletonClient.ws.readyState !== WebSocket.OPEN) {
+      await singletonClient.reconnect(SERVER_URL);
+    }
+    return singletonClient;
+  }
 
+  // Fetch encrypted credentials from DB
   const db = await getDB();
   const encrCreds = (await db.getAll('user')) as EncryptedCredentialsType[];
   if (!encrCreds || encrCreds.length === 0) {
@@ -36,7 +47,9 @@ export async function getSignalingClient(): Promise<SignalingClient> {
   if (!creds) throw new Error('Failed to decrypt user credentials');
 
   singletonClient = new SignalingClient(creds.userId, creds.username, creds.public);
-  await singletonClient.connect('ws://localhost:8080'); // TODO: change to config
+
+  // Connect and auto-reconnect built into SignalingClient
+  await singletonClient.connect(SERVER_URL);
 
   return singletonClient;
 }

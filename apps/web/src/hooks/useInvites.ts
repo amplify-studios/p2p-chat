@@ -106,8 +106,9 @@ export function useInvites() {
       },
     } as AckMessage;
     client.sendAck(invite.from, ack);
+    console.log("ACK sent");
 
-    router.push(`/chat?id=${user.userId}`);
+    router.push(`/chat?id=${roomId}`);
   }
 
   const declineInvite = async (invite: InviteType) => {
