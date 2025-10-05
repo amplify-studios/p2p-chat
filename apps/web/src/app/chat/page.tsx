@@ -13,11 +13,11 @@ import { createPeerConnection, WebRTCConnection } from '@chat/sockets/webrtc';
 import useClient from '@/hooks/useClient';
 import { prepareSendMessagePackage, returnDecryptedMessage } from '@/lib/messaging';
 import { createECDHkey } from '@chat/crypto';
+import { Buffer } from 'buffer';
 
 export default function P2PChatPage() {
   const connectionRef = useRef<WebRTCConnection | null>(null);
   const msgId = useRef(0);
-  const queuedMessages = useRef<string[]>([]);
 
   const [ws, setWs] = useState<WebSocket | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -30,6 +30,13 @@ export default function P2PChatPage() {
   const roomId = useMemo(() => searchParams?.get('id') ?? null, [searchParams]);
   const room = useMemo(() => rooms?.find((r) => r.roomId === roomId) ?? null, [rooms, roomId]);
   const otherUser = useMemo(() => room?.keys.find((k) => k.userId !== user?.userId) ?? null, [room, user?.userId]);
+
+  const userECDH = useMemo(() => {
+    if (!user?.private) return null;
+    const e = createECDHkey();
+    e.setPrivateKey(Buffer.from(user.private, 'hex'));
+    return e;
+  }, [user?.private]);
 
   // Load local messages
   useEffect(() => {
@@ -53,7 +60,7 @@ export default function P2PChatPage() {
         console.error('Failed to load messages', err);
       }
     })();
-  }, [db, roomId, key, user?.userId]);
+  }, [db, roomId, key, user?.userId, getAllDecr]);
 
   // Connect to signaling server
   useEffect(() => {
@@ -61,72 +68,62 @@ export default function P2PChatPage() {
     if (client.ws) setWs(client.ws);
   }, [client, status]);
 
-  // --- WebRTC connection & message handling ---
+  // WebRTC connection & message handling
   useEffect(() => {
-    if (!ws || !otherUser?.userId || !user?.userId || !user.private) return;
+    if (!ws || !otherUser?.userId || !user?.userId || !userECDH) return;
 
     let mounted = true;
-    let retryTimer: NodeJS.Timeout | null = null;
-
-    const userECDH = createECDHkey();
-    userECDH.setPrivateKey(Buffer.from(user.private, 'hex'));
+    let retryTimer: ReturnType<typeof setTimeout> | null = null;
 
     const setupConnection = async () => {
       if (!mounted) return;
 
       try {
-        let conn = connectionRef.current;
+        // Clean previous connection before creating a new one
+        connectionRef.current?.close();
+        connectionRef.current = null;
 
-        // Recreate connection if it doesn't exist or closed
-        if (!conn || conn.pc.iceConnectionState === 'closed' || conn.dataChannel?.readyState === 'closed') {
-          conn = await createPeerConnection({
-            ws,
-            peerId: otherUser.userId,
-            myId: user.userId,
-            onMessage: async (encrMsg) => {
-              if (!mounted || !encrMsg) return;
+        const conn = await createPeerConnection({
+          ws,
+          peerId: otherUser.userId,
+          myId: user.userId,
+          onMessage: async (encrMsg) => {
+            if (!mounted || !encrMsg) return;
 
-              console.log(encrMsg);
-              const msg = returnDecryptedMessage(userECDH, JSON.parse(encrMsg));
+            // safely parse encrypted message
+            let parsed: any;
+            try {
+              parsed = JSON.parse(encrMsg);
+            } catch (e) {
+              console.warn('Malformed encrypted message', encrMsg);
+              return;
+            }
 
-              msgId.current += 1;
-              setMessages((prev) => [
-                ...prev,
-                { id: msgId.current, text: msg, sender: 'other' },
-              ]);
+            const msg = returnDecryptedMessage(userECDH, parsed);
+            msgId.current += 1;
+            setMessages((prev) => [
+              ...prev,
+              { id: msgId.current, text: msg, sender: 'other' },
+            ]);
 
-              if (!key) return;
+            if (!key) return;
+            putEncr(
+              'messages',
+              {
+                roomId,
+                senderId: otherUser.userId,
+                message: msg,
+                timestamp: Date.now(),
+              } as MessageType,
+              key
+            );
+          },
+          onLog: (m) => console.log('[WebRTC]', m),
+        });
 
-              await putEncr(
-                'messages',
-                {
-                  roomId,
-                  senderId: otherUser.userId,
-                  message: msg,
-                  timestamp: Date.now(),
-                } as MessageType,
-                key
-              );
-            },
-            onLog: (m) => console.log('[WebRTC]', m),
-          });
+        connectionRef.current = conn;
 
-            connectionRef.current = conn;
-        }
-
-        // Flush queued messages when channel opens
-        if (conn.dataChannel) {
-          if (conn.dataChannel.readyState === 'open') {
-            queuedMessages.current.forEach((m) => conn.send(m));
-            queuedMessages.current = [];
-          } else {
-            conn.dataChannel.onopen = () => {
-              queuedMessages.current.forEach((m) => conn.send(m));
-              queuedMessages.current = [];
-            };
-          }
-        }
-
+        // If channel already open, nothing else needed; conn.send() internally queues if not open.
         console.log('WebRTC connection established');
       } catch (err) {
         console.error('WebRTC setup failed, retrying in 3s...', err);
@@ -136,10 +133,9 @@ export default function P2PChatPage() {
 
     setupConnection();
 
-    // Cleanup
     return () => {
       mounted = false;
-      if (retryTimer) clearTimeout(retryTimer);
+      if (retryTimer) clearTimeout(retryTimer!);
       connectionRef.current?.close();
       connectionRef.current = null;
     };
@@ -151,7 +147,7 @@ export default function P2PChatPage() {
     setMessages((prev) => [...prev, { id: msgId.current, text, sender }]);
   }, []);
 
-  // Send message
+  // Send message - relies on createPeerConnection.send queue
   const sendMessage = useCallback(
     async (message: string) => {
       if (!key || !user?.userId || !otherUser) return;
@@ -161,10 +157,38 @@ export default function P2PChatPage() {
       const text = JSON.stringify(encrText);
 
       const conn = connectionRef.current;
-      if (conn?.dataChannel?.readyState === 'open') {
-        conn.send(text);
+      if (!conn) {
+        // no connection yet: attempt to set it up now (fire-and-forget)
+        // we do not await here to avoid blocking UI
+        (async () => {
+          try {
+            const clientWs = ws;
+            if (clientWs) {
+              const newConn = await createPeerConnection({
+                ws: clientWs,
+                peerId: otherUser.userId,
+                myId: user.userId,
+                onMessage: async (encrMsg) => {
+                  // same handler as above - but keep simple here
+                  let parsed: any;
+                  try { parsed = JSON.parse(encrMsg); } catch { return; }
+                  const msg = returnDecryptedMessage(userECDH!, parsed);
+                  msgId.current += 1;
+                  setMessages((prev) => [...prev, { id: msgId.current, text: msg, sender: 'other' }]);
+                },
+                onLog: (m) => console.log('[WebRTC]', m),
+              });
+              connectionRef.current = newConn;
+              newConn.send(text); // this will queue if needed
+            } else {
+              console.warn('No signaling websocket available to create connection');
+            }
+          } catch (err) {
+            console.error('Failed to create connection on demand', err);
+          }
+        })();
       } else {
-        queuedMessages.current.push(text);
+        conn.send(text);
       }
 
       try {
@@ -182,7 +206,7 @@ export default function P2PChatPage() {
         console.error('Failed to store message locally', err);
       }
     },
-    [key, roomId, user?.userId, otherUser, putEncr, logMessage]
+    [key, roomId, user?.userId, otherUser, putEncr, ws, userECDH]
   );
 
   if (!db || !rooms || !user) return <Loading />;

@@ -35,7 +35,7 @@ export default function Sidebar({ children }: SidebarProps) {
   useEffect(() => {
     (async () => {
       const notificationsPermission = await getNotificationPermission();
-      console.log(notificationsPermission);
+      console.log("Notification permission: ", notificationsPermission);
     })();
   }, []);
 

@@ -1,3 +1,4 @@
+// webrtc.ts
 import { STUN_SERVERS, TURN_SERVERS } from "./stun";
 
 export interface WebRTCOptions {
@@ -16,6 +17,14 @@ export interface WebRTCConnection {
   close: () => void;
 }
 
+/**
+ * createPeerConnection
+ * - Deterministic offerer (myId < peerId offers)
+ * - Data channel created only by offerer
+ * - Queues outgoing messages until data channel open
+ * - Queues incoming ICE candidates until remoteDescription is set
+ * - Adds a single ws message listener and removes it on close
+ */
 export async function createPeerConnection({
   ws,
   myId,
@@ -27,111 +36,163 @@ export async function createPeerConnection({
   let retryCount = 0;
   let dataChannel: RTCDataChannel | null = null;
 
-  const log = (msg: string) => onLog?.(msg);
+  const log = (msg: string) => {
+    try { onLog?.(msg); } catch {}
+  };
 
-  const pc = new RTCPeerConnection({
-    iceServers: [{ urls: STUN_SERVERS }, ...TURN_SERVERS]
-  });
+  // Ensure STUN_SERVERS is an array of RTCIceServer or string items converted properly.
+  const iceServers: RTCIceServer[] = [
+    // map STUN strings to objects
+    ...(Array.isArray(STUN_SERVERS) ? STUN_SERVERS.map((s) => ({ urls: s })) : []),
+    // spread TURN entries (expected to be RTCIceServer objects)
+    ...(Array.isArray(TURN_SERVERS) ? TURN_SERVERS : []),
+  ];
 
-  const queuedMessages: string[] = [];
+  const pc = new RTCPeerConnection({ iceServers });
 
-  const sendQueued = () => {
-    if (dataChannel?.readyState === "open") {
-      queuedMessages.forEach((msg) => dataChannel!.send(msg));
-      queuedMessages.length = 0;
+  // outgoing message queue (used by returned send())
+  const outgoingQueue: string[] = [];
+  const flushOutgoing = () => {
+    if (dataChannel && dataChannel.readyState === "open") {
+      while (outgoingQueue.length) {
+        const m = outgoingQueue.shift()!;
+        try { dataChannel.send(m); } catch (e) { log(`send error: ${e}`); }
+      }
     }
   };
 
-  // Deterministic offerer: lower ID always offers
+  // incoming ICE candidate queue until remoteDescription is set
+  const pendingCandidates: RTCIceCandidateInit[] = [];
+
+  // Deterministic offerer: lower ID offers
   const amOfferer = myId < peerId;
 
-  const setupDataChannel = () => {
-    dataChannel = pc.createDataChannel("chat");
-    dataChannel.onopen = () => {
-      log("Data channel open (offerer)");
-      sendQueued();
-    };
-    dataChannel.onmessage = (e) => onMessage?.(e.data);
-    dataChannel.onclose = () => log("Data channel closed");
+  // Setup data channel only for offerer, and ondatachannel for answerer
+  const setupDataChannelHandlers = () => {
+    if (amOfferer) {
+      // create local data channel
+      dataChannel = pc.createDataChannel("chat");
+      dataChannel.onopen = () => {
+        log("Data channel open (offerer)");
+        flushOutgoing();
+      };
+      dataChannel.onmessage = (e) => onMessage?.(e.data);
+      dataChannel.onclose = () => log("Data channel closed");
+      dataChannel.onerror = (e) => log("DataChannel error: " + e);
+    }
 
+    // answerer will receive the remote channel here
     pc.ondatachannel = (e) => {
       dataChannel = e.channel;
       dataChannel.onmessage = (ev) => onMessage?.(ev.data);
       dataChannel.onopen = () => {
         log("Data channel open (answerer)");
-        sendQueued();
+        flushOutgoing();
       };
       dataChannel.onclose = () => log("Data channel closed");
+      dataChannel.onerror = (e) => log("DataChannel error: " + e);
     };
   };
 
-  setupDataChannel();
+  setupDataChannelHandlers();
 
+  // Send ICE candidates via signaling
   pc.onicecandidate = (e) => {
     if (!e.candidate) return;
-    ws.send(
-      JSON.stringify({
+    try {
+      ws.send(JSON.stringify({
         type: "signal",
         target: peerId,
         from: myId,
-        payload: e.candidate,
-      })
-    );
+        payload: { candidate: e.candidate },
+      }));
+    } catch (err) {
+      log("Failed to send ICE candidate: " + err);
+    }
   };
 
+  // Handle remote signals: use a single handler we can remove on close
   const handleSignal = async (msg: any) => {
     if (msg.type !== "signal" || msg.from !== peerId) return;
 
-    if (msg.payload.sdp) {
-      await pc.setRemoteDescription(msg.payload);
+    const payload = msg.payload;
 
-      if (msg.payload.type === "offer") {
-        const answer = await pc.createAnswer();
-        await pc.setLocalDescription(answer);
-        ws.send(
-          JSON.stringify({
+    // SDP handling
+    if (payload && (payload.type === "offer" || payload.type === "answer" || payload.sdp)) {
+      // setRemoteDescription expects a RTCSessionDescriptionInit-like object
+      try {
+        await pc.setRemoteDescription(payload);
+        log("setRemoteDescription done");
+
+        // after setting remote description, add any pending ICE candidates
+        while (pendingCandidates.length) {
+          const c = pendingCandidates.shift()!;
+          try { await pc.addIceCandidate(c); } catch (err) { log("addIceCandidate error: " + err); }
+        }
+
+        // if we got an offer (and we are answerer), create an answer
+        if (payload.type === "offer" && !amOfferer) {
+          const answer = await pc.createAnswer();
+          await pc.setLocalDescription(answer);
+          ws.send(JSON.stringify({
             type: "signal",
-            target: peerId,
+            target: msg.from,
             from: myId,
             payload: answer,
-          })
-        );
+          }));
+        }
+      } catch (err) {
+        log("Error handling SDP: " + err);
       }
-    } else if (msg.payload.candidate) {
+      return;
+    }
+
+    // Candidate handling
+    if (payload && payload.candidate) {
+      // If remoteDescription not set yet, queue candidate
+      if (!pc.remoteDescription) {
+        pendingCandidates.push(payload.candidate);
+        return;
+      }
       try {
-        await pc.addIceCandidate(msg.payload);
+        await pc.addIceCandidate(payload.candidate);
       } catch (err) {
         log("Failed to add ICE candidate: " + err);
       }
     }
   };
 
-  ws.addEventListener("message", (event) => {
+  const onWsMessage = (event: MessageEvent) => {
     try {
       const msg = JSON.parse(event.data);
       handleSignal(msg);
-    } catch {}
-  });
+    } catch (e) {
+      // ignore malformed
+    }
+  };
 
+  ws.addEventListener("message", onWsMessage);
+
+  // Establish connection (offer if offerer). Retries on failure.
   const establishConnection = async () => {
     try {
       if (amOfferer) {
         const offer = await pc.createOffer();
         await pc.setLocalDescription(offer);
-        ws.send(
-          JSON.stringify({
-            type: "signal",
-            target: peerId,
-            from: myId,
-            payload: offer,
-          })
-        );
+        ws.send(JSON.stringify({
+          type: "signal",
+          target: peerId,
+          from: myId,
+          payload: offer,
+        }));
       }
     } catch (err) {
       log(`Connection attempt failed: ${err}`);
       if (retryCount < maxRetries) {
         retryCount++;
         setTimeout(establishConnection, 2000 * retryCount);
+      } else {
+        throw err;
       }
     }
   };
@@ -142,15 +203,19 @@ export async function createPeerConnection({
     pc,
     dataChannel,
     send: (message: string) => {
+      // queue if not open
       if (!dataChannel || dataChannel.readyState !== "open") {
-        queuedMessages.push(message);
+        outgoingQueue.push(message);
       } else {
-        dataChannel.send(message);
+        try { dataChannel.send(message); } catch (e) { outgoingQueue.push(message); }
       }
     },
     close: () => {
-      pc.close();
-      dataChannel?.close();
+      try {
+        ws.removeEventListener("message", onWsMessage);
+      } catch {}
+      try { pc.close(); } catch {}
+      try { dataChannel?.close(); } catch {}
       log("Connection closed");
     },
   };
