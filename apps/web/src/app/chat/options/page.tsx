@@ -11,7 +11,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { decryptMessageType } from '@chat/crypto';
 import { useBlocks } from '@/hooks/useBlocks';
 import { useConfirm } from '@/components/local/ConfirmContext';
-import { LogOut, Trash, User } from 'lucide-react';
+import { ChevronLeft, LogOut, Trash, User } from 'lucide-react';
 import { useToast } from '@/components/local/ToastContext';
 
 export default function ChatOptionsPage() {
@@ -114,7 +114,17 @@ export default function ChatOptionsPage() {
 
   return (
     <div className="p-6 max-w-md mx-auto flex flex-col gap-6">
-      <h1 className="text-2xl font-bold text-center text-foreground">Chat Options</h1>
+      <div className="flex items-center gap-2 w-full">
+        <Button 
+          variant="ghost"
+          onClick={() => router.push(`/chat?id=${roomId}`)}
+        >
+          <ChevronLeft />
+        </Button>
+        <h1 className="text-2xl font-bold text-foreground flex-1 text-center">
+          Chat Options
+        </h1>
+      </div>
 
       <div className="flex flex-col gap-4">
         {room.type == 'single' && (
