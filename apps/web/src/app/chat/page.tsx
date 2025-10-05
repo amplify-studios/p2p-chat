@@ -58,13 +58,12 @@ export default function P2PChatPage() {
     })();
   }, [db, roomId, key, user?.userId]);
 
-  // ---- Track signaling WebSocket ----
   useEffect(() => {
     if (!client || status !== 'connected') return;
     if (client.ws) setWs(client.ws);
   }, [client, status]);
 
-  // ---- Setup WebRTC via signaling with automatic retries ----
+  // ---- Setup WebRTC via signaling ----
   useEffect(() => {
     if (!ws || !otherUser?.userId || !user?.userId) return;
 
@@ -153,7 +152,6 @@ export default function P2PChatPage() {
     [key, roomId, user?.userId, otherUser, putEncr, logMessage]
   );
 
-  // ---- UI states ----
   if (!db || !rooms || !user) return <Loading />;
   if (!roomId) return <EmptyState msg="No room selected" />;
   if (!room) return <EmptyState msg="Room not found" />;
