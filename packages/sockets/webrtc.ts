@@ -2,7 +2,6 @@ import { STUN_SERVERS } from "./stun";
 
 export interface WebRTCOptions {
   ws: WebSocket;
-  myId: string;
   peerId: string;
   onMessage?: (msg: string) => void;
   onLog?: (msg: string) => void;
@@ -20,7 +19,6 @@ export interface WebRTCConnection {
  */
 export function createPeerConnection({
   ws,
-  myId,
   peerId,
   onMessage,
   onLog,

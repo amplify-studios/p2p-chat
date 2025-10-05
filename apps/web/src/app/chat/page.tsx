@@ -76,7 +76,6 @@ export default function P2PChatPage() {
       try {
         const conn = await createPeerConnection({
           ws,
-          myId: user.userId,
           peerId: otherUser.userId,
           onMessage: (msg) => {
             if (!mounted) return;
