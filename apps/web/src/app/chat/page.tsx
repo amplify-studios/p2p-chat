@@ -11,6 +11,8 @@ import EmptyState from '@/components/local/EmptyState';
 import { MessageType } from '@chat/core';
 import { createPeerConnection, WebRTCConnection } from '@chat/sockets/webrtc';
 import useClient from '@/hooks/useClient';
+import { prepareSendMessagePackage, returnDecryptedMessage } from '@/lib/messaging';
+import { createECDHkey } from '@chat/crypto';
 
 export default function P2PChatPage() {
   const connectionRef = useRef<WebRTCConnection | null>(null);
@@ -61,10 +63,13 @@ export default function P2PChatPage() {
 
   // Setup WebRTC with reconnect & queue
   useEffect(() => {
-    if (!ws || !otherUser?.userId || !user?.userId) return;
+    if (!ws || !otherUser?.userId || !user?.userId || !user.private) return;
 
     let mounted = true;
     let retryTimer: NodeJS.Timeout | null = null;
+
+    const userECDH = createECDHkey();
+    userECDH.setPrivateKey(Buffer.from(user.private, 'hex'));
 
     const setupConnection = async () => {
       if (!mounted) return;
@@ -74,8 +79,11 @@ export default function P2PChatPage() {
           ws,
           peerId: otherUser.userId,
           myId: user.userId,
-          onMessage: async (msg) => {
-            if (!mounted || !msg) return;
+          onMessage: async (encrMsg) => {
+            if (!mounted || !encrMsg) return;
+
+            console.log(encrMsg);
+            const msg = returnDecryptedMessage(userECDH, JSON.parse(encrMsg));
 
             msgId.current += 1;
             setMessages((prev) => [
@@ -137,14 +145,19 @@ export default function P2PChatPage() {
 
   // Send message
   const sendMessage = useCallback(
-    async (text: string) => {
+    async (message: string) => {
       if (!key || !user?.userId || !otherUser) return;
-      logMessage(text, 'me');
+      logMessage(message, 'me');
+
+      const encrText = prepareSendMessagePackage(otherUser.public, message);
+      const text = JSON.stringify(encrText);
 
       const conn = connectionRef.current;
+      console.log(conn);
       if (conn?.dataChannel?.readyState === 'open') {
         conn.send(text);
       } else {
+        console.log('Queueing message', text);
         queuedMessages.current.push(text);
       }
 
@@ -154,7 +167,7 @@ export default function P2PChatPage() {
           {
             roomId,
             senderId: user.userId,
-            message: text,
+            message: message,
             timestamp: Date.now(),
           } as MessageType,
           key
