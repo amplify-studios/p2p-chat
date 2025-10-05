@@ -59,7 +59,7 @@ export default function P2PChatPage() {
     if (client.ws) setWs(client.ws);
   }, [client, status]);
 
-  // Setup WebRTC with reconnect & queue
+  // --- WebRTC connection & message handling ---
   useEffect(() => {
     if (!ws || !otherUser?.userId || !user?.userId) return;
 
@@ -70,46 +70,53 @@ export default function P2PChatPage() {
       if (!mounted) return;
 
       try {
-        const conn = await createPeerConnection({
-          ws,
-          peerId: otherUser.userId,
-          myId: user.userId,
-          onMessage: async (msg) => {
-            if (!mounted || !msg) return;
+        let conn = connectionRef.current;
 
-            msgId.current += 1;
-            setMessages((prev) => [
-              ...prev,
-              { id: msgId.current, text: msg, sender: 'other' },
-            ]);
+        // Recreate connection if it doesn't exist or closed
+        if (!conn || conn.pc.iceConnectionState === 'closed' || conn.dataChannel?.readyState === 'closed') {
+          conn = await createPeerConnection({
+            ws,
+            peerId: otherUser.userId,
+            myId: user.userId,
+            onMessage: async (msg) => {
+              if (!mounted || !msg) return;
 
-            if (!key) return;
+              msgId.current += 1;
+              setMessages((prev) => [
+                ...prev,
+                { id: msgId.current, text: msg, sender: 'other' },
+              ]);
 
-            await putEncr(
-              'messages',
-              {
-                roomId,
-                senderId: otherUser.userId,
-                message: msg,
-                timestamp: Date.now(),
-              } as MessageType,
-              key
-            );
-          },
-          onLog: (m) => console.log('[WebRTC]', m),
-        });
+              if (!key) return;
 
-        connectionRef.current = conn;
+              await putEncr(
+                'messages',
+                {
+                  roomId,
+                  senderId: otherUser.userId,
+                  message: msg,
+                  timestamp: Date.now(),
+                } as MessageType,
+                key
+              );
+            },
+            onLog: (m) => console.log('[WebRTC]', m),
+          });
 
-        // Send queued messages when channel opens
-        if (conn.dataChannel && conn.dataChannel.readyState === 'open') {
-          queuedMessages.current.forEach((m) => conn.send(m));
-          queuedMessages.current = [];
-        } else if (conn.dataChannel) {
-          conn.dataChannel.onopen = () => {
+            connectionRef.current = conn;
+        }
+
+        // Flush queued messages when channel opens
+        if (conn.dataChannel) {
+          if (conn.dataChannel.readyState === 'open') {
             queuedMessages.current.forEach((m) => conn.send(m));
             queuedMessages.current = [];
-          };
+          } else {
+            conn.dataChannel.onopen = () => {
+              queuedMessages.current.forEach((m) => conn.send(m));
+              queuedMessages.current = [];
+            };
+          }
         }
 
         console.log('WebRTC connection established');
@@ -121,11 +128,12 @@ export default function P2PChatPage() {
 
     setupConnection();
 
+    // Cleanup
     return () => {
       mounted = false;
+      if (retryTimer) clearTimeout(retryTimer);
       connectionRef.current?.close();
       connectionRef.current = null;
-      if (retryTimer) clearTimeout(retryTimer);
     };
   }, [ws, user?.userId, otherUser?.userId, key]);
 
