@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useDB } from '@/hooks/useDB';
 import { generateBase58Id } from '@chat/crypto';
-import { connectToPeer, InviteMessage, handleSignal, AckMessage } from '@chat/sockets';
+import { InviteMessage, AckMessage } from '@chat/sockets';
 import { CredentialsType, InviteType, RoomType } from '@chat/core';
 import { refreshRooms } from '@/lib/utils';
 import { useAuth } from './useAuth';
@@ -105,23 +105,8 @@ export function useInvites() {
     } as AckMessage;
     client.sendAck(invite.from, ack);
 
-    // WebRTC flow
-    await connectToPeer(
-      client,
-      invite.from, // inviter’s peer id
-      (msg) => {
-        console.log('Message from peer:', msg);
-        // TODO: push into message store
-      },
-    );
-
-    client.on('signal', (msg) => {
-      const { from, payload } = msg;
-      handleSignal(client, from, payload, (m) => {
-        console.log('Message from', from, ':', m);
-      });
-    });
-  };
+    // TODO: WebRTC flow
+  }
 
   const declineInvite = async (invite: InviteType) => {
     if (!db) return;

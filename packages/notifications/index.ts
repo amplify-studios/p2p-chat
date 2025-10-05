@@ -34,7 +34,6 @@ export async function sendNotification(title: string, body: string) {
     }
   }
 
-  // Fallback to normal Notification (foreground)
   const notification = new Notification(title, { body, icon: '/icon.png' });
   notification.onclick = () => {
     window.focus();

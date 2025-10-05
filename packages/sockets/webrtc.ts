@@ -1,142 +1,118 @@
-import { MessagePackage } from '@chat/core/messages';
-import { SignalingClient } from './SignalingClient';
-import { STUN_SERVERS } from './stun';
+import { STUN_SERVERS } from "./stun";
 
-const peers: Record<string, RTCPeerConnection> = {};
-const dataChannels: Record<string, RTCDataChannel> = {};
+export interface WebRTCOptions {
+  ws: WebSocket;
+  myId: string;
+  peerId: string;
+  onMessage?: (msg: string) => void;
+  onLog?: (msg: string) => void;
+}
 
-const rtcConfig: RTCConfiguration = {
-  iceServers: [{ urls: STUN_SERVERS }],
-};
-
-// Utility for creating/returning a peer connection
-function getPeerConnection(
-  client: SignalingClient,
-  peerId: string,
-  onMessage: (msg: string) => void,
-): RTCPeerConnection {
-  if (peers[peerId]) return peers[peerId];
-
-  const pc = new RTCPeerConnection(rtcConfig);
-
-  // Remote creates data channel
-  pc.ondatachannel = (e) => {
-    const channel = e.channel;
-    dataChannels[peerId] = channel;
-
-    channel.onmessage = (ev) => onMessage(ev.data);
-    channel.onopen = () => { console.log('Data channel open'); };
-    channel.onclose = () => console.log(peerId, 'Data channel CLOSED');
-    channel.onerror = (err) => console.log(peerId, 'Data channel ERROR', err);
-  };
-
-  pc.oniceconnectionstatechange = () => {
-    console.log(peerId, 'ICE state:', pc.iceConnectionState);
-  };
-
-
-  // ICE candidates
-  pc.onicecandidate = async (e) => {
-    if (e.candidate) {
-      client.sendCandidate(peerId, e.candidate);
-    }
-  };
-
-  peers[peerId] = pc;
-  return pc;
-
-  // setup peer connection
-  // const  pcRef = new RTCPeerConnection();
-
-  // pcRef.onicecandidate = (e) => {
-  //   if (e.candidate) {
-  //     client.sendCandidate(peerId, e.candidate);
-  //   }
-  //   // if (e.candidate) {
-  //   //   socketRef?.send(JSON.stringify({ candidate: e.candidate }));
-  //   // }
-  // };
-
-  //   // create data channel
-  //   const dc = pcRef.current.createDataChannel("chat");
-  //   dcRef.current = dc;
-  //   dc.onmessage = (e) => {
-  //     logMessage(e.data, "other");
-  //   };
-
-  //   // if the other peer creates a channel
-  //   pcRef.current.ondatachannel = (event) => {
-  //     event.channel.onmessage = (e) => {
-  //       logMessage(e.data, "other");
-  //     };
-  //   };
+export interface WebRTCConnection {
+  pc: RTCPeerConnection;
+  dataChannel: RTCDataChannel | null;
+  send: (message: string) => void;
+  close: () => void;
 }
 
 /**
- * Start a connection to a peer after invite is accepted.
+ * Create a WebRTC peer connection and handle offer/answer exchange via WebSocket signaling.
  */
-export async function connectToPeer(
-  client: SignalingClient,
-  peerId: string,
-  onMessage: (msg: string) => void,
-): Promise<RTCPeerConnection> {
-  const pc = getPeerConnection(client, peerId, onMessage);
+export function createPeerConnection({
+  ws,
+  myId,
+  peerId,
+  onMessage,
+  onLog,
+}: WebRTCOptions): Promise<WebRTCConnection> {
+  return new Promise(async (resolve) => {
+    const log = (msg: string) => onLog?.(msg);
+    const pc = new RTCPeerConnection({
+      iceServers: [{ urls: STUN_SERVERS }],
+    });
 
-  // Create data channel for chat
-  const channel = pc.createDataChannel('chat');
-  dataChannels[peerId] = channel;
-  channel.onmessage = (ev) => onMessage(ev.data);
+    let dataChannel: RTCDataChannel | null = null;
 
-  const offer = await pc.createOffer();
-  await pc.setLocalDescription(offer);
+    // Data channel (local)
+    dataChannel = pc.createDataChannel("chat");
+    dataChannel.onmessage = (e) => onMessage?.(e.data);
 
-  client.sendSignal(peerId, offer);
+    // ICE candidate handling
+    pc.onicecandidate = (e) => {
+      if (e.candidate) {
+        ws.send(
+          JSON.stringify({
+            type: "signal",
+            target: peerId,
+            payload: e.candidate,
+          })
+        );
+      }
+    };
 
-  return pc;
-}
+    // Remote data channel
+    pc.ondatachannel = (e) => {
+      const remoteChannel = e.channel;
+      remoteChannel.onmessage = (ev) => onMessage?.("Peer: " + ev.data);
+      dataChannel = remoteChannel;
+    };
 
-/**
- * Handle incoming signaling messages (SDP or ICE)
- */
-export async function handleSignal(
-  client: SignalingClient,
-  from: string,
-  payload: RTCSessionDescriptionInit | RTCIceCandidateInit,
-  onMessage: (msg: string) => void,
-) {
-  const pc = getPeerConnection(client, from, onMessage);
+    // Handle incoming signaling
+    ws.addEventListener("message", async (event) => {
+      const msg = JSON.parse(event.data);
+      if (msg.type !== "signal") return;
+      if (msg.from !== peerId) return;
 
-  if ('sdp' in payload) {
-    // Received an SDP
-    await pc.setRemoteDescription(new RTCSessionDescription(payload));
-    if (payload.type === 'offer') {
-      const answer = await pc.createAnswer();
-      await pc.setLocalDescription(answer);
+      if (msg.payload.sdp) {
+        await pc.setRemoteDescription(new RTCSessionDescription(msg.payload));
+        if (msg.payload.type === "offer") {
+          const answer = await pc.createAnswer();
+          await pc.setLocalDescription(answer);
+          ws.send(
+            JSON.stringify({
+              type: "signal",
+              target: msg.from,
+              payload: answer,
+            })
+          );
+        }
+      } else if (msg.payload.candidate) {
+        try {
+          await pc.addIceCandidate(msg.payload);
+        } catch (err) {
+          console.error("Error adding candidate", err);
+        }
+      }
+    });
 
-      client.sendSDP(from, pc.localDescription!);
-    }
-  } else if ('candidate' in payload) {
-    // Received ICE candidate
-    try {
-      await pc.addIceCandidate(new RTCIceCandidate(payload));
-    } catch (err) {
-      console.error('Error adding ICE candidate:', err);
-    }
-  }
-}
+    // Create and send offer
+    const offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
+    ws.send(
+      JSON.stringify({
+        type: "signal",
+        target: peerId,
+        payload: offer,
+      })
+    );
 
-/**
- * Send a chat message over the data channel
- */
-export function sendMessage(peerId: string, msg: string | MessagePackage ) {
-  const channel = dataChannels[peerId];
-  if (channel && channel.readyState === 'open') {
-    if (typeof msg === 'string') {
-      channel.send(msg);
-    } else {
-      channel.send(JSON.stringify(msg));
-    }
-  } else {
-    console.warn('Data channel not ready');
-  }
+    log?.(`Connecting to ${peerId}...`);
+
+    resolve({
+      pc,
+      dataChannel,
+      send: (message: string) => {
+        if (dataChannel && dataChannel.readyState === "open") {
+          dataChannel.send(message);
+        } else {
+          log?.("Channel not ready");
+        }
+      },
+      close: () => {
+        pc.close();
+        dataChannel?.close();
+        log?.("Connection closed");
+      },
+    });
+  });
 }
