@@ -161,11 +161,9 @@ export default function P2PChatPage() {
       const text = JSON.stringify(encrText);
 
       const conn = connectionRef.current;
-      console.log(conn);
       if (conn?.dataChannel?.readyState === 'open') {
         conn.send(text);
       } else {
-        console.log('Queueing message', text);
         queuedMessages.current.push(text);
       }
 
