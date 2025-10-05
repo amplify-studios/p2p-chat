@@ -15,5 +15,10 @@
   "scripts": {
     "format": "prettier --write '**/*.{js,ts,tsx,json,css,md}'",
     "format:check": "prettier --check '**/*.{js,ts,tsx,json,css,md}'"
+  },
+  "dependencies": {
+    "@emoji-mart/data": "^1.2.1",
+    "@emoji-mart/react": "^1.1.1",
+    "emoji-mart": "^5.6.0"
   }
 }

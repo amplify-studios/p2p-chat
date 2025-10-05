@@ -4,9 +4,11 @@ import { useState, useRef, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { EllipsisVertical, Send, User, Users } from 'lucide-react';
+import { EllipsisVertical, Send, User, Users, Smile } from 'lucide-react';
 import EmptyState from './EmptyState';
 import { RoomType } from '@chat/core/types';
+import Picker from '@emoji-mart/react';
+import data from '@emoji-mart/data';
 
 export interface Message {
   id: number;
@@ -25,7 +27,9 @@ interface ChatProps {
 
 export function Chat({ title, messages, onSend, href, isTyping = false, room }: ChatProps) {
   const [input, setInput] = useState('');
+  const [emojiOpen, setEmojiOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const emojiRef = useRef<HTMLDivElement>(null);
 
   const sendMessage = () => {
     if (!input.trim()) return;
@@ -33,6 +37,7 @@ export function Chat({ title, messages, onSend, href, isTyping = false, room }: 
     setInput('');
   };
 
+  // scroll chat to bottom when new messages arrive
   useEffect(() => {
     const el = scrollRef.current;
     if (el) {
@@ -42,6 +47,17 @@ export function Chat({ title, messages, onSend, href, isTyping = false, room }: 
       });
     }
   }, [messages, isTyping]);
+
+  // close emoji picker when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (emojiRef.current && !emojiRef.current.contains(event.target as Node)) {
+        setEmojiOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   return (
     <div className="flex flex-col h-full w-full bg-background">
@@ -90,12 +106,41 @@ export function Chat({ title, messages, onSend, href, isTyping = false, room }: 
 
       {/* --- Bottom Bar --- */}
       <div className="sticky bottom-0 z-10 flex items-center gap-2 px-4 py-3 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/75">
+        {/* Emoji Button + Picker Popup */}
+        <div className="relative" ref={emojiRef}>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setEmojiOpen((prev) => !prev)}
+            className="rounded-full"
+            aria-label="Add emoji"
+          >
+            <Smile className="w-5 h-5" />
+          </Button>
+
+          {emojiOpen && (
+            <div className="absolute bottom-full mb-2 left-0 z-50 bg-white dark:bg-gray-800 shadow-lg border rounded-2xl overflow-hidden">
+              <Picker
+                data={data}
+                onEmojiSelect={(emoji: any) => {
+                  setInput((prev) => prev + emoji.native);
+                  setEmojiOpen(false);
+                }}
+                theme="light"
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Text Input */}
         <Input
           placeholder="Type a message..."
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
         />
+
+        {/* Send Button */}
         <Button onClick={sendMessage}>
           <Send className="w-4 h-4" />
         </Button>
