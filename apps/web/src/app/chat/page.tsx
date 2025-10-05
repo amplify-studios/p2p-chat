@@ -21,12 +21,13 @@ export default function P2PChatPage() {
 
   const [ws, setWs] = useState<WebSocket | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [connected, setConnected] = useState(false);
+
   const { db, getAllDecr, putEncr } = useDB();
   const { user, key } = useAuth();
   const searchParams = useSearchParams();
   const { rooms } = useRooms();
   const { client, status } = useClient();
-  const [connected, setConnected] = useState(false);
 
   const roomId = useMemo(() => searchParams?.get('id') ?? null, [searchParams]);
   const room = useMemo(() => rooms?.find((r) => r.roomId === roomId) ?? null, [rooms, roomId]);
@@ -45,8 +46,9 @@ export default function P2PChatPage() {
     const e = createECDHkey();
     e.setPrivateKey(Buffer.from(user.private, 'hex'));
     return e;
-  }, [user?.private]); // Load local messages
+  }, [user?.private]);
 
+  // Load local messages
   useEffect(() => {
     if (!db || !roomId || !key || !user?.userId) return;
 
@@ -62,7 +64,7 @@ export default function P2PChatPage() {
                 id: idx + 1,
                 text: m.message,
                 sender: m.senderId === user.userId ? 'me' : 'other',
-              }) as Message,
+              } as Message),
           );
 
         msgId.current = roomMessages.length;
@@ -71,32 +73,33 @@ export default function P2PChatPage() {
         console.error('Failed to load messages', err);
       }
     })();
-  }, [db, roomId, key, user?.userId, getAllDecr]); // Connect to signaling server
+  }, [db, roomId, key, user?.userId, getAllDecr]);
 
+  // Connect to signaling server
   useEffect(() => {
     if (!client || status !== 'connected') return;
     if (client.ws) setWs(client.ws);
   }, [client, status]);
 
+  // Track connection state
   useEffect(() => {
     const conn = connectionRef.current;
     if (!conn || !conn.dataChannel) return;
 
-    const update = () => setConnected(conn.dataChannel.readyState === 'open');
+    const update = () => setConnected(conn.dataChannel!.readyState === 'open');
     conn.dataChannel.addEventListener('open', update);
     conn.dataChannel.addEventListener('close', update);
 
-    // Initial check
     update();
 
     return () => {
-      conn.dataChannel.removeEventListener('open', update);
-      conn.dataChannel.removeEventListener('close', update);
+      conn.dataChannel?.removeEventListener('open', update);
+      conn.dataChannel?.removeEventListener('close', update);
     };
-  }, [connectionRef.current]); // WebRTC connection & message handling
+  }, [connectionRef.current?.dataChannel]);
 
+  // WebRTC connection & message handling
   useEffect(() => {
-    // amOfferer is now a dependency for the signaling logic
     if (!ws || !otherUser?.userId || !user?.userId || !userECDH) return;
 
     let mounted = true;
@@ -106,19 +109,17 @@ export default function P2PChatPage() {
       if (!mounted) return;
 
       try {
-        // Clean previous connection before creating a new one
         connectionRef.current?.close();
         connectionRef.current = null;
 
-        // NOTE: Only send the "hello" signal if we are the ANSWERER.
-        // The offerer will start the process naturally on mount. The answerer needs a prompt.
+        // Answerer sends a reconnect signal to prompt the offerer
         if (!amOfferer) {
           ws.send(
             JSON.stringify({
               type: 'signal',
               target: otherUser.userId,
               from: user.userId,
-              payload: { type: 'hello' },
+              payload: { type: 'reconnect' },
             }),
           );
         }
@@ -128,13 +129,12 @@ export default function P2PChatPage() {
           peerId: otherUser.userId,
           myId: user.userId,
           onMessage: async (encrMsg) => {
-            if (!mounted || !encrMsg) return; // safely parse encrypted message
+            if (!mounted || !encrMsg) return;
 
             let parsed: any;
             try {
               parsed = JSON.parse(encrMsg);
-            } catch (e) {
-              console.warn('Malformed encrypted message', encrMsg);
+            } catch {
               return;
             }
 
@@ -157,7 +157,7 @@ export default function P2PChatPage() {
           onLog: (m) => console.log('[WebRTC]', m),
         });
 
-        connectionRef.current = conn; // If channel already open, nothing else needed; conn.send() internally queues if not open.
+        connectionRef.current = conn;
 
         console.log('WebRTC connection established');
       } catch (err) {
@@ -174,16 +174,19 @@ export default function P2PChatPage() {
       connectionRef.current?.close();
       connectionRef.current = null;
     };
-  }, [ws, user?.userId, otherUser?.userId, key, roomId, amOfferer]); // Log message locally
+  }, [ws, user?.userId, otherUser?.userId, key, roomId, amOfferer]);
 
+  // Local message logger
   const logMessage = useCallback((text: string, sender: 'me' | 'other') => {
     msgId.current += 1;
     setMessages((prev) => [...prev, { id: msgId.current, text, sender }]);
-  }, []); // Send message - relies on createPeerConnection.send queue
+  }, []);
 
+  // Send a message
   const sendMessage = useCallback(
     async (message: string) => {
       if (!key || !user?.userId || !otherUser) return;
+
       logMessage(message, 'me');
 
       const encrText = prepareSendMessagePackage(otherUser.public, message);
@@ -191,50 +194,41 @@ export default function P2PChatPage() {
 
       const conn = connectionRef.current;
       if (!conn) {
-        // no connection yet: attempt to set it up now (fire-and-forget)
-        // we do not await here to avoid blocking UI
+        // Fire-and-forget connection creation
         (async () => {
           try {
-            const clientWs = ws;
-            if (clientWs) {
-              // Also send a 'hello' signal here if the connection is missing and we are the answerer
-              if (!amOfferer) {
-                clientWs.send(
-                  JSON.stringify({
-                    type: 'signal',
-                    target: otherUser.userId,
-                    from: user.userId,
-                    payload: { type: 'hello' },
-                  }),
-                );
-              }
+            if (!ws) return;
 
-              const newConn = await createPeerConnection({
-                ws: clientWs,
-                peerId: otherUser.userId,
-                myId: user.userId,
-                onMessage: async (encrMsg) => {
-                  // same handler as above - but keep simple here
-                  let parsed: any;
-                  try {
-                    parsed = JSON.parse(encrMsg);
-                  } catch {
-                    return;
-                  }
-                  const msg = returnDecryptedMessage(userECDH!, parsed);
-                  msgId.current += 1;
-                  setMessages((prev) => [
-                    ...prev,
-                    { id: msgId.current, text: msg, sender: 'other' },
-                  ]);
-                },
-                onLog: (m) => console.log('[WebRTC]', m),
-              });
-              connectionRef.current = newConn;
-              newConn.send(text); // this will queue if needed
-            } else {
-              console.warn('No signaling websocket available to create connection');
+            if (!amOfferer) {
+              ws.send(
+                JSON.stringify({
+                  type: 'signal',
+                  target: otherUser.userId,
+                  from: user.userId,
+                  payload: { type: 'reconnect' },
+                }),
+              );
             }
+
+            const newConn = await createPeerConnection({
+              ws,
+              peerId: otherUser.userId,
+              myId: user.userId,
+              onMessage: async (encrMsg) => {
+                let parsed: any;
+                try {
+                  parsed = JSON.parse(encrMsg);
+                } catch {
+                  return;
+                }
+                const msg = returnDecryptedMessage(userECDH!, parsed);
+                msgId.current += 1;
+                setMessages((prev) => [...prev, { id: msgId.current, text: msg, sender: 'other' }]);
+              },
+              onLog: (m) => console.log('[WebRTC]', m),
+            });
+            connectionRef.current = newConn;
+            newConn.send(text);
           } catch (err) {
             console.error('Failed to create connection on demand', err);
           }
@@ -265,25 +259,16 @@ export default function P2PChatPage() {
   if (!roomId) return <EmptyState msg="No room selected" />;
   if (!room) return <EmptyState msg="Room not found" />;
 
-  const isConnected = () => {
-    const conn = connectionRef.current;
-    if (!conn) return false;
-    if (!conn.dataChannel) return false;
-    return conn && conn.dataChannel.readyState == 'open';
-  };
-
   return (
     <div className="flex flex-col h-full min-h-screen">
-           {' '}
       <Chat
         title={room.name}
         messages={messages}
         href={`/chat/options?id=${room.roomId}`}
         onSend={sendMessage}
         room={room}
-        connected={isConnected()}
+        connected
       />
-         {' '}
     </div>
   );
 }
