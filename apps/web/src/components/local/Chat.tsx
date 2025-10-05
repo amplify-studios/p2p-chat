@@ -22,10 +22,19 @@ interface ChatProps {
   onSend: (msg: string) => void;
   href: string;
   isTyping?: boolean;
+  connected: boolean;
   room: RoomType;
 }
 
-export function Chat({ title, messages, onSend, href, isTyping = false, room }: ChatProps) {
+export function Chat({
+  title,
+  messages,
+  onSend,
+  href,
+  connected = false,
+  isTyping = false,
+  room,
+}: ChatProps) {
   const [input, setInput] = useState('');
   const [emojiOpen, setEmojiOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -66,6 +75,7 @@ export function Chat({ title, messages, onSend, href, isTyping = false, room }: 
         <div className="flex flex-row items-center gap-2">
           {room.type === 'single' ? <User /> : <Users />}
           <h2 className="text-lg font-bold truncate">{title}</h2>
+          {connected && <span>●</span>}
         </div>
         <Link href={href}>
           <EllipsisVertical className="w-5 h-5" />

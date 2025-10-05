@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
     ignoreDuringBuilds: true,
   },
   webpack: (config, { dev, isServer }) => {
-  if (dev && !isServer) {
+    if (dev && !isServer) {
       const originalEntry = config.entry;
       config.entry = async () => {
         const entries = await originalEntry();
@@ -19,7 +19,5 @@ const nextConfig: NextConfig = {
     return config;
   },
 };
-
-
 
 export default nextConfig;

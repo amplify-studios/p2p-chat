@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import { useState, useRef, useEffect } from "react";
-import data from '@emoji-mart/data'
-import Picker from "@emoji-mart/react";
-import { Smile } from "lucide-react";
-import "emoji-mart/css/emoji-mart.css";
+import { useState, useRef, useEffect } from 'react';
+import data from '@emoji-mart/data';
+import Picker from '@emoji-mart/react';
+import { Smile } from 'lucide-react';
+import 'emoji-mart/css/emoji-mart.css';
 
 interface EmojiPickerProps {
   onSelect: (emoji: string) => void;
@@ -21,8 +21,8 @@ export default function EmojiPicker({ onSelect }: EmojiPickerProps) {
         setOpen(false);
       }
     }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   return (
@@ -54,4 +54,3 @@ export default function EmojiPicker({ onSelect }: EmojiPickerProps) {
     </div>
   );
 }
-

@@ -7,9 +7,9 @@ if (process.env.NODE_ENV === 'development') {
 
     whyDidYouRender(React, {
       trackAllPureComponents: true,
-    //   trackHooks: true,
-    //   logOnDifferentValues: true,
-    //   hotReload: true,
+      //   trackHooks: true,
+      //   logOnDifferentValues: true,
+      //   hotReload: true,
     });
   }
 }

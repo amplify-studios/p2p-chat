@@ -12,26 +12,23 @@ export default function Qr() {
   return (
     <div className="flex flex-col items-center justify-center p-4 gap-4">
       <div className="h-125 w-full max-w-md aspect-square bg-black rounded-lg overflow-hidden shadow-lg">
-      <QrScanner
-        onScan={(data) => {
-          try {
-            const url = new URL(data);
+        <QrScanner
+          onScan={(data) => {
+            try {
+              const url = new URL(data);
 
-            if (url.origin === window.location.origin) {
-              router.push(url.pathname + url.search + url.hash);
-            } else {
-              showToast("Invalid QR code: not from this site", "error");
+              if (url.origin === window.location.origin) {
+                router.push(url.pathname + url.search + url.hash);
+              } else {
+                showToast('Invalid QR code: not from this site', 'error');
+              }
+            } catch {
+              showToast('Invalid QR code', 'error');
             }
-          } catch {
-            showToast("Invalid QR code", "error");
-          }
-        }}
-      />
+          }}
+        />
       </div>
-      <Button
-        variant="secondary"
-        onClick={() => router.push("/settings")}
-      >
+      <Button variant="secondary" onClick={() => router.push('/settings')}>
         Cancel
       </Button>
     </div>

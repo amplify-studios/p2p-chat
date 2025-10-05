@@ -10,7 +10,7 @@ import * as argon2 from 'argon2-browser';
 export async function deriveEncryptionKey(
   password: string,
   salt?: Uint8Array,
-  keyLength = 32
+  keyLength = 32,
 ): Promise<{ key: Uint8Array; salt: Uint8Array }> {
   if (!salt) {
     salt = new Uint8Array(16);
@@ -20,8 +20,8 @@ export async function deriveEncryptionKey(
   const result = await argon2.hash({
     pass: password,
     salt,
-    time: 4,          // iterations
-    mem: 65536,       // memory in KB (64 MB)
+    time: 4, // iterations
+    mem: 65536, // memory in KB (64 MB)
     hashLen: keyLength,
     parallelism: 2,
     type: argon2.ArgonType.Argon2id,
