@@ -15,7 +15,7 @@ import useClient from '@/hooks/useClient';
 export default function P2PChatPage() {
   const connectionRef = useRef<WebRTCConnection | null>(null);
   const msgId = useRef(0);
-  const retryTimer = useRef<NodeJS.Timeout | null>(null);
+  const queuedMessages = useRef<string[]>([]);
 
   const [ws, setWs] = useState<WebSocket | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -26,17 +26,10 @@ export default function P2PChatPage() {
   const { client, status } = useClient();
 
   const roomId = useMemo(() => searchParams?.get('id') ?? null, [searchParams]);
-  const room = useMemo(
-    () => rooms?.find((r) => r.roomId === roomId) ?? null,
-    [rooms, roomId]
-  );
+  const room = useMemo(() => rooms?.find((r) => r.roomId === roomId) ?? null, [rooms, roomId]);
+  const otherUser = useMemo(() => room?.keys.find((k) => k.userId !== user?.userId) ?? null, [room, user?.userId]);
 
-  const otherUser = useMemo(
-    () => room?.keys.find((k) => k.userId !== user?.userId) ?? null,
-    [room, user?.userId]
-  );
-
-  // ---- Load messages ----
+  // Load local messages
   useEffect(() => {
     if (!db || !roomId || !key || !user?.userId) return;
 
@@ -60,36 +53,29 @@ export default function P2PChatPage() {
     })();
   }, [db, roomId, key, user?.userId]);
 
-  // ---- Watch client ----
+  // Connect to signaling server
   useEffect(() => {
     if (!client || status !== 'connected') return;
     if (client.ws) setWs(client.ws);
   }, [client, status]);
 
-  // ---- Setup WebRTC and auto-reconnect ----
+  // Setup WebRTC with reconnect & queue
   useEffect(() => {
     if (!ws || !otherUser?.userId || !user?.userId) return;
 
     let mounted = true;
-
-    const cleanConnection = () => {
-      if (connectionRef.current) {
-        connectionRef.current.close();
-        connectionRef.current = null;
-      }
-    };
+    let retryTimer: NodeJS.Timeout | null = null;
 
     const setupConnection = async () => {
       if (!mounted) return;
-
-      cleanConnection();
 
       try {
         const conn = await createPeerConnection({
           ws,
           peerId: otherUser.userId,
-          onMessage: (msg) => {
-            if (!mounted || !connectionRef.current || !msg) return;
+          myId: user.userId,
+          onMessage: async (msg) => {
+            if (!mounted || !msg) return;
 
             msgId.current += 1;
             setMessages((prev) => [
@@ -98,7 +84,8 @@ export default function P2PChatPage() {
             ]);
 
             if (!key) return;
-            putEncr(
+
+            await putEncr(
               'messages',
               {
                 roomId,
@@ -112,18 +99,23 @@ export default function P2PChatPage() {
           onLog: (m) => console.log('[WebRTC]', m),
         });
 
-        // Wait for data channel to open
-        if (conn.dataChannel?.readyState !== 'open') {
-          conn.dataChannel?.addEventListener('open', () => {
-            console.log('Data channel is open');
-          });
+        connectionRef.current = conn;
+
+        // Send queued messages when channel opens
+        if (conn.dataChannel && conn.dataChannel.readyState === 'open') {
+          queuedMessages.current.forEach((m) => conn.send(m));
+          queuedMessages.current = [];
+        } else if (conn.dataChannel) {
+          conn.dataChannel.onopen = () => {
+            queuedMessages.current.forEach((m) => conn.send(m));
+            queuedMessages.current = [];
+          };
         }
 
-        connectionRef.current = conn;
         console.log('WebRTC connection established');
       } catch (err) {
         console.error('WebRTC setup failed, retrying in 3s...', err);
-        retryTimer.current = setTimeout(setupConnection, 3000);
+        retryTimer = setTimeout(setupConnection, 3000);
       }
     };
 
@@ -131,32 +123,32 @@ export default function P2PChatPage() {
 
     return () => {
       mounted = false;
-      if (retryTimer.current) clearTimeout(retryTimer.current);
-      cleanConnection();
+      connectionRef.current?.close();
+      connectionRef.current = null;
+      if (retryTimer) clearTimeout(retryTimer);
     };
   }, [ws, user?.userId, otherUser?.userId, key]);
 
-  // ---- Log message locally ----
+  // Log message locally
   const logMessage = useCallback((text: string, sender: 'me' | 'other') => {
     msgId.current += 1;
     setMessages((prev) => [...prev, { id: msgId.current, text, sender }]);
   }, []);
 
-  // ---- Send message through WebRTC safely ----
+  // Send message
   const sendMessage = useCallback(
     async (text: string) => {
       if (!key || !user?.userId || !otherUser) return;
       logMessage(text, 'me');
 
-      try {
-        const conn = connectionRef.current;
-        if (!conn) return;
-        if (conn.dataChannel?.readyState !== 'open') {
-          console.warn('Data channel not open, message not sent');
-          return;
-        }
+      const conn = connectionRef.current;
+      if (conn?.dataChannel?.readyState === 'open') {
         conn.send(text);
+      } else {
+        queuedMessages.current.push(text);
+      }
 
+      try {
         await putEncr(
           'messages',
           {
@@ -168,7 +160,7 @@ export default function P2PChatPage() {
           key
         );
       } catch (err) {
-        console.error('Failed to send message via WebRTC', err);
+        console.error('Failed to store message locally', err);
       }
     },
     [key, roomId, user?.userId, otherUser, putEncr, logMessage]

@@ -17,111 +17,69 @@ export interface WebRTCConnection {
 /**
  * Create a WebRTC peer connection and handle offer/answer exchange via WebSocket signaling.
  */
-export function createPeerConnection({
-  ws,
-  peerId,
-  onMessage,
-  onLog,
-}: WebRTCOptions): Promise<WebRTCConnection> {
+export function createPeerConnection({ ws, peerId, myId, onMessage, onLog }: WebRTCOptions & { myId: string }): Promise<WebRTCConnection> {
   return new Promise(async (resolve) => {
-    const log = (msg: string) => onLog?.(msg);
-    const pc = new RTCPeerConnection({
-      iceServers: [{ urls: STUN_SERVERS }],
-    });
-
+    const pc = new RTCPeerConnection({ iceServers: [
+      { urls: STUN_SERVERS },
+      // TODO: use our own self-hosted TURN Server. See https://github.com/coturn/coturn
+      // {
+      //   urls: 'turn:YOUR_TURN_SERVER:3478',
+      //   username: 'TURN_USERNAME',
+      //   credential: 'TURN_PASSWORD',
+      // },
+    ] });
     let dataChannel: RTCDataChannel | null = null;
 
-    // Data channel (local)
-    dataChannel = pc.createDataChannel("chat");
-    dataChannel.onmessage = (e) => onMessage?.(e.data);
+    const log = (msg: string) => onLog?.(msg);
+
+    const handleDataChannel = (channel: RTCDataChannel) => {
+      dataChannel = channel;
+      dataChannel.onmessage = (e) => onMessage?.(e.data);
+      dataChannel.onopen = () => log("Data channel open");
+      dataChannel.onclose = () => log("Data channel closed");
+    };
+
+    // Only create a data channel if myId > peerId (deterministic role)
+    if (myId > peerId) {
+      dataChannel = pc.createDataChannel("chat");
+      handleDataChannel(dataChannel);
+    } else {
+      pc.ondatachannel = (e) => handleDataChannel(e.channel);
+    }
 
     // ICE candidate handling
     pc.onicecandidate = (e) => {
-      if (e.candidate) {
-        ws.send(
-          JSON.stringify({
-            type: "signal",
-            target: peerId,
-            payload: e.candidate,
-          })
-        );
-      }
+      if (e.candidate) ws.send(JSON.stringify({ type: "signal", target: peerId, payload: e.candidate }));
     };
 
-    // Remote data channel
-    pc.ondatachannel = (e) => {
-      const remoteChannel = e.channel;
-      remoteChannel.onmessage = (ev) => onMessage?.("Peer: " + ev.data);
-      dataChannel = remoteChannel;
-    };
-
-    // Handle incoming signaling
-    const pendingCandidates: RTCIceCandidateInit[] = [];
-
+    // Signaling messages
     ws.addEventListener("message", async (event) => {
       const msg = JSON.parse(event.data);
-      if (msg.type !== "signal") return;
-      if (msg.from !== peerId) return;
+      if (msg.type !== "signal" || msg.from !== peerId) return;
 
       if (msg.payload.sdp) {
-        await pc.setRemoteDescription(new RTCSessionDescription(msg.payload));
-
-        // If it's an offer, create and send answer
-        if (msg.payload.type === "offer") {
+        await pc.setRemoteDescription(msg.payload);
+        if (msg.payload.type === "offer" && myId < peerId) {
           const answer = await pc.createAnswer();
           await pc.setLocalDescription(answer);
-          ws.send(
-            JSON.stringify({ type: "signal", target: msg.from, payload: answer })
-          );
+          ws.send(JSON.stringify({ type: "signal", target: peerId, payload: answer }));
         }
-
-        // Drain pending ICE candidates
-        for (const c of pendingCandidates) {
-          await pc.addIceCandidate(c);
-        }
-        pendingCandidates.length = 0;
       } else if (msg.payload.candidate) {
-        if (!pc.remoteDescription) {
-          // Queue if remoteDescription not yet set
-          pendingCandidates.push(msg.payload);
-        } else {
-          try {
-            await pc.addIceCandidate(msg.payload);
-          } catch (err) {
-            console.error("Error adding candidate", err);
-          }
-        }
+        try { await pc.addIceCandidate(msg.payload); } catch {}
       }
     });
 
-    // Create and send offer
-    const offer = await pc.createOffer();
-    await pc.setLocalDescription(offer);
-    ws.send(
-      JSON.stringify({
-        type: "signal",
-        target: peerId,
-        payload: offer,
-      })
-    );
-
-    log?.(`Connecting to ${peerId}...`);
+    if (myId > peerId) {
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+      ws.send(JSON.stringify({ type: "signal", target: peerId, payload: offer }));
+    }
 
     resolve({
       pc,
       dataChannel,
-      send: (message: string) => {
-        if (dataChannel && dataChannel.readyState === "open") {
-          dataChannel.send(message);
-        } else {
-          log?.("Channel not ready");
-        }
-      },
-      close: () => {
-        pc.close();
-        dataChannel?.close();
-        log?.("Connection closed");
-      },
+      send: (msg) => dataChannel?.readyState === "open" && dataChannel.send(msg),
+      close: () => { pc.close(); dataChannel?.close(); },
     });
   });
 }
