@@ -112,18 +112,6 @@ export default function P2PChatPage() {
         connectionRef.current?.close();
         connectionRef.current = null;
 
-        // Answerer sends a reconnect signal to prompt the offerer
-        if (!amOfferer) {
-          ws.send(
-            JSON.stringify({
-              type: 'signal',
-              target: otherUser.userId,
-              from: user.userId,
-              payload: { type: 'reconnect' },
-            }),
-          );
-        }
-
         const conn = await createPeerConnection({
           ws,
           peerId: otherUser.userId,
@@ -199,17 +187,6 @@ export default function P2PChatPage() {
           try {
             if (!ws) return;
 
-            if (!amOfferer) {
-              ws.send(
-                JSON.stringify({
-                  type: 'signal',
-                  target: otherUser.userId,
-                  from: user.userId,
-                  payload: { type: 'reconnect' },
-                }),
-              );
-            }
-
             const newConn = await createPeerConnection({
               ws,
               peerId: otherUser.userId,
@@ -267,7 +244,7 @@ export default function P2PChatPage() {
         href={`/chat/options?id=${room.roomId}`}
         onSend={sendMessage}
         room={room}
-        connected
+        connected={connected}
       />
     </div>
   );
