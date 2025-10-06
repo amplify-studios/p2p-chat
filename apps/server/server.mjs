@@ -64,10 +64,13 @@ wss.on("connection", (ws) => {
       }
 
       case "peers": {
-        ws.send(JSON.stringify({
-          type: "peers",
-          peers: getPeerList()
-        }));
+        for (const { ws } of clients.values()) {
+          ws.send(JSON.stringify({ type: "peers", peers: getPeerList() }));
+        }
+        // ws.send(JSON.stringify({
+        //   type: "peers",
+        //   peers: getPeerList()
+        // }));
         break;
       }
 
@@ -76,13 +79,29 @@ wss.on("connection", (ws) => {
       case "answer":
       case "candidate": {
         const target = clients.get(data.target);
-        if (target) {
-          target.ws.send(JSON.stringify({
-            type: data.type,
-            from: clientId,
-            payload: data.payload
-          }));
+        if (!target || target.ws.readyState !== target.ws.OPEN) {
+          ws.send(JSON.stringify({ type: "error", message: "Target not found or disconnected" }));
+          break;
         }
+
+        // Basic validation
+        if (data.type === "offer" || data.type === "answer") {
+          if (!data.payload?.sdp) {
+            console.warn(`Invalid ${data.type} payload`, data.payload);
+            break;
+          }
+        } else if (data.type === "candidate") {
+          if (!data.payload?.candidate) {
+            console.warn("Invalid ICE candidate payload", data.payload);
+            break;
+          }
+        }
+
+        target.ws.send(JSON.stringify({
+          type: data.type,
+          from: clientId,
+          payload: data.payload
+        }));
         break;
       }
 
