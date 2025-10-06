@@ -1,0 +1,10 @@
+services:
+  signaling:
+    build: .
+    container_name: signaling-server
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - NODE_ENV=production
+
