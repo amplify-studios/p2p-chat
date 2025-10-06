@@ -48,18 +48,16 @@ export async function createPeerConnection({
   const amOfferer = myId < peerId;
 
   const initiateIceRestart = () => {
-      // Check if we're already at max retries before signaling/restarting
       if (retryCount >= maxRetries) {
           log("Max retry attempts reached. Connection failed permanently.");
           return;
       }
 
       log("ICE connection failed. Initiating reconnection sequence.");
-      retryCount = 0; // Reset retry count for the restart attempt
+      retryCount = 0;
 
       if (amOfferer) {
           log("Offerer: Creating new offer with ICE restart.");
-          // Delay the restart slightly to allow internal cleanup
           setTimeout(() => establishConnection(true), 100); 
       } else {
           log("Answerer: Requesting offerer to perform ICE restart.");
@@ -76,22 +74,19 @@ export async function createPeerConnection({
       log(`ICE connection state: ${pc.iceConnectionState}`);
 
       if (pc.iceConnectionState === 'failed') {
-          // Use a timeout to debounce the restart trigger
           setTimeout(() => {
-              // Only initiate restart if the state is STILL 'failed' after a short wait
               if (pc.iceConnectionState === 'failed') {
                   initiateIceRestart();
               }
-          }, 3000); // 3-second debounce before signaling restart
+          }, 3000);
       }
       
       if (pc.iceConnectionState === 'connected' || pc.iceConnectionState === 'completed') {
           log("ICE connection successfully established/completed.");
-          retryCount = 0; // Reset on success
+          retryCount = 0;
       }
   };
 
-  // Setup data channel
   const setupDataChannelEvents = (channel: RTCDataChannel, role: string) => {
       channel.onopen = () => { 
           log(`Data channel open (${role}). State: ${channel.readyState}`); 
@@ -118,7 +113,6 @@ export async function createPeerConnection({
 
   setupDataChannelHandlers();
 
-  // Send ICE candidates
   pc.onicecandidate = (e) => {
     if (!e.candidate) return;
     try {
@@ -134,7 +128,6 @@ export async function createPeerConnection({
   const establishConnection = async (iceRestart = false) => {
     try {
       if (amOfferer) {
-        // When iceRestart is true, a new offer with new ICE candidates is generated.
         const offer = await pc.createOffer({ iceRestart });
         await pc.setLocalDescription(offer);
         ws.send(JSON.stringify({
@@ -160,38 +153,77 @@ export async function createPeerConnection({
     const payload = msg.payload;
     if (!payload) return;
 
-    // Reconnect request from Answerer
+
+    // Handle request for initial offer from answerer
     if (payload.type === "reconnect" && amOfferer) {
-      log("Answerer requested reconnect, creating new offer with ICE restart");
-      // Use the helper function to respect maxRetries and logging
+      log("Answerer requested reconnect");
       initiateIceRestart(); 
+      
+      // Clear pending candidates as we're starting fresh
+      pendingCandidates.length = 0;
+      
+      // Rollback if not in stable state
+      if (pc.signalingState !== "stable") {
+        log(`Signaling state is ${pc.signalingState}, rolling back before creating new offer`);
+        try {
+          await pc.setLocalDescription({ type: "rollback" });
+        } catch (err) {
+          log(`Rollback error: ${err}`);
+        }
+      }
+      
+      log("Creating new offer for answerer");
+      await establishConnection(false);
       return;
     }
 
-    // SDP handling (Offer/Answer - handles initial setup and ICE restart/renegotiation)
-    if (payload.type === "offer" || payload.type === "answer" || payload.sdp) {
+    if (payload.type === "offer") {
+      try {
+        log("Received offer - processing");
+        
+        // Clear pending candidates as we're starting fresh with a new offer
+        pendingCandidates.length = 0;
+        
+        // If we already have a remote description, this is a renegotiation
+        // We need to handle it using the "rollback" technique to avoid state conflicts
+        if (pc.signalingState !== "stable") {
+          log(`Signaling state is ${pc.signalingState}, rolling back before applying new offer`);
+          await pc.setLocalDescription({ type: "rollback" });
+        }
+        
+        // Set the remote description (the offer)
+        await pc.setRemoteDescription(payload);
+        log("setRemoteDescription done for offer");
+
+        // Create and send answer
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
+        ws.send(JSON.stringify({
+          type: "signal",
+          target: msg.from,
+          from: myId,
+          payload: answer,
+        }));
+        log("Sent answer in response to offer");
+      } catch (err) {
+        log("Error handling offer: " + err);
+      }
+      return;
+    }
+
+    // Handle answer
+    if (payload.type === "answer" || payload.sdp) {
       try {
         await pc.setRemoteDescription(payload);
-        log("setRemoteDescription done");
+        log("setRemoteDescription done for answer");
 
         // Drain pending candidates after remote description is set
         while (pendingCandidates.length) {
           const c = pendingCandidates.shift()!;
           try { await pc.addIceCandidate(c); } catch (err) { log("addIceCandidate error: " + err); }
         }
-
-        if (payload.type === "offer" && !amOfferer) {
-          const answer = await pc.createAnswer();
-          await pc.setLocalDescription(answer);
-          ws.send(JSON.stringify({
-            type: "signal",
-            target: msg.from,
-            from: myId,
-            payload: answer,
-          }));
-        }
       } catch (err) {
-        log("Error handling SDP: " + err);
+        log("Error handling answer: " + err);
       }
       return;
     }
@@ -215,7 +247,18 @@ export async function createPeerConnection({
   ws.addEventListener("message", onWsMessage);
 
   // Establish initial connection
-  await establishConnection();
+  if (amOfferer) {
+    await establishConnection();
+  } else {
+    // Answerer: Signal to offerer that we're ready for a new offer
+    log("Answerer ready - requesting offer from offerer");
+    ws.send(JSON.stringify({
+      type: "signal",
+      target: peerId,
+      from: myId,
+      payload: { type: "reconnect" },
+    }));
+  }
 
   return {
     pc,

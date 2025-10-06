@@ -13,7 +13,6 @@ import { createPeerConnection, WebRTCConnection } from '@chat/sockets/webrtc';
 import useClient from '@/hooks/useClient';
 import { prepareSendMessagePackage, returnDecryptedMessage } from '@/lib/messaging';
 import { createECDHkey } from '@chat/crypto';
-import { Buffer } from 'buffer';
 
 export default function P2PChatPage() {
   const connectionRef = useRef<WebRTCConnection | null>(null);

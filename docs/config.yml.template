@@ -1,0 +1,14 @@
+# config.yml
+appName: "P2P Chat"
+
+stunServers:
+  - urls: ["stun:stun.l.google.com:19302", "stun:stun.l.google.com:5349", "stun:stun1.l.google.com:3478"]
+
+turnServers:
+  - urls: "turn:your.turn.server:3478"
+    username: "user"
+    credential: "pass"
+
+signaling:
+  url: "ws://localhost:8080"
+

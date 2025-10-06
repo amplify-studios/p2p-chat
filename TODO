@@ -1,7 +1,6 @@
 TODO: Group chats
 TODO: Chat sync
 TODO: Notifications system
-TODO: config
 TODO: Home page features
 TODO: Selecting / Defining signaling server/s to use
 TODO: Server federation
@@ -44,3 +43,4 @@ DONE: QR scanner better ui
 DONE: Check if the url is valid when scanning qr
 DONE: Sending messages
 DONE: Receiving messages
+DONE: config
