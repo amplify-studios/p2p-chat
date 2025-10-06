@@ -11,9 +11,9 @@ import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.share
 function redirectToLogin(router: AppRouterInstance) {
   const fullPath = window.location.pathname + window.location.search + window.location.hash;
 
-  if (window.location.pathname.startsWith("/login")) {
+  if (window.location.pathname.startsWith('/login')) {
     return;
- }
+  }
 
   router.push(`/login?redirect=${encodeURIComponent(fullPath)}`);
 }
@@ -24,7 +24,6 @@ export function useAuth() {
   const [key, setKey] = useState<Uint8Array | null>(null);
   const { db } = useDB();
   const router = useRouter();
-
 
   useEffect(() => {
     if (!db) return;

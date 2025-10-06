@@ -42,8 +42,8 @@ export default function ChatOptionsPage() {
     if (!confirmed) return;
     if (!key) return;
 
-    if(room.type === 'group') {
-      room.keys = []
+    if (room.type === 'group') {
+      room.keys = [];
     }
     await db.delete('rooms', room.roomId);
 
@@ -73,7 +73,7 @@ export default function ChatOptionsPage() {
   };
 
   const eraseMessages = async (roomId: string) => {
-    if(!key) return;
+    if (!key) return;
     const tx = db.transaction('messages', 'readwrite');
     const store = tx.objectStore('messages');
 
@@ -89,7 +89,7 @@ export default function ChatOptionsPage() {
     }
 
     await tx.done;
-  }
+  };
 
   const leaveGroup = async () => {
     const confirmed = await confirm({
@@ -110,20 +110,15 @@ export default function ChatOptionsPage() {
     refreshRooms();
 
     console.log(room);
-  }
+  };
 
   return (
     <div className="p-6 max-w-md mx-auto flex flex-col gap-6">
       <div className="flex items-center gap-2 w-full">
-        <Button 
-          variant="ghost"
-          onClick={() => router.push(`/chat?id=${roomId}`)}
-        >
+        <Button variant="ghost" onClick={() => router.push(`/chat?id=${roomId}`)}>
           <ChevronLeft />
         </Button>
-        <h1 className="text-2xl font-bold text-foreground flex-1 text-center">
-          Chat Options
-        </h1>
+        <h1 className="text-2xl font-bold text-foreground flex-1 text-center">Chat Options</h1>
       </div>
 
       <div className="flex flex-col gap-4">
@@ -133,15 +128,20 @@ export default function ChatOptionsPage() {
               Block This User
             </Button>
 
-            <Button className="w-full" variant="outline" onClick={async () => { 
-              eraseMessages(room.roomId) 
-              showToast("Messages erased", "info");
-            }}>
+            <Button
+              className="w-full"
+              variant="outline"
+              onClick={async () => {
+                eraseMessages(room.roomId);
+                showToast('Messages erased', 'info');
+              }}
+            >
               Erase All Messages
             </Button>
 
             <Button className="w-full" variant="destructive" onClick={deleteChat}>
-              <Trash />Delete Chat
+              <Trash />
+              Delete Chat
             </Button>
           </>
         )}
@@ -150,9 +150,13 @@ export default function ChatOptionsPage() {
             <h2 className="text-lg font-semibold mb-2 text-foreground">Participants</h2>
             <div className="max-h-100 overflow-y-auto mb-4 border p-2 rounded">
               {room.keys.map((k) => (
-                <div key={k.userId} className="p-2 border-b last:border-0 flex items-center justify-start gap-2">
+                <div
+                  key={k.userId}
+                  className="p-2 border-b last:border-0 flex items-center justify-start gap-2"
+                >
                   <div className="font-medium text-foreground flex flex-row gap-2">
-                    <User />{k.username}
+                    <User />
+                    {k.username}
                   </div>
                   {/*<CircleMinus />*/}
                   {/* <p className="text-sm text-muted-foreground break-all">{k.userId}</p> */}
@@ -160,7 +164,8 @@ export default function ChatOptionsPage() {
               ))}
             </div>
             <Button className="mt-5 w-full" variant="destructive" onClick={leaveGroup}>
-              <LogOut />Leave group
+              <LogOut />
+              Leave group
             </Button>
           </div>
         )}

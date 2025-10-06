@@ -9,7 +9,6 @@ export default function Invites() {
   useAuth();
   const { invites: currentInvites, acceptInvite, declineInvite } = useInvites();
 
-
   if (!currentInvites.length) {
     return <EmptyState msg="No pending invites" />;
   }
@@ -39,4 +38,3 @@ export default function Invites() {
     </div>
   );
 }
-

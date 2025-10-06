@@ -138,16 +138,16 @@ export default function NewRoom() {
     }
 
     setError('');
-    if(type === 'single') {
+    if (type === 'single') {
       setPendingInvite(true);
-  
+
       const peer = peers.find((p) => p.id === otherUserId);
       if (!peer) {
         console.error(`Peer ${otherUserId} not found`);
         setPendingInvite(false);
         return;
       }
-  
+
       const invite = {
         from: user.userId,
         name: type === 'single' ? user.username || user.userId : name,
@@ -155,7 +155,7 @@ export default function NewRoom() {
         pubkey: user.public,
         roomType: type,
       } as InviteMessage;
-  
+
       try {
         client.sendRoomInvite(otherUserId, invite);
         console.log('Invite sent:', invite);
@@ -167,10 +167,12 @@ export default function NewRoom() {
       setPendingInvite(true);
       try {
         const roomId = generateBase58Id();
-  
-        const localCreds = await getAllDecr('credentials', key) as CredentialsType[];
-        const creds = participants.map((p) => localCreds.find(c => c.userId === p.id)) as CredentialsType[];
-        
+
+        const localCreds = (await getAllDecr('credentials', key)) as CredentialsType[];
+        const creds = participants.map((p) =>
+          localCreds.find((c) => c.userId === p.id),
+        ) as CredentialsType[];
+
         const room: RoomType = {
           roomId,
           name: name,
@@ -181,25 +183,25 @@ export default function NewRoom() {
               public: user.public,
               username: user.username,
             },
-            ...creds
+            ...creds,
           ],
         };
-  
+
         // Save room
         await putEncr('rooms', room, key);
-        
+
         try {
           const client = await getSignalingClient();
 
-          console.log("Participants: ", participants);
+          console.log('Participants: ', participants);
           const notifyParticipants = participants.map((participant) => {
             const ack = {
               from: user.userId,
               to: participant.id,
-              room: room
+              room: room,
             } as AckMessage;
             return client.sendAck(participant.id, ack);
-          });        
+          });
           await Promise.allSettled(notifyParticipants);
         } catch (sigErr) {
           console.warn('Failed to notify participants via signaling:', sigErr);
@@ -207,9 +209,8 @@ export default function NewRoom() {
 
         refreshRooms();
         router.push(`/chat?id=${roomId}`);
-  
-        console.log(room);
 
+        console.log(room);
       } catch (err) {
         console.error('Error creating group:', err);
         setPendingInvite(false);
@@ -237,9 +238,11 @@ export default function NewRoom() {
     setQrValue(url);
   };
 
-  const handleSelected = (selectedParticipant:Friend) => {
+  const handleSelected = (selectedParticipant: Friend) => {
     setSelectedParticipants((prev: Friend[]) =>
-      prev.includes(selectedParticipant) ? prev.filter((friend) => friend !== selectedParticipant) : [...prev, selectedParticipant]
+      prev.includes(selectedParticipant)
+        ? prev.filter((friend) => friend !== selectedParticipant)
+        : [...prev, selectedParticipant],
     );
   };
 
@@ -247,11 +250,11 @@ export default function NewRoom() {
     const newParticipants = newSelectedParticipant.filter((name) => !participants.includes(name));
     setParticipants((prev) => [...prev, ...newParticipants]);
     setSelectedParticipants([]);
-  }
+  };
 
   const handleRemoveParticipant = (id: string) => {
     setParticipants((prev) => prev.filter((p) => p.id !== id));
-  }
+  };
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
@@ -278,8 +281,8 @@ export default function NewRoom() {
               value="group"
               checked={type === 'group'}
               onChange={() => {
-                setType('group')
-                setError('')
+                setType('group');
+                setError('');
               }}
             />
             Group
@@ -290,25 +293,30 @@ export default function NewRoom() {
           <div className="space-y-4">
             <div className="flex items-center gap-4">
               <div className="flex-1">
-                <Input placeholder="Room name" value={name} onChange={(e) => setName(e.target.value)} className="mb-2" />
+                <Input
+                  placeholder="Room name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="mb-2"
+                />
               </div>
             </div>
             <div className="border-t pt-4">
-              <h2 className="text-lg font-medium text-foreground">{friends.length === 0 ? "No friends" : `All friends (${friends.length})`}
+              <h2 className="text-lg font-medium text-foreground">
+                {friends.length === 0 ? 'No friends' : `All friends (${friends.length})`}
               </h2>
-              <span className="text-sm text-muted-foreground">{friends.length === 0 ? "" : "Select at least two friends"}</span>
-              <div 
-                className="flex flex-col items-start mt-2 mb-2"
-              >
+              <span className="text-sm text-muted-foreground">
+                {friends.length === 0 ? '' : 'Select at least two friends'}
+              </span>
+              <div className="flex flex-col items-start mt-2 mb-2">
                 {/* Friends */}
                 {friends.map((p) => (
                   <Button
                     key={p.id}
-                    variant={"ghost"}
+                    variant={'ghost'}
                     onClick={() => handleSelected(p)}
                     className={`w-fit flex items-center mb-2 transition-all duration-50 
-                      ${selectedParticipants.includes(p) ? "border-2 border-green-500" : ""
-                    }`}
+                      ${selectedParticipants.includes(p) ? 'border-2 border-green-500' : ''}`}
                   >
                     <User /> {p.username}
                   </Button>
@@ -317,37 +325,27 @@ export default function NewRoom() {
               <div className="flex items-center justify-between pt-2">
                 <Button
                   className="w-full"
-                  variant={"outline"}
+                  variant={'outline'}
                   disabled={friends.length === 0 || selectedParticipants.length < 2}
-                  onClick={() => handleAddParticipants(selectedParticipants)} 
+                  onClick={() => handleAddParticipants(selectedParticipants)}
                 >
                   <UserPlus /> Add participants
                 </Button>
               </div>
             </div>
             <div className="border-t pt-4">
-              <h2 className="text-lg font-medium text-foreground">Participants
-              </h2>
-              <div 
-                className="flex flex-col items-start mt-2 mb-2"
-              >
-                <Button
-                  className="w-auto mb-2"
-                  variant={"outline"} 
-                >
+              <h2 className="text-lg font-medium text-foreground">Participants</h2>
+              <div className="flex flex-col items-start mt-2 mb-2">
+                <Button className="w-auto mb-2" variant={'outline'}>
                   <ShieldUser /> {user.username} (Me)
                 </Button>
                 {/* Participants */}
                 {participants.map((p) => (
-                  <Button
-                    key={p.id}
-                    className="w-fit flex items-center mb-2"
-                    variant={"outline"}
-                  >
+                  <Button key={p.id} className="w-fit flex items-center mb-2" variant={'outline'}>
                     <User /> {p.username}
-                    <Button 
-                      className='ml-2 w-auto'
-                      variant='ghost'
+                    <Button
+                      className="ml-2 w-auto"
+                      variant="ghost"
                       onClick={() => handleRemoveParticipant(p.id)}
                     >
                       <CircleMinus />
@@ -355,13 +353,12 @@ export default function NewRoom() {
                   </Button>
                 ))}
               </div>
-              <div className="border-t pt-4 mt-4">
-              </div>
+              <div className="border-t pt-4 mt-4"></div>
             </div>
             <div className="flex gap-2">
-              <Button 
-                onClick={handleCreateRoom} 
-                className="flex-1" 
+              <Button
+                onClick={handleCreateRoom}
+                className="flex-1"
                 disabled={participants.length < 2}
               >
                 Create Group
@@ -385,11 +382,7 @@ export default function NewRoom() {
               onChange={(e) => setOtherUserId(e.target.value)}
               className="mb-4"
             />
-            <Button
-              onClick={handleCreateRoom}
-              className="w-full mb-2"
-              disabled={pendingInvite}
-            >
+            <Button onClick={handleCreateRoom} className="w-full mb-2" disabled={pendingInvite}>
               {pendingInvite ? 'Invite Pending...' : 'Send Invite'}
             </Button>
 
@@ -397,10 +390,10 @@ export default function NewRoom() {
               Generate QR Invite
             </Button>
 
-        {qrValue && (
-          <div className="flex flex-col items-center mt-4 gap-2">
-            <p className="text-sm text-muted-foreground">Scan to join instantly:</p>
-            <ResponsiveQr qrValue={qrValue} />
+            {qrValue && (
+              <div className="flex flex-col items-center mt-4 gap-2">
+                <p className="text-sm text-muted-foreground">Scan to join instantly:</p>
+                <ResponsiveQr qrValue={qrValue} />
 
                 <Button onClick={handleShare} className="mt-2">
                   Share Invite

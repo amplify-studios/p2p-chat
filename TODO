@@ -1,5 +1,3 @@
-TODO: Sending messages
-TODO: Receiving messages
 TODO: Group chats
 TODO: Chat sync
 TODO: Notifications system
@@ -10,6 +8,7 @@ TODO: Server federation
 TODO: Sync between devices
 TODO: Documentation (code and docs/)
 TODO: Derive the local encryption key from the user’s password using a strong KDF such as Argon2id or scrypt.
+TODO: Bulletproof p2p connections
 DONE: IndexedDB
 DONE: ECDH crypto methods
 DONE: AES-256-GCM crypto methods
@@ -42,3 +41,5 @@ DONE: Block actions if signaling server is not available
 DONE: QR scanner decoding and redirecting to url
 DONE: QR scanner better ui
 DONE: Check if the url is valid when scanning qr
+DONE: Sending messages
+DONE: Receiving messages

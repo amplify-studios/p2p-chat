@@ -3,27 +3,28 @@
 > 29-09-2025
 
 <!--toc:start-->
+
 - [Specification v1.2](#specification-v12)
   - [Encryption](#encryption)
-  - [Operations](#operations)
-    - [1. User Connection](#1-user-connection)
-    - [2. Messaging](#2-messaging)
-      - [Sending](#sending)
-        - [Sending - Pseudocode](#sending---pseudocode)
-      - [Receiving](#receiving)
-        - [Receiving - Pseudocode](#receiving---pseudocode)
-    - [3. Local Storage](#3-local-storage)
-    - [4. Authentication](#4-authentication)
+  - [Operations](#operations) 
+    - [1. User Connection](#1-user-connection) 
+    - [2. Messaging](#2-messaging) 
+      - [Sending](#sending) 
+      - [Sending - Pseudocode](#sending---pseudocode) 
+      - [Receiving](#receiving) 
+      - [Receiving - Pseudocode](#receiving---pseudocode) 
+    - [3. Local Storage](#3-local-storage) 
+    - [4. Authentication](#4-authentication) 
     - [5. Registration](#5-registration)
-<!--toc:end-->
+  <!--toc:end-->
 
 ---
 
 ## Encryption
 
-* **AES-256-GCM** is used for message confidentiality and integrity.
-* **ECDH (X25519)** is used to derive ephemeral shared secrets between peers.
-* **HKDF (SHA-256)** is used to expand shared secrets into symmetric keys and nonces.
+- **AES-256-GCM** is used for message confidentiality and integrity.
+- **ECDH (X25519)** is used to derive ephemeral shared secrets between peers.
+- **HKDF (SHA-256)** is used to expand shared secrets into symmetric keys and nonces.
 
 ---
 
@@ -57,6 +58,7 @@ Supported operations include:
    ```
    Z = ECDH(esk, recipient_longterm_pk)
    ```
+
 3. Select a salt: either random (recommended) or derived from session context.
 4. Run HKDF-SHA256:
 
@@ -66,36 +68,38 @@ Supported operations include:
    ```
 
    Split `KDF_output` into:
+   - `K_enc` (32 bytes, AES-256 key)
+   - `K_nonce_seed` (16–32 bytes, for nonce derivation)
+   - `K_other` (optional, e.g., for key confirmation)
 
-   * `K_enc` (32 bytes, AES-256 key)
-   * `K_nonce_seed` (16–32 bytes, for nonce derivation)
-   * `K_other` (optional, e.g., for key confirmation)
 5. Derive a per-message nonce:
-
-   * Deterministic:
+   - Deterministic:
 
      ```
      nonce = HKDF-Expand(K_nonce_seed, "nonce|" + message_seq, 12)
      ```
-   * Or random 96-bit value (must be unique; then included in the message).
+
+   - Or random 96-bit value (must be unique; then included in the message).
+
 6. Construct **Associated Data (AAD)**:
 
    ```
    AAD = concat(protocol_version, senderID, recipientID, timestamp, message_seq)
    ```
+
 7. Encrypt with AES-256-GCM:
 
    ```
    (ciphertext, authTag) = AES-256-GCM-Encrypt(K_enc, nonce, plaintext, AAD)
    ```
-8. Send the message containing:
 
-   * `epk` (ephemeral public key)
-   * `salt`
-   * `nonce` (if random; omitted if derived deterministically)
-   * `ciphertext`
-   * `authTag`
-   * `protocol_version`, `senderID`, `recipientID`, `message_seq`, `timestamp`
+8. Send the message containing:
+   - `epk` (ephemeral public key)
+   - `salt`
+   - `nonce` (if random; omitted if derived deterministically)
+   - `ciphertext`
+   - `authTag`
+   - `protocol_version`, `senderID`, `recipientID`, `message_seq`, `timestamp`
 
 ##### Sending - Pseudocode
 
@@ -142,6 +146,7 @@ function SendMessage(recipient_pk, sender_id, recipient_id, plaintext, message_s
    ```
    Z = ECDH(recipient_sk, epk)
    ```
+
 3. Re-run HKDF with the provided salt and same info string to derive `K_enc` and `K_nonce_seed`.
 4. Derive the nonce (unless explicitly included in the message).
 5. Rebuild the AAD exactly as the sender did.
@@ -185,27 +190,24 @@ function ReceiveMessage(message, recipient_sk):
 
 ### 3. Local Storage
 
-* All sensitive data stored locally (e.g., in IndexedDB) must be encrypted.
-* Derive the local encryption key from the user’s password using a strong KDF such as **Argon2id** or **scrypt**.
+- All sensitive data stored locally (e.g., in IndexedDB) must be encrypted.
+- Derive the local encryption key from the user’s password using a strong KDF such as **Argon2id** or **scrypt**.
 
 ---
 
 ### 4. Authentication
 
-* **Trust on First Use (TOFU)**:
-
-  * On initial connection, peers exchange long-term public keys.
-  * Users verify key fingerprints out-of-band (QR code, phone call, in person).
-  * Verified keys are cached locally for subsequent sessions.
+- **Trust on First Use (TOFU)**:
+  - On initial connection, peers exchange long-term public keys.
+  - Users verify key fingerprints out-of-band (QR code, phone call, in person).
+  - Verified keys are cached locally for subsequent sessions.
 
 ---
 
 ### 5. Registration
 
-* No centralized registration service exists.
-* Each user generates an ECDH key pair on first use; the public key is their identity.
-* Authentication relies on TOFU or a Web of Trust.
-* Optional: users may assign local nicknames mapped to public keys.
-
-  * Nicknames are not globally unique or enforced.
-
+- No centralized registration service exists.
+- Each user generates an ECDH key pair on first use; the public key is their identity.
+- Authentication relies on TOFU or a Web of Trust.
+- Optional: users may assign local nicknames mapped to public keys.
+  - Nicknames are not globally unique or enforced.

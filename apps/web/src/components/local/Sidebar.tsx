@@ -27,7 +27,7 @@ export default function Sidebar({ children }: SidebarProps) {
   const [connected, setConnected] = useState<boolean>(false);
 
   useEffect(() => {
-    setConnected(status === "connected");
+    setConnected(status === 'connected');
   }, [status]);
 
   if (!rooms) return <Loading />;
@@ -35,7 +35,7 @@ export default function Sidebar({ children }: SidebarProps) {
   useEffect(() => {
     (async () => {
       const notificationsPermission = await getNotificationPermission();
-      console.log(notificationsPermission);
+      console.log('Notification permission: ', notificationsPermission);
     })();
   }, []);
 
@@ -70,11 +70,11 @@ export default function Sidebar({ children }: SidebarProps) {
 
         {/* Fixed bottom items */}
         <div className="p-4 flex flex-col gap-2 border-t border-secondary">
-          <SidebarItem 
-            name="New Room" 
-            href="/new" 
-            icon={<Plus size={19} />} 
-            type="default" 
+          <SidebarItem
+            name="New Room"
+            href="/new"
+            icon={<Plus size={19} />}
+            type="default"
             disabled={!connected}
           />
 
@@ -85,11 +85,11 @@ export default function Sidebar({ children }: SidebarProps) {
             type="default"
             disabled={!connected}
           />
-          <SidebarItem 
-            name="Peers" 
-            href="/peers" 
-            icon={<Users size={20} />} 
-            type="default" 
+          <SidebarItem
+            name="Peers"
+            href="/peers"
+            icon={<Users size={20} />}
+            type="default"
             disabled={!connected}
           />
           <SidebarItem
@@ -117,39 +117,25 @@ export default function Sidebar({ children }: SidebarProps) {
                 {room.name}
               </Link>
             ))}
-            <SidebarItem 
-              href="/new" 
-              type="small" 
-              icon={<Plus size={16} />} 
-              disabled={!connected}
-            /> 
-
+            <SidebarItem href="/new" type="small" icon={<Plus size={16} />} disabled={!connected} />
           </div>
 
           {/* Fixed right icons */}
           <div className="flex gap-2 ml-2">
-            <SidebarItem 
-              href="/" 
-              type="small" 
-              icon={<Home size={16} />} 
-            /> 
-            <SidebarItem 
-              href="/invites" 
-              type="small" 
+            <SidebarItem href="/" type="small" icon={<Home size={16} />} />
+            <SidebarItem
+              href="/invites"
+              type="small"
               icon={<MessageSquareDot size={16} />}
               disabled={!connected}
-              />
-            <SidebarItem 
-              href="/peers" 
-              type="small" 
+            />
+            <SidebarItem
+              href="/peers"
+              type="small"
               icon={<Users size={16} />}
               disabled={!connected}
             />
-            <SidebarItem 
-              href="/settings" 
-              type="small" 
-              icon={<Settings size={16} />}
-            />
+            <SidebarItem href="/settings" type="small" icon={<Settings size={16} />} />
           </div>
         </nav>
 

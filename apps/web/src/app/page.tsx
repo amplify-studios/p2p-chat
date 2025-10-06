@@ -63,9 +63,7 @@ export default function Home() {
         </div>
       </header>
 
-      {status !== "connected" && (
-        <EmptyState msg='No connection to the signaling server' />
-      )}
+      {status !== 'connected' && <EmptyState msg="No connection to the signaling server" />}
 
       {/* Status Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">

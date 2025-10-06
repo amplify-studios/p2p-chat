@@ -63,8 +63,7 @@ export default function SettingsPage() {
       await eraseDB();
       showToast('Erased all data successfully!', 'success');
 
-      if(client)
-        client.disconnect();
+      if (client) client.disconnect();
     } catch (err) {
       console.error(err);
       showToast('Erasing data failed', 'error');
@@ -140,20 +139,28 @@ export default function SettingsPage() {
         </Button>
       </div>
 
-      <Button className="w-full" variant="outline" onClick={() => {
-        sessionStorage.removeItem(PASSWORD_KEY);
-        router.push('/login')
-      }}>
+      <Button
+        className="w-full"
+        variant="outline"
+        onClick={() => {
+          sessionStorage.removeItem(PASSWORD_KEY);
+          router.push('/login');
+        }}
+      >
         <LogOut className="mr-1 h-4 w-4" /> Logout
       </Button>
 
-      <Button className="w-full" variant="outline" onClick={() => {
-        try {
-          sendNotification("Test", "Hello World");
-        } catch (err: unknown){
-          alert(err instanceof Error ? err.message : JSON.stringify(err));
-        }
-      }}>
+      <Button
+        className="w-full"
+        variant="outline"
+        onClick={() => {
+          try {
+            sendNotification('Test', 'Hello World');
+          } catch (err: unknown) {
+            alert(err instanceof Error ? err.message : JSON.stringify(err));
+          }
+        }}
+      >
         <TestTube className="mr-1 h-4 w-4" /> Test
       </Button>
     </div>

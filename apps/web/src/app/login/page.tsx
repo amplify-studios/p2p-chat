@@ -45,7 +45,7 @@ export default function Login() {
   const confirm = useConfirm();
 
   const searchParams = useSearchParams();
-  const redirect = searchParams.get("redirect") ?? "/";
+  const redirect = searchParams.get('redirect') ?? '/';
 
   const [existingUser, setExistingUser] = useState<
     null | CredentialsType | EncryptedCredentialsType
@@ -111,7 +111,7 @@ export default function Login() {
       initSignalingClient(client);
       try {
         await client.connect('ws://192.168.1.8:8080');
-      } catch(err: unknown) {
+      } catch (err: unknown) {
         console.error(err);
         setError(err instanceof Error ? err.message : JSON.stringify(err));
       }
@@ -121,10 +121,7 @@ export default function Login() {
       let decrUser: CredentialsType;
 
       try {
-        decrUser = decryptCredentialsType(
-          existingUser as EncryptedCredentialsType,
-          aesKey,
-        );
+        decrUser = decryptCredentialsType(existingUser as EncryptedCredentialsType, aesKey);
       } catch (err: unknown) {
         setError('Incorrect password');
         const next = attempts + 1;
@@ -140,7 +137,7 @@ export default function Login() {
       }
 
       sessionStorage.setItem(PASSWORD_KEY, hash(password));
-      sessionStorage.removeItem("loginAttempts");
+      sessionStorage.removeItem('loginAttempts');
       setUsername(decrUser.username);
 
       setUser(decrUser);
@@ -164,13 +161,9 @@ export default function Login() {
 
         {error && <p className="text-destructive mb-4">{error}</p>}
         {attempts > 0 && attempts < 3 && (
-          <p className="text-muted-foreground mb-2">
-            {3 - attempts} attempt(s) remaining
-          </p>
+          <p className="text-muted-foreground mb-2">{3 - attempts} attempt(s) remaining</p>
         )}
-        {isLocked && (
-          <p className="text-muted-foreground mb-2">Erasing data...</p>
-        )}
+        {isLocked && <p className="text-muted-foreground mb-2">Erasing data...</p>}
 
         {!existingUser && (
           <Input
