@@ -71,14 +71,11 @@ wss.on("connection", (ws) => {
         break;
       }
 
-      case "signal":
-      case "offer":
-      case "answer":
-      case "candidate": {
+      case "signal": {
         const target = clients.get(data.target);
         if (target) {
           target.ws.send(JSON.stringify({
-            type: data.type,
+            type: "signal",
             from: clientId,
             payload: data.payload
           }));
