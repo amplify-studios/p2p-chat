@@ -18,7 +18,7 @@ import {
 import { useAuth } from '@/hooks/useAuth';
 import { initSignalingClient } from '@/lib/signalingClient';
 import { SignalingClient } from '@chat/sockets';
-import { CredentialsType } from '@chat/core';
+import { CLIENT_CONFIG, CredentialsType } from '@chat/core';
 import { eraseDB, PASSWORD_KEY } from '@/lib/storage';
 import { useConfirm } from '@/components/local/ConfirmContext';
 
@@ -110,7 +110,7 @@ export default function Login() {
       const client = new SignalingClient(id, username, user.public);
       initSignalingClient(client);
       try {
-        await client.connect('ws://192.168.1.8:8080');
+        await client.connect(CLIENT_CONFIG.signalingUrl);
       } catch (err: unknown) {
         console.error(err);
         setError(err instanceof Error ? err.message : JSON.stringify(err));
