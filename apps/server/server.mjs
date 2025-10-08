@@ -1,6 +1,16 @@
 import { WebSocketServer } from "ws";
+import http from "http";
 
-const wss = new WebSocketServer({ port: 8080 });
+const PORT = process.env.PORT || 8080;
+
+// Create a basic HTTP server
+const server = http.createServer((req, res) => {
+  res.writeHead(200);
+  res.end("WebSocket signaling server is running\n");
+});
+
+// Attach WebSocket server to the HTTP server
+const wss = new WebSocketServer({ server });
 
 const clients = new Map();
 
@@ -64,10 +74,9 @@ wss.on("connection", (ws) => {
       }
 
       case "peers": {
-        ws.send(JSON.stringify({
-          type: "peers",
-          peers: getPeerList()
-        }));
+        for (const { ws } of clients.values()) {
+          ws.send(JSON.stringify({ type: "peers", peers: getPeerList() }));
+        }
         break;
       }
 
@@ -75,13 +84,29 @@ wss.on("connection", (ws) => {
       case "answer": 
       case "offer": {
         const target = clients.get(data.target);
-        if (target) {
-          target.ws.send(JSON.stringify({
-            type: data.type,
-            from: clientId,
-            payload: data.payload
-          }));
+        if (!target || target.ws.readyState !== target.ws.OPEN) {
+          ws.send(JSON.stringify({ type: "error", message: "Target not found or disconnected" }));
+          break;
         }
+
+        // Basic validation
+        if (data.type === "offer" || data.type === "answer") {
+          if (!data.payload?.sdp) {
+            console.warn(`Invalid ${data.type} payload`, data.payload);
+            break;
+          }
+        } else if (data.type === "candidate") {
+          if (!data.payload?.candidate) {
+            console.warn("Invalid ICE candidate payload", data.payload);
+            break;
+          }
+        }
+
+        target.ws.send(JSON.stringify({
+          type: data.type,
+          from: clientId,
+          payload: data.payload
+        }));
         break;
       }
 
@@ -118,3 +143,7 @@ function broadcastPeerList() {
 }
 
 console.log("Signaling server running on ws://localhost:8080");
+
+server.listen(PORT, () => {
+  console.log(`Signaling server running on port ${PORT}`);
+});
