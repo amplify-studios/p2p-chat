@@ -67,10 +67,6 @@ wss.on("connection", (ws) => {
         for (const { ws } of clients.values()) {
           ws.send(JSON.stringify({ type: "peers", peers: getPeerList() }));
         }
-        // ws.send(JSON.stringify({
-        //   type: "peers",
-        //   peers: getPeerList()
-        // }));
         break;
       }
 

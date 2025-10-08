@@ -14,6 +14,7 @@ import {
   generateAESKey,
   generateBase58Id,
   hash,
+  deriveEncryptionKey,
 } from '@chat/crypto';
 import { useAuth } from '@/hooks/useAuth';
 import { initSignalingClient } from '@/lib/signalingClient';
@@ -110,18 +111,22 @@ export default function Login() {
       const client = new SignalingClient(id, username, user.public);
       initSignalingClient(client);
       try {
-        await client.connect('ws://192.168.1.8:8080');
+        await client.connect('ws://localhost:8080'); // TODO: change to get it from the config
       } catch (err: unknown) {
         console.error(err);
         setError(err instanceof Error ? err.message : JSON.stringify(err));
       }
     } else {
       // --- Existing user unlock ---
-      const aesKey = generateAESKey(new TextEncoder().encode(hash(password)));
+      const aeskey = generateAESKey(new TextEncoder().encode(hash(password+username)));
+
+      const argonResult = await deriveEncryptionKey(password, aeskey);
+      const key = argonResult.key;
+
       let decrUser: CredentialsType;
 
       try {
-        decrUser = decryptCredentialsType(existingUser as EncryptedCredentialsType, aesKey);
+        decrUser = decryptCredentialsType(existingUser as EncryptedCredentialsType, aeskey);
       } catch (err: unknown) {
         setError('Incorrect password');
         const next = attempts + 1;
