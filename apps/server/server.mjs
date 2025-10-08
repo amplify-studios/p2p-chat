@@ -1,6 +1,16 @@
 import { WebSocketServer } from "ws";
+import http from "http";
 
-const wss = new WebSocketServer({ port: 8080 });
+const PORT = process.env.PORT || 8080;
+
+// Create a basic HTTP server
+const server = http.createServer((req, res) => {
+  res.writeHead(200);
+  res.end("WebSocket signaling server is running\n");
+});
+
+// Attach WebSocket server to the HTTP server
+const wss = new WebSocketServer({ server });
 
 const clients = new Map();
 
@@ -118,3 +128,7 @@ function broadcastPeerList() {
 }
 
 console.log("Signaling server running on ws://localhost:8080");
+
+server.listen(PORT, () => {
+  console.log(`Signaling server running on port ${PORT}`);
+});
