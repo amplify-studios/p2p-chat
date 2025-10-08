@@ -11,7 +11,7 @@ export const CLIENT_CONFIG = {
     {
       "urls": "turn:192.168.1.25:3478",
       "username": "p2p",
-      "credential": ""
+      "credential": "RKe9IythqFqvi0"
     }
   ],
   "signalingUrl": "wss://p2p-signaling-55197d11d9bf.herokuapp.com/"
