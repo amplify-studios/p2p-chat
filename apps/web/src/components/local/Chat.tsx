@@ -134,7 +134,6 @@ export function Chat({
                 data={data}
                 onEmojiSelect={(emoji: any) => {
                   setInput((prev) => prev + emoji.native);
-                  setEmojiOpen(false);
                 }}
                 theme="light"
               />

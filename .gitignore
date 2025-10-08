@@ -1,3 +1,6 @@
 logs
 package-lock.json
 node_modules
+
+config.yml
+packages/core/config.ts

@@ -13,7 +13,6 @@ import { createPeerConnection, WebRTCConnection } from '@chat/sockets/webrtc';
 import useClient from '@/hooks/useClient';
 import { prepareSendMessagePackage, returnDecryptedMessage } from '@/lib/messaging';
 import { createECDHkey } from '@chat/crypto';
-import { Buffer } from 'buffer';
 
 export default function P2PChatPage() {
   const connectionRef = useRef<WebRTCConnection | null>(null);
@@ -112,18 +111,6 @@ export default function P2PChatPage() {
         connectionRef.current?.close();
         connectionRef.current = null;
 
-        // Answerer sends a reconnect signal to prompt the offerer
-        if (!amOfferer) {
-          ws.send(
-            JSON.stringify({
-              type: 'signal',
-              target: otherUser.userId,
-              from: user.userId,
-              payload: { type: 'reconnect' },
-            }),
-          );
-        }
-
         const conn = await createPeerConnection({
           ws,
           peerId: otherUser.userId,
@@ -199,17 +186,6 @@ export default function P2PChatPage() {
           try {
             if (!ws) return;
 
-            if (!amOfferer) {
-              ws.send(
-                JSON.stringify({
-                  type: 'signal',
-                  target: otherUser.userId,
-                  from: user.userId,
-                  payload: { type: 'reconnect' },
-                }),
-              );
-            }
-
             const newConn = await createPeerConnection({
               ws,
               peerId: otherUser.userId,
@@ -267,7 +243,7 @@ export default function P2PChatPage() {
         href={`/chat/options?id=${room.roomId}`}
         onSend={sendMessage}
         room={room}
-        connected
+        connected={connected}
       />
     </div>
   );

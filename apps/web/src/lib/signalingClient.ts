@@ -1,10 +1,11 @@
 import { SignalingClient } from '@chat/sockets';
 import { getDB, PASSWORD_KEY } from './storage';
 import { decryptCredentialsType, EncryptedCredentialsType, generateAESKey } from '@chat/crypto';
+import { CLIENT_CONFIG } from '@chat/core';
 
 let singletonClient: SignalingClient | null = null;
 
-const SERVER_URL = 'ws://localhost:8080';
+const SERVER_URL = CLIENT_CONFIG.signalingUrl;
 
 /**
  * Initialize the singleton manually (optional).

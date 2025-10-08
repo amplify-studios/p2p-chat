@@ -5,6 +5,7 @@
     "apps/*"
   ],
   "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
     "@typescript-eslint/eslint-plugin": "^8.43.0",
     "@typescript-eslint/parser": "^8.43.0",
     "eslint": "^9.35.0",
@@ -14,11 +15,7 @@
   },
   "scripts": {
     "format": "prettier --write '**/*.{js,ts,tsx,json,css,md}'",
-    "format:check": "prettier --check '**/*.{js,ts,tsx,json,css,md}'"
-  },
-  "dependencies": {
-    "@emoji-mart/data": "^1.2.1",
-    "@emoji-mart/react": "^1.1.1",
-    "emoji-mart": "^5.6.0"
+    "format:check": "prettier --check '**/*.{js,ts,tsx,json,css,md}'",
+"postinstall": "npm install --prefix ./apps/server"
   }
 }

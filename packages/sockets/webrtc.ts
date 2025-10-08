@@ -26,10 +26,11 @@ export async function createPeerConnection({
 }: WebRTCOptions): Promise<WebRTCConnection> {
   let retryCount = 0;
   let dataChannel: RTCDataChannel | null = null;
+  let makingOffer = false;
+  let ignoreOffer = false;
+  let isSettingRemote = false;
 
-  const log = (msg: string) => {
-    try { onLog?.(msg); } catch {}
-  };
+  const log = (msg: string) => { try { onLog?.(msg); } catch {} };
 
   const iceServers = [{ urls: STUN_SERVERS }, ...TURN_SERVERS];
   const pc = new RTCPeerConnection({ iceServers });
@@ -39,36 +40,33 @@ export async function createPeerConnection({
     if (dataChannel && dataChannel.readyState === "open") {
       while (outgoingQueue.length) {
         const m = outgoingQueue.shift()!;
-        try { dataChannel.send(m); } catch (e) { log(`send error: ${e}`); }
+        try { dataChannel.send(m); } catch { outgoingQueue.push(m); }
       }
     }
   };
 
   const pendingCandidates: RTCIceCandidateInit[] = [];
-  const amOfferer = myId < peerId;
 
-  // Setup data channel
-  const setupDataChannelHandlers = () => {
-    if (amOfferer) {
-      dataChannel = pc.createDataChannel("chat");
-      dataChannel.onopen = () => { log("Data channel open (offerer)"); flushOutgoing(); };
-      dataChannel.onmessage = (e) => onMessage?.(e.data);
-      dataChannel.onclose = () => log("Data channel closed");
-      dataChannel.onerror = (e) => log("DataChannel error: " + e);
-    }
-
-    pc.ondatachannel = (e) => {
-      dataChannel = e.channel;
-      dataChannel.onopen = () => { log("Data channel open (answerer)"); flushOutgoing(); };
-      dataChannel.onmessage = (ev) => onMessage?.(ev.data);
-      dataChannel.onclose = () => log("Data channel closed");
-      dataChannel.onerror = (e) => log("DataChannel error: " + e);
-    };
+  const setupDataChannel = (channel: RTCDataChannel, role: string) => {
+    channel.onopen = () => { log(`Data channel open (${role})`); flushOutgoing(); };
+    channel.onmessage = (e) => onMessage?.(e.data);
+    channel.onclose = () => log(`Data channel closed (${role})`);
+    channel.onerror = (e) => log(`DataChannel error (${role}): ${e}`);
   };
 
-  setupDataChannelHandlers();
+  // Always create a data channel; the remote peer will catch it on ondatachannel
+  try {
+    dataChannel = pc.createDataChannel("chat");
+    setupDataChannel(dataChannel, "creator");
+  } catch (e) {
+    log("Failed to create data channel: " + e);
+  }
 
-  // Send ICE candidates
+  pc.ondatachannel = (e) => {
+    dataChannel = e.channel;
+    setupDataChannel(dataChannel, "receiver");
+  };
+
   pc.onicecandidate = (e) => {
     if (!e.candidate) return;
     try {
@@ -81,26 +79,34 @@ export async function createPeerConnection({
     } catch (err) { log("Failed to send ICE candidate: " + err); }
   };
 
-  const establishConnection = async (iceRestart = false) => {
-    try {
-      if (amOfferer) {
-        const offer = await pc.createOffer({ iceRestart });
-        await pc.setLocalDescription(offer);
-        ws.send(JSON.stringify({
-          type: "signal",
-          target: peerId,
-          from: myId,
-          payload: offer,
-        }));
-      }
-    } catch (err) {
-      log(`Connection attempt failed: ${err}`);
+  pc.oniceconnectionstatechange = () => {
+    log(`ICE connection state: ${pc.iceConnectionState}`);
+    if (pc.iceConnectionState === "failed") {
       if (retryCount < maxRetries) {
         retryCount++;
-        setTimeout(() => establishConnection(iceRestart), 2000 * retryCount);
+        setTimeout(() => initiateOffer(), 100 + Math.random() * 500);
       } else {
-        throw err;
+        log("Max retries reached, connection failed permanently.");
       }
+    }
+  };
+
+  const initiateOffer = async () => {
+    try {
+      makingOffer = true;
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+      ws.send(JSON.stringify({
+        type: "signal",
+        target: peerId,
+        from: myId,
+        payload: offer,
+      }));
+      log("Sent offer to peer");
+    } catch (err) {
+      log("Offer failed: " + err);
+    } finally {
+      makingOffer = false;
     }
   };
 
@@ -109,71 +115,72 @@ export async function createPeerConnection({
     const payload = msg.payload;
     if (!payload) return;
 
-    // Reconnect request
-    if (payload.type === "reconnect" && amOfferer) {
-      log("Answerer requested reconnect, creating new offer with ICE restart");
-      retryCount = 0;
-      await establishConnection(true); // iceRestart: true
-      return;
-    }
-
-    // SDP handling
-    if (payload.type === "offer" || payload.type === "answer" || payload.sdp) {
-      try {
-        await pc.setRemoteDescription(payload);
-        log("setRemoteDescription done");
-
-        while (pendingCandidates.length) {
-          const c = pendingCandidates.shift()!;
-          try { await pc.addIceCandidate(c); } catch (err) { log("addIceCandidate error: " + err); }
-        }
-
-        if (payload.type === "offer" && !amOfferer) {
-          const answer = await pc.createAnswer();
-          await pc.setLocalDescription(answer);
-          ws.send(JSON.stringify({
-            type: "signal",
-            target: msg.from,
-            from: myId,
-            payload: answer,
-          }));
-        }
-      } catch (err) {
-        log("Error handling SDP: " + err);
-      }
-      return;
-    }
-
     // ICE candidate
     if (payload.candidate) {
-      if (!pc.remoteDescription) {
-        pendingCandidates.push(payload.candidate);
-        return;
-      }
+      if (pc.remoteDescription) {
+        try { await pc.addIceCandidate(payload.candidate); }
+        catch (err) { log("Failed to add ICE candidate: " + err); }
+      } else pendingCandidates.push(payload.candidate);
+      return;
+    }
+
+    // Offer
+    if (payload.type === "offer") {
+      const offerCollision = makingOffer || pc.signalingState !== "stable";
+      ignoreOffer = !offerCollision ? false : myId > peerId; // higher id yields
+      if (ignoreOffer) return;
+
       try {
-        await pc.addIceCandidate(payload.candidate);
-      } catch (err) { log("Failed to add ICE candidate: " + err); }
+        isSettingRemote = true;
+        if (pc.signalingState !== "stable") await pc.setLocalDescription({ type: "rollback" });
+        await pc.setRemoteDescription(payload);
+        isSettingRemote = false;
+
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
+        ws.send(JSON.stringify({
+          type: "signal",
+          target: msg.from,
+          from: myId,
+          payload: answer,
+        }));
+
+        // flush pending candidates
+        while (pendingCandidates.length) {
+          const c = pendingCandidates.shift()!;
+          await pc.addIceCandidate(c);
+        }
+        log("Sent answer to peer");
+      } catch (err) { log("Error handling offer: " + err); }
+      return;
+    }
+
+    // Answer
+    if (payload.type === "answer") {
+      try {
+        await pc.setRemoteDescription(payload);
+        while (pendingCandidates.length) {
+          const c = pendingCandidates.shift()!;
+          await pc.addIceCandidate(c);
+        }
+        log("Set remote description for answer");
+      } catch (err) { log("Error handling answer: " + err); }
+      return;
     }
   };
 
-  const onWsMessage = (event: MessageEvent) => {
-    try { handleSignal(JSON.parse(event.data)); } catch {}
-  };
-
+  const onWsMessage = (event: MessageEvent) => { try { handleSignal(JSON.parse(event.data)); } catch {} };
   ws.addEventListener("message", onWsMessage);
 
-  // Establish initial connection
-  await establishConnection();
+  // Start negotiation immediately
+  initiateOffer();
 
   return {
     pc,
     dataChannel,
-    send: (message: string) => {
-      if (!dataChannel || dataChannel.readyState !== "open") {
-        outgoingQueue.push(message);
-      } else {
-        try { dataChannel.send(message); } catch { outgoingQueue.push(message); }
-      }
+    send: (msg: string) => {
+      if (!dataChannel || dataChannel.readyState !== "open") outgoingQueue.push(msg);
+      else try { dataChannel.send(msg); } catch { outgoingQueue.push(msg); }
     },
     close: () => {
       try { ws.removeEventListener("message", onWsMessage); } catch {}
