@@ -1,11 +1,12 @@
 import { SignalingClient } from '@chat/sockets';
 import { getDB, PASSWORD_KEY } from './storage';
 import { decryptCredentialsType, EncryptedCredentialsType, generateAESKey } from '@chat/crypto';
-import { CLIENT_CONFIG } from '@chat/core';
+// import { CLIENT_CONFIG } from '@chat/core';
 
 let singletonClient: SignalingClient | null = null;
 
-const SERVER_URL = CLIENT_CONFIG.signalingUrl;
+// const SERVER_URL = CLIENT_CONFIG.signalingUrl;
+const SERVER_URL = "https://p2p-signaling-55197d11d9bf.herokuapp.com/";
 
 /**
  * Initialize the singleton manually (optional).
