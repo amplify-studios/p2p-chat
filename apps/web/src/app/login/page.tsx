@@ -162,7 +162,7 @@ export default function Login() {
 
       const client = new SignalingClient(decrUser.userId, decrUser.username, decrUser.public);
       initSignalingClient(client);
-      await client.connect('ws://192.168.1.4:8080');
+      await client.connect(CLIENT_CONFIG.signalingUrl);
     }
 
     try {
