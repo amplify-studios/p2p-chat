@@ -14,7 +14,7 @@ import {
   generateAESKey,
   generateBase58Id,
   hash,
-  deriveEncryptionKey,
+  //deriveEncryptionKey,
 } from '@chat/crypto';
 import { useAuth } from '@/hooks/useAuth';
 import { initSignalingClient } from '@/lib/signalingClient';
@@ -46,11 +46,24 @@ export default function Login() {
   const confirm = useConfirm();
 
   const searchParams = useSearchParams();
-  const redirect = searchParams.get('redirect') ?? '/';
+  const rawRedirect = searchParams.get('redirect') ?? '/';
 
   const [existingUser, setExistingUser] = useState<
     null | CredentialsType | EncryptedCredentialsType
   >(null);
+
+  const sanitizeRedirect = (r: string | null) => {
+    if (!r) return '/';
+    try {
+      const decoded = decodeURIComponent(r);
+      if (decoded.startsWith('/') && !decoded.startsWith('//')) return decoded;
+    } catch (e) {
+      // fallback if decodeURIComponent fails
+    }
+    return '/';
+  };
+
+  const redirect = sanitizeRedirect(rawRedirect);
 
   useEffect(() => {
     const saved = sessionStorage.getItem('loginAttempts');
@@ -62,11 +75,11 @@ export default function Login() {
 
     const storedPass = sessionStorage.getItem(PASSWORD_KEY);
     if (storedPass) {
-      router.replace(redirect);
+      //router.replace(redirect);
     } else {
       setExistingUser(encryptedUser);
     }
-  }, [encryptedUser, router, redirect]);
+  }, [encryptedUser, router]);
 
   if (!db) return <Loading />;
 
@@ -120,8 +133,8 @@ export default function Login() {
       // --- Existing user unlock ---
       const aeskey = generateAESKey(new TextEncoder().encode(hash(password+username)));
 
-      const argonResult = await deriveEncryptionKey(password, aeskey);
-      const key = argonResult.key;
+      //const argonResult = await deriveEncryptionKey(password, aeskey);
+      //const key = argonResult.key;
 
       let decrUser: CredentialsType;
 
@@ -149,10 +162,20 @@ export default function Login() {
 
       const client = new SignalingClient(decrUser.userId, decrUser.username, decrUser.public);
       initSignalingClient(client);
-      await client.connect('ws://192.168.1.8:8080');
+      await client.connect('ws://192.168.1.4:8080');
     }
 
-    router.replace(redirect);
+    try {
+      await Promise.resolve();
+      router.replace(redirect);
+      setTimeout(() => {
+        if (typeof window.location.pathname !== redirect) {
+          window.location.href = redirect;
+        }
+      }, 100);
+    } catch (err) {
+      console.error('Navigation attempt failed', err);
+    }
   };
 
   const isLocked = attempts >= 3;
