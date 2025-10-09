@@ -75,7 +75,7 @@ export function Chat({
         <div className="flex flex-row items-center gap-2">
           {room.type === 'single' ? <User /> : <Users />}
           <h2 className="text-lg font-bold truncate">{title}</h2>
-          {connected && <span>●</span>}
+          {connected && <span className='text-green-500'>●</span>}
         </div>
         <Link href={href}>
           <EllipsisVertical className="w-5 h-5" />
