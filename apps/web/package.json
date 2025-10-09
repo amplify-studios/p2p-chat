@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "cd ../.. && ./scripts/generate-client-config.mjs && cd apps/web && next dev --turbopack",
-    "build": "cd ../.. && ./scripts/generate-client-config.mjs && cd apps/web && next build --turbopack",
+    "dev": "next dev --turbopack",
+    "build": "next build --turbopack",
     "start": "next start",
     "lint": "eslint"
   },
