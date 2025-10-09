@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { EllipsisVertical, Send, User, Users, Smile } from 'lucide-react';
+import { EllipsisVertical, Send, User, Users, Smile, ArrowDown } from 'lucide-react';
 import EmptyState from './EmptyState';
 import { RoomType } from '@chat/core/types';
 import Picker from '@emoji-mart/react';
@@ -40,22 +40,39 @@ export function Chat({
   const scrollRef = useRef<HTMLDivElement>(null);
   const emojiRef = useRef<HTMLDivElement>(null);
 
+  const [isAtBottom, setIsAtBottom] = useState(true);
+
   const sendMessage = () => {
     if (!input.trim()) return;
     onSend(input);
     setInput('');
   };
 
-  // scroll chat to bottom when new messages arrive
+  // Detect if user scrolled up
+  const handleScroll = () => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 150;
+    setIsAtBottom(nearBottom);
+  };
+
+  // Scroll to bottom only if user is at bottom
   useEffect(() => {
     const el = scrollRef.current;
-    if (el) {
-      el.scrollTo({
-        top: el.scrollHeight,
-        behavior: 'smooth',
-      });
+    if (!el) return;
+
+    if (isAtBottom) {
+      el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
     }
-  }, [messages, isTyping]);
+  }, [messages, isAtBottom]);
+
+  // Add scroll listener
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.addEventListener('scroll', handleScroll);
+    return () => el.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // close emoji picker when clicking outside
   useEffect(() => {
@@ -68,14 +85,21 @@ export function Chat({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  const scrollToBottom = () => {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+    setIsAtBottom(true);
+  };
+
   return (
-    <div className="flex flex-col h-full w-full bg-background">
+    <div className="flex flex-col h-full w-full bg-background relative">
       {/* --- Top Bar --- */}
       <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-3 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/75">
         <div className="flex flex-row items-center gap-2">
           {room.type === 'single' ? <User /> : <Users />}
           <h2 className="text-lg font-bold truncate">{title}</h2>
-          {connected && <span className='text-green-500'>●</span>}
+          {connected && <span className="text-green-500">●</span>}
         </div>
         <Link href={href}>
           <EllipsisVertical className="w-5 h-5" />
@@ -113,6 +137,17 @@ export function Chat({
           </div>
         )}
       </div>
+
+      {/* --- Floating Scroll Button --- */}
+      {!isAtBottom && (
+        <Button
+          variant={"secondary"}
+          onClick={scrollToBottom}
+          className="absolute bottom-20 right-6 p-2 rounded-full shadow-lg"
+        >
+          <ArrowDown className="w-4 h-4" />
+        </Button>
+      )}
 
       {/* --- Bottom Bar --- */}
       <div className="sticky bottom-0 z-10 flex items-center gap-2 px-4 py-3 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/75">
