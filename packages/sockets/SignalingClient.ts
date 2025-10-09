@@ -1,3 +1,98 @@
+/**
+ * # SignalingClient
+ *
+ * The `SignalingClient` manages all communication between peers through a signaling server,
+ * which is essential for setting up WebRTC connections. It provides a clean interface to
+ * connect, disconnect, send messages, and handle events between peers.
+ *
+ * ## Overview
+ *
+ * WebRTC cannot establish peer-to-peer connections directly — it first needs an intermediary
+ * signaling server to exchange:
+ * - Session descriptions (SDP offers/answers)
+ * - ICE candidates
+ * - Custom messages (e.g., invites, acknowledgments)
+ *
+ * The `SignalingClient` handles this signaling layer using a WebSocket connection.
+ *
+ * ---
+ *
+ * ## Connection Lifecycle
+ *
+ * 1. **Construction**
+ *    - The class is initialized with an `id`, `username`, and `pubkey`.
+ *    - These identify the client and authenticate it on the signaling server.
+ *
+ * 2. **Connect**
+ *    - `connect(url)` opens a WebSocket connection to the signaling server.
+ *    - On connection open:
+ *      - Sends a `"join"` message with `{ id, username, pubkey }`.
+ *      - Marks the client as `joined`.
+ *    - Any incoming messages from the server are JSON-decoded and dispatched to registered handlers.
+ *    - Errors or closure events trigger cleanup and state resets.
+ *
+ * 3. **Message Handling**
+ *    - Incoming messages are routed by their `"type"` field.
+ *    - Example types:
+ *      - `"offer"`, `"answer"`, `"candidate"` → WebRTC negotiation.
+ *      - `"invite"` → room or connection invitation.
+ *      - `"ack"` → acknowledgment of invites or other actions.
+ *      - `"signal"` → general-purpose payloads.
+ *    - Handlers can be registered using `on(type, handler)` and removed with `off(type, handler)`.
+ *
+ * 4. **Sending Messages**
+ *    - Outgoing messages are serialized as JSON and sent through the active WebSocket.
+ *    - If the WebSocket is not open, messages are dropped with a warning.
+ *    - Helper methods:
+ *      - `sendSignal(target, signal)`
+ *      - `sendOffer(target, offer)`
+ *      - `sendAnswer(target, answer)`
+ *      - `sendCandidate(target, candidate)`
+ *      - `sendRoomInvite(target, payload)`
+ *      - `sendAck(target, payload)`
+ *      - `requestPeers()`
+ *
+ * 5. **Disconnect & Reconnect**
+ *    - `disconnect()` gracefully closes the WebSocket, clears event handlers, and resets state.
+ *    - `reconnect(url)` forcibly disconnects, waits briefly, and re-establishes a connection.
+ *
+ * ---
+ *
+ * ## Event Flow Example
+ *
+ * 1. Peer A connects:
+ *    ```ts
+ *    await clientA.connect('wss://signaling.example.com');
+ *    ```
+ *    → Server assigns A’s connection and broadcasts to others that A joined.
+ *
+ * 2. Peer B connects similarly.
+ *
+ * 3. A sends an offer to B:
+ *    ```ts
+ *    clientA.sendOffer('peerB', offer);
+ *    ```
+ *
+ * 4. Server forwards this offer to B as a message:
+ *    ```json
+ *    { "type": "offer", "target": "peerB", "payload": { ...SDP... } }
+ *    ```
+ *
+ * 5. B receives it and triggers the `"offer"` handler registered via `clientB.on('offer', handler)`.
+ *
+ * 6. B sends back an `"answer"`, and ICE candidates follow using `"candidate"` messages.
+ *
+ * ---
+ *
+ * ## Reliability Features
+ *
+ * - Prevents double `join` messages via the `joined` flag.
+ * - Automatically cleans up handlers and reconnect timeouts on `disconnect()`.
+ * - Provides a `reconnect()` utility for transient connection drops.
+ * - Drops unsent messages gracefully when disconnected (with warnings).
+ *
+ */
+
 import { InviteMessage, AckMessage } from './signaling';
 
 export type SignalHandler = (msg: any) => void;
@@ -51,7 +146,7 @@ export class SignalingClient {
       this.ws.onmessage = (event) => {
         try {
           const msg = JSON.parse(event.data);
-          console.log(msg);
+          // console.log(msg);
           this.dispatch(msg.type, msg);
         } catch (e) {
           console.error('Invalid signaling message', event.data);
