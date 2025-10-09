@@ -20,6 +20,7 @@ import { createECDHkey } from '@chat/crypto';
 import { useDB } from '@/hooks/useDB';
 import { findRoomIdByPeer } from '@/lib/utils';
 import { usePathname } from 'next/navigation';
+import { createConnection, setOnMessage } from '@/lib/peerStore';
 
 interface SidebarProps {
   children: ReactNode;
@@ -41,45 +42,62 @@ export default function Sidebar({ children }: SidebarProps) {
       [friends]
   );
 
-  usePeerConnections(onlineFriends, async (peerId: string, encrMsg: string) => {
-    if (!encrMsg) return;
-    if (!key) return;
+  useEffect(() => {
+    if (!client?.ws || !user) return;
 
-    let parsed: any;
-    try {
-      parsed = JSON.parse(encrMsg);
-    } catch {
-      return;
-    }
+    onlineFriends.forEach(friend => {
+      if(!client.ws) return;
+      createConnection(friend, client.ws, user.userId);
 
-    const userECDH = createECDHkey();
-    if(!user?.private) return;
-    userECDH.setPrivateKey(Buffer.from(user.private, 'hex'));
+      // Attach or update message handler
+      setOnMessage(friend.id, async (encrMsg: string) => {
+        if (!encrMsg || !key) return;
 
-    const msg = returnDecryptedMessage(userECDH, parsed);
-    
-    const rooms = (await getAllDecr("rooms", key)) as RoomType[];
+        let parsed: any;
+        try {
+          parsed = JSON.parse(encrMsg);
+        } catch {
+          return;
+        }
 
-    const roomId = findRoomIdByPeer(rooms, peerId);
-    const peerUsername = friends.find((f) => f.id == peerId)?.username;
+        const userECDH = createECDHkey();
+        if (!user?.private) return;
+        userECDH.setPrivateKey(Buffer.from(user.private, 'hex'));
 
-    putEncr(
-      'messages',
-      {
-        roomId,
-        senderId: peerId,
-        message: msg,
-        timestamp: Date.now(),
-        sent: true,
-        read: false
-      } as MessageType,
-      key,
-    ); 
+        const msg = returnDecryptedMessage(userECDH, parsed);
+        const rooms = (await getAllDecr('rooms', key)) as RoomType[];
+        const roomId = findRoomIdByPeer(rooms, friend.id);
+        const peerUsername = friends.find(f => f.id === friend.id)?.username;
 
-    if (pathname !== "/chat" || activeRoomId !== roomId) {
-      sendNotification(`New Message from ${peerUsername ?? "Anonymous"}`, msg);
-    }
-  });
+        await putEncr(
+          'messages',
+          {
+            roomId,
+            senderId: friend.id,
+            message: msg,
+            timestamp: Date.now(),
+            sent: true,
+            read: false,
+          } as MessageType,
+          key,
+        );
+
+        // Show notification only if not in the active chat
+        if (pathname !== '/chat' || activeRoomId !== roomId) {
+          sendNotification(`New Message from ${peerUsername ?? 'Anonymous'}`, msg);
+        }
+      });
+    });
+  }, [
+    client?.ws,
+    user?.userId,
+    user?.private,
+    onlineFriends,
+    key,
+    friends,
+    activeRoomId,
+    pathname,
+  ]);
 
   // Track overall connection status
   useEffect(() => {

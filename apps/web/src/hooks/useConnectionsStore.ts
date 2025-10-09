@@ -1,3 +1,6 @@
+// IMPORTANT: THIS SHOULD NOT BE USED
+// This hook works but the lib/peerStore.ts file should be used instead
+
 import { useEffect } from 'react';
 import { WebRTCConnection } from '@chat/sockets/webrtc';
 import { PeerInfo } from '@chat/sockets';

@@ -1,7 +1,7 @@
 'use client';
 
 import { Chat, Message } from '@/components/local/Chat';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useDB } from '@/hooks/useDB';
 import Loading from '@/components/local/Loading';
 import { useAuth } from '@/hooks/useAuth';
@@ -9,9 +9,14 @@ import { useSearchParams } from 'next/navigation';
 import { useRooms } from '@/hooks/useRooms';
 import EmptyState from '@/components/local/EmptyState';
 import { MessageType } from '@chat/core';
-import { prepareSendMessagePackage } from '@/lib/messaging';
-import { PeerInfo } from '@chat/sockets';
-import { usePeerConnections } from '@/hooks/useConnectionsStore';
+import { prepareSendMessagePackage, returnDecryptedMessage } from '@/lib/messaging';
+import {
+  createConnection,
+  getConnection,
+  setOnMessage,
+} from '@/lib/peerStore';
+import useClient from '@/hooks/useClient';
+import { createECDHkey } from '@chat/crypto';
 
 let currentMsgId = 0;
 
@@ -21,6 +26,7 @@ export default function P2PChatPage() {
 
   const { db, getAllDecr, putEncr } = useDB();
   const { user, key } = useAuth();
+  const { client } = useClient();
   const searchParams = useSearchParams();
   const { rooms } = useRooms();
 
@@ -56,38 +62,80 @@ export default function P2PChatPage() {
     })();
   }, [db, roomId, key, user?.userId, getAllDecr]);
 
-  const connections = usePeerConnections(
-    otherUser
-      ? [
-          {
-            id: otherUser.userId,
-            username: otherUser.username,
-            pubkey: '', // not needed here
-          } as PeerInfo,
-        ]
-      : []
-  );
+  // Ensure connection exists (created in Sidebar or here)
+  useEffect(() => {
+    if (!client?.ws || !user || !otherUser) return;
 
+    createConnection(
+      { id: otherUser.userId, username: otherUser.username, pubkey: '' },
+      client.ws,
+      user.userId
+    );
+  }, [client?.ws, user, otherUser]);
+
+  // Get existing connection
   const connection = useMemo(
-    () => (otherUser ? connections[otherUser.userId] : undefined),
-    [connections, otherUser]
+    () => (otherUser ? getConnection(otherUser.userId) : undefined),
+    [otherUser]
   );
 
-  // Track connection state
+  // Listen for incoming messages
+  useEffect(() => {
+    if (!connection || !user || !otherUser || !roomId || !key) return;
+
+    setOnMessage(otherUser.userId, async (encrMsg: string) => {
+      if (!encrMsg) return;
+
+      let parsed: any;
+      try {
+        parsed = JSON.parse(encrMsg);
+      } catch {
+        console.warn('Invalid message JSON');
+        return;
+      }
+
+      // Decrypt message
+      const userECDH = createECDHkey();
+      if (!user?.private) return;
+      userECDH.setPrivateKey(Buffer.from(user.private, 'hex'));
+      const msg = returnDecryptedMessage(userECDH, parsed);
+
+      // Update local state
+      setMessages((prev) => [
+        ...prev,
+        { id: ++currentMsgId, text: msg, sender: 'other' },
+      ]);
+
+      // Save locally
+      try {
+        await putEncr(
+          'messages',
+          {
+            roomId,
+            senderId: otherUser.userId,
+            message: msg,
+            timestamp: Date.now(),
+            sent: true,
+          } as MessageType,
+          key
+        );
+      } catch (err) {
+        console.error('Failed to store incoming message', err);
+      }
+    });
+  }, [connection, user, otherUser, roomId, key, putEncr]);
+
+  // Track connection status
   useEffect(() => {
     if (!connection) {
       setConnected(false);
       return;
     }
-
-    const interval = setInterval(() => {
-      setConnected(connection.isConnected());
-    }, 500);
-
+    const interval = setInterval(() => setConnected(connection.isConnected()), 500);
     return () => clearInterval(interval);
   }, [connection]);
 
-  // Send a new message
+  // Send message
   const sendMessage = useCallback(
     async (message: string) => {
       if (!connection || !user?.userId || !otherUser || !roomId || !key) return;
@@ -101,7 +149,6 @@ export default function P2PChatPage() {
       const canSendImmediately = connection.isConnected();
       connection.send(text);
 
-      // Store locally
       try {
         await putEncr(
           'messages',
