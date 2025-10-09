@@ -9,7 +9,7 @@ import { useSearchParams } from 'next/navigation';
 import { useRooms } from '@/hooks/useRooms';
 import EmptyState from '@/components/local/EmptyState';
 import { MessageType } from '@chat/core';
-import { createPeerConnection, WebRTCConnection } from '@chat/sockets/webrtc';
+import { WebRTCConnection } from '@chat/sockets/webrtc';
 import useClient from '@/hooks/useClient';
 import { prepareSendMessagePackage, returnDecryptedMessage } from '@/lib/messaging';
 import { createECDHkey } from '@chat/crypto';
@@ -80,22 +80,43 @@ export default function P2PChatPage() {
     if (client.ws) setWs(client.ws);
   }, [client, status]);
 
-  // Track connection state
+  // ✅ Track connection state safely and efficiently
   useEffect(() => {
-    const conn = connectionRef.current;
-    if (!conn || !conn.dataChannel) return;
+    let cleanup: (() => void) | null = null;
 
-    const update = () => setConnected(conn.dataChannel!.readyState === 'open');
-    conn.dataChannel.addEventListener('open', update);
-    conn.dataChannel.addEventListener('close', update);
+    const tryAttach = () => {
+      const conn = connectionRef.current;
+      if (!conn || !conn.dataChannel) return false;
 
-    update();
+      const dc = conn.dataChannel;
+      const update = () => setConnected(dc.readyState === 'open');
+
+      dc.addEventListener('open', update);
+      dc.addEventListener('close', update);
+
+      // initial update
+      update();
+
+      cleanup = () => {
+        dc.removeEventListener('open', update);
+        dc.removeEventListener('close', update);
+      };
+
+      return true;
+    };
+
+    // Try to attach immediately, or retry until channel exists
+    if (!tryAttach()) {
+      const interval = setInterval(() => {
+        if (tryAttach()) clearInterval(interval);
+      }, 200);
+      return () => clearInterval(interval);
+    }
 
     return () => {
-      conn.dataChannel?.removeEventListener('open', update);
-      conn.dataChannel?.removeEventListener('close', update);
+      if (cleanup) cleanup();
     };
-  }, [connectionRef.current?.dataChannel]);
+  }, []); // Runs once; no dependency-based re-creation
 
   // WebRTC connection & message handling
   useEffect(() => {
@@ -111,7 +132,7 @@ export default function P2PChatPage() {
         connectionRef.current?.close();
         connectionRef.current = null;
 
-        const conn = await createPeerConnection({
+        const conn = new WebRTCConnection({
           ws,
           peerId: otherUser.userId,
           myId: user.userId,
@@ -145,7 +166,6 @@ export default function P2PChatPage() {
         });
 
         connectionRef.current = conn;
-
         console.log('WebRTC connection established');
       } catch (err) {
         console.error('WebRTC setup failed, retrying in 3s...', err);
@@ -157,7 +177,7 @@ export default function P2PChatPage() {
 
     return () => {
       mounted = false;
-      if (retryTimer) clearTimeout(retryTimer!);
+      if (retryTimer) clearTimeout(retryTimer);
       connectionRef.current?.close();
       connectionRef.current = null;
     };
@@ -169,7 +189,7 @@ export default function P2PChatPage() {
     setMessages((prev) => [...prev, { id: msgId.current, text, sender }]);
   }, []);
 
-  // Send a message
+  // Send message
   const sendMessage = useCallback(
     async (message: string) => {
       if (!key || !user?.userId || !otherUser) return;
@@ -181,12 +201,10 @@ export default function P2PChatPage() {
 
       const conn = connectionRef.current;
       if (!conn) {
-        // Fire-and-forget connection creation
         (async () => {
           try {
             if (!ws) return;
-
-            const newConn = await createPeerConnection({
+            const newConn = new WebRTCConnection({
               ws,
               peerId: otherUser.userId,
               myId: user.userId,
@@ -199,7 +217,10 @@ export default function P2PChatPage() {
                 }
                 const msg = returnDecryptedMessage(userECDH!, parsed);
                 msgId.current += 1;
-                setMessages((prev) => [...prev, { id: msgId.current, text: msg, sender: 'other' }]);
+                setMessages((prev) => [
+                  ...prev,
+                  { id: msgId.current, text: msg, sender: 'other' },
+                ]);
               },
               onLog: (m) => console.log('[WebRTC]', m),
             });
@@ -228,7 +249,7 @@ export default function P2PChatPage() {
         console.error('Failed to store message locally', err);
       }
     },
-    [key, roomId, user?.userId, otherUser, putEncr, ws, userECDH, amOfferer],
+    [key, roomId, user?.userId, otherUser, putEncr, ws, userECDH, amOfferer, logMessage],
   );
 
   if (!db || !rooms || !user) return <Loading />;

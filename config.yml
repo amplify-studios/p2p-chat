@@ -13,4 +13,4 @@ turnServers:
     credential: "RKe9IythqFqvi0"
 
 signaling:
-  url: "wss://p2p-signaling-55197d11d9bf.herokuapp.com/"
+  url: "ws://localhost:8080"
