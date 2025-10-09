@@ -11,6 +11,7 @@ import { useInvites } from '@/hooks/useInvites';
 import { useAuth } from '@/hooks/useAuth';
 import { useAcks } from '@/hooks/useAcks';
 import { getNotificationPermission } from '@chat/notifications';
+import { CLIENT_CONFIG } from '@chat/core';
 
 interface SidebarProps {
   children: ReactNode;
@@ -46,7 +47,7 @@ export default function Sidebar({ children }: SidebarProps) {
         {/* Logo / App Title */}
         <div className="p-6 text-2xl font-bold border-b border-secondary">
           <Link className="text-primary" href="/">
-            P2P Chat
+            {CLIENT_CONFIG.appName}
           </Link>
         </div>
 

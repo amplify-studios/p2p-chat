@@ -140,6 +140,14 @@ export class WebRTCConnection {
     this.initiateOffer(); // Every peer tries to initiate, but only one wins
   }
 
+  /** ---------------- Getters ---------------- */
+
+  public getDataChannel = () => { return this.dataChannel; }
+
+  public isConnected(): boolean {
+    return this.dataChannel?.readyState === 'open';
+  }
+
   /** ---------------- Core setup ---------------- */
 
   private log = (msg: string) => { try { this.onLog?.(msg); } catch { } };
