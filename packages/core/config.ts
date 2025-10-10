@@ -15,7 +15,7 @@ export const CLIENT_CONFIG = {
     }
   ],
   "signalingUrls": [
-    "ws://signaling.kdesp73.org",
+    "wss://signaling.kdesp73.org",
     "wss://p2p-signaling-55197d11d9bf.herokuapp.com"
   ]
 };

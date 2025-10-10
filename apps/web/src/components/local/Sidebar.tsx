@@ -20,6 +20,7 @@ import { useDB } from '@/hooks/useDB';
 import { findRoomIdByPeer } from '@/lib/utils';
 import { usePathname } from 'next/navigation';
 import { createConnection, setOnMessage } from '@/lib/peerStore';
+import { useBlocks } from '@/hooks/useBlocks';
 
 interface SidebarProps {
   children: ReactNode;
@@ -30,6 +31,7 @@ export default function Sidebar({ children }: SidebarProps) {
   const { client, status } = useClient();
   const { rooms, activeRoomId } = useRooms();
   const { friends } = usePeers();
+  const { blocks } = useBlocks();
   useInvites();
   useAcks({ client });
   const { putEncr, getAllDecr } = useDB();
@@ -42,10 +44,12 @@ export default function Sidebar({ children }: SidebarProps) {
   );
 
   useEffect(() => {
-    if (!client?.ws || !user) return;
+    if (!client?.ws || !user || !blocks) return;
 
     onlineFriends.forEach(friend => {
       if(!client.ws) return;
+      const isBlocked = blocks.find(b => b.userId === friend.id);
+      if(isBlocked) return;
       createConnection(friend, client.ws, user.userId,
         async (encrMsg) => {
           if (!encrMsg || !key) return;
