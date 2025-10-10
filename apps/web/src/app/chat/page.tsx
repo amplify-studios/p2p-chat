@@ -62,18 +62,6 @@ export default function P2PChatPage() {
     })();
   }, [db, roomId, key, user?.userId, getAllDecr]);
 
-  // Ensure connection exists (created in Sidebar or here)
-  useEffect(() => {
-    if (!client?.ws || !user || !otherUser) return;
-
-    createConnection(
-      { id: otherUser.userId, username: otherUser.username, pubkey: '' },
-      client.ws,
-      user.userId,
-      undefined,
-      (log) => console.log(`[WebRTC ${otherUser.username}] ${log}`)
-    );
-  }, [client?.ws, user, otherUser]);
 
   // Get existing connection
   const connection = useMemo(
