@@ -137,7 +137,7 @@ export default function Servers() {
                   checked={selectedServer === server}
                   onChange={() => selectServer(server)}
                 />
-                {server}
+                {server} {server == CLIENT_CONFIG.signalingUrls[0] && (<span>(Recommended)</span>)}
               </label>
             ))}
           </div>
