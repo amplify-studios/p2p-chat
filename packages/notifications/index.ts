@@ -62,6 +62,11 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
     }
 }
 
+export function hasNotifictationPermission(): boolean {
+    if (!("Notification" in window)) return false;
+    return Notification.permission === "granted";
+}
+
 export async function requestNotificationPermission(): Promise<boolean> {
     if (!("Notification" in window)) return false;
     if (Notification.permission === "granted") return true;

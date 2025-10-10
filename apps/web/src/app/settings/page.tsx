@@ -10,10 +10,10 @@ import { useRouter } from 'next/navigation';
 import { refreshRooms } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/local/ToastContext';
-import { Archive, LogOut, QrCode, Server, ShieldBan, TestTube, Trash } from 'lucide-react';
+import { Archive, LogOut, QrCode, Server, ShieldBan, TestTube, Trash, Bell } from 'lucide-react';
 import { useConfirm } from '@/components/local/ConfirmContext';
 import useClient from '@/hooks/useClient';
-import { sendLocalNotification } from '@chat/notifications';
+import { hasNotifictationPermission, requestNotificationPermission, sendLocalNotification } from '@chat/notifications';
 
 function SettingsRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -138,6 +138,18 @@ export default function SettingsPage() {
           <QrCode className="mr-1 h-4 w-4" /> QR Scanner
         </Button>
       </div>
+
+      {!hasNotifictationPermission() && 
+      <Button
+        className="w-full"
+        variant="outline"
+        onClick={() => {
+          requestNotificationPermission();
+        }}
+      >
+        <Bell className="mr-1 h-4 w-4" /> Grant Notifications Permissions
+      </Button>
+      }
 
       <Button
         className="w-full"
