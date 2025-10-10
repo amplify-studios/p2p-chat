@@ -9,10 +9,13 @@ export const CLIENT_CONFIG = {
   },
   "turnServers": [
     {
-      "urls": "turn:192.168.1.25:3478",
+      "urls": "turn:turn.kdesp73.org",
       "username": "p2pclient",
-      "credential": "$5$df1816c39b84bd66$7223d319f3a30cb3660abcadc079b425ea62512bacd90591ed20bfaaa32445a2"
+      "credential": "$5$e91c1c5cdd015723$7b675df9a28828c157a8ef69677cea440f7792f71c15ce73c1ec6100372a64c8"
     }
   ],
-  "signalingUrl": "ws://192.168.1.25:8080"
+  "signalingUrls": [
+    "ws://signaling.kdesp73.org",
+    "wss://p2p-signaling-55197d11d9bf.herokuapp.com"
+  ]
 };

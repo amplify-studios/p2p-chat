@@ -124,7 +124,7 @@ export default function Login() {
       const client = new SignalingClient(id, username, user.public);
       initSignalingClient(client);
       try {
-        await client.connect(CLIENT_CONFIG.signalingUrl);
+        await client.connect(CLIENT_CONFIG.signalingUrls[0]);
       } catch (err: unknown) {
         console.error(err);
         setError(err instanceof Error ? err.message : JSON.stringify(err));

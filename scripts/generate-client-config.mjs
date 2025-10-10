@@ -10,7 +10,7 @@ const clientConfig = {
   appName: config.appName,
   stunServers: config.stunServers,
   turnServers: config.turnServers,
-  signalingUrl: config.signaling.url,
+  signalingUrls: config.signaling.urls,
 };
 
 fs.writeFileSync('./packages/core/config.ts', `export const CLIENT_CONFIG = ${JSON.stringify(clientConfig, null, 2)};`);
