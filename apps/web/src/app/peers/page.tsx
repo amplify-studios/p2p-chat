@@ -13,6 +13,7 @@ import { CredentialsType } from '@chat/core';
 import { useDB } from '@/hooks/useDB';
 import useClient from '@/hooks/useClient';
 import Loading from '@/components/local/Loading';
+import { PeerInfo } from '@chat/sockets';
 
 export default function Peers() {
   const { user } = useAuth();
@@ -20,6 +21,7 @@ export default function Peers() {
   const { showToast } = useToast();
   const { block } = useBlocks();
   const { db } = useDB();
+  const { blocks } = useBlocks();
 
   if (loading) {
     return (
@@ -27,6 +29,15 @@ export default function Peers() {
         <p className="text-gray-500">Loading peers...</p>
       </div>
     );
+  }
+
+  const checkIfPeerIsBlocked = (peerId: string) => {
+    const alreadyBlocked = blocks.find((b) => b.userId === peerId);
+    if (alreadyBlocked) {
+      showToast(`This user is in your block list. Unblock first and then try again.`, 'warning');
+      return;
+    }
+    window.location.href = `/new?userId=${peerId}`
   }
 
   return (
@@ -53,7 +64,7 @@ export default function Peers() {
                     className={`mb-2 flex justify-between items-center p-3 bg-card rounded shadow transition ${
                       isMe ? 'border-2 border-primary' : 'hover:bg-secondary'
                     }`}
-                    onClick={() => (window.location.href = `/new?userId=${p.id}`)}
+                    onClick={async () => checkIfPeerIsBlocked(p.id)}
                   >
                     <div>
                       <p className="font-medium">
