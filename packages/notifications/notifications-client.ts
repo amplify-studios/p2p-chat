@@ -31,3 +31,12 @@ function urlBase64ToUint8Array(base64: string) {
         outputArray[i] = rawData.charCodeAt(i);
     return outputArray;
 }
+
+
+export async function subscribeToPush(vapidKey: string) {
+    const registration = await navigator.serviceWorker.register("/sw.js");
+    return registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(vapidKey),
+    });
+}

@@ -23,7 +23,7 @@ import { createConnection, setOnMessage } from '@/lib/peerStore';
 import { useBlocks } from '@/hooks/useBlocks';
 import NotificationInit from './Notifications';
 // import { NotificationsClient } from '@chat/notifications/notifications-client';
-import { requestNotificationPermission, sendLocalNotification } from '@chat/notifications';
+import { registerServiceWorker, requestNotificationPermission, sendLocalNotification } from '@chat/notifications';
 
 interface SidebarProps {
   children: ReactNode;
@@ -69,6 +69,7 @@ export default function Sidebar({ children }: SidebarProps) {
   // }, []);
 
   useEffect(() => {
+    registerServiceWorker();
     async () => {
     const granted = await requestNotificationPermission();
     if (!granted) return;
