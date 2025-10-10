@@ -175,7 +175,7 @@ export default function P2PChatPage() {
   if (!room) return <EmptyState msg="Room not found" />;
 
   return (
-    <div className="flex flex-col h-full min-h-screen">
+    <div className="flex flex-col">
       <Chat
         title={room.name}
         messages={messages}

@@ -14,5 +14,6 @@ turnServers:
 
 signaling:
   # url: "ws://localhost:8080"
-  url: "ws://192.168.1.25:8080"
+  # url: "ws://192.168.1.25:8080"
+  url: "ws://signaling.kdesp73.org"
   # url: "wss://p2p-signaling-55197d11d9bf.herokuapp.com"
