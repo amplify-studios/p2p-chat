@@ -38,6 +38,10 @@ export function setOnMessage(peerId: string, callback: (msg: string) => void) {
   connectionsRef[peerId]?.setOnMessage(callback);
 }
 
+export function setOnLog(peerId: string, callback: (msg: string) => void) {
+  connectionsRef[peerId]?.setOnLog(callback);
+}
+
 export function sendMessage(peerId: string, msg: string) {
   const conn = connectionsRef[peerId];
   if (conn) conn.send(msg);

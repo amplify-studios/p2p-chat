@@ -13,6 +13,7 @@ import { prepareSendMessagePackage, returnDecryptedMessage } from '@/lib/messagi
 import {
   createConnection,
   getConnection,
+  setOnLog,
   setOnMessage,
 } from '@/lib/peerStore';
 import useClient from '@/hooks/useClient';

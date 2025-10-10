@@ -1,5 +1,13 @@
 {
   "name": "@chat/notifications",
   "version": "0.1.0",
-  "main": "index.ts"
+  "main": "index.ts",
+  "devDependencies": {
+    "@types/web-push": "^3.6.4"
+  },
+  "exports": {
+    ".": "./index.ts",
+    "./notifications-client": "./notifications-client.ts",
+    "./notifications-server": "./notifications-server.ts"
+  }
 }

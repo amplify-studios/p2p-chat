@@ -10,7 +10,6 @@ import useClient from '@/hooks/useClient';
 import { useInvites } from '@/hooks/useInvites';
 import { useAuth } from '@/hooks/useAuth';
 import { useAcks } from '@/hooks/useAcks';
-import { getNotificationPermission, sendNotification } from '@chat/notifications';
 import { CLIENT_CONFIG, MessageType, RoomType } from '@chat/core';
 import { usePeers } from '@/hooks/usePeers';
 import { PeerInfo } from '@chat/sockets';
@@ -82,7 +81,12 @@ export default function Sidebar({ children }: SidebarProps) {
 
           // Show notification only if not in the active chat
           if (pathname !== '/chat' || activeRoomId !== roomId) {
-            sendNotification(`New Message from ${peerUsername ?? 'Anonymous'}`, msg);
+            fetch("/api/notify", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ title: `${peerUsername ?? 'Anonymous'}`, body: msg }),
+            });
+
           }
         },
         (log) => {
@@ -104,14 +108,6 @@ export default function Sidebar({ children }: SidebarProps) {
   useEffect(() => {
     setConnected(status === 'connected');
   }, [status]);
-
-  // Ask for notification permission
-  useEffect(() => {
-    (async () => {
-      const permission = await getNotificationPermission();
-      console.log('Notification permission:', permission);
-    })();
-  }, []);
 
   if (!rooms) return <Loading />;
 
