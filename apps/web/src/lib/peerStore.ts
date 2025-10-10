@@ -28,6 +28,8 @@ export function createConnection(
     });
   } else if (onMessage) {
     connectionsRef[peer.id].setOnMessage(onMessage);
+  } else if (onLog) {
+    connectionsRef[peer.id].setOnLog(onLog);
   }
   return connectionsRef[peer.id];
 }

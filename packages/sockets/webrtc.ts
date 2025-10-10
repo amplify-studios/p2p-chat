@@ -149,6 +149,7 @@ export class WebRTCConnection {
   }
 
   public setOnMessage(handler?: (msg: string) => void) { this.onMessage = handler }
+  public setOnLog(handler?: (msg: string) => void) { this.onLog= handler }
 
   /** ---------------- Core setup ---------------- */
 

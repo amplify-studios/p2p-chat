@@ -47,46 +47,47 @@ export default function Sidebar({ children }: SidebarProps) {
 
     onlineFriends.forEach(friend => {
       if(!client.ws) return;
-      createConnection(friend, client.ws, user.userId);
+      createConnection(friend, client.ws, user.userId,
+        async (encrMsg) => {
+          if (!encrMsg || !key) return;
 
-      // Attach or update message handler
-      setOnMessage(friend.id, async (encrMsg: string) => {
-        if (!encrMsg || !key) return;
+          let parsed: any;
+          try {
+            parsed = JSON.parse(encrMsg);
+          } catch {
+            return;
+          }
 
-        let parsed: any;
-        try {
-          parsed = JSON.parse(encrMsg);
-        } catch {
-          return;
-        }
+          const userECDH = createECDHkey();
+          if (!user?.private) return;
+          userECDH.setPrivateKey(Buffer.from(user.private, 'hex'));
 
-        const userECDH = createECDHkey();
-        if (!user?.private) return;
-        userECDH.setPrivateKey(Buffer.from(user.private, 'hex'));
+          const msg = returnDecryptedMessage(userECDH, parsed);
+          const rooms = (await getAllDecr('rooms', key)) as RoomType[];
+          const roomId = findRoomIdByPeer(rooms, friend.id);
+          const peerUsername = friends.find(f => f.id === friend.id)?.username;
 
-        const msg = returnDecryptedMessage(userECDH, parsed);
-        const rooms = (await getAllDecr('rooms', key)) as RoomType[];
-        const roomId = findRoomIdByPeer(rooms, friend.id);
-        const peerUsername = friends.find(f => f.id === friend.id)?.username;
+          await putEncr(
+            'messages',
+            {
+              roomId,
+              senderId: friend.id,
+              message: msg,
+              timestamp: Date.now(),
+              sent: true,
+              read: false,
+            } as MessageType,
+            key,
+          );
 
-        await putEncr(
-          'messages',
-          {
-            roomId,
-            senderId: friend.id,
-            message: msg,
-            timestamp: Date.now(),
-            sent: true,
-            read: false,
-          } as MessageType,
-          key,
-        );
-
-        // Show notification only if not in the active chat
-        if (pathname !== '/chat' || activeRoomId !== roomId) {
-          sendNotification(`New Message from ${peerUsername ?? 'Anonymous'}`, msg);
-        }
-      });
+          // Show notification only if not in the active chat
+          if (pathname !== '/chat' || activeRoomId !== roomId) {
+            sendNotification(`New Message from ${peerUsername ?? 'Anonymous'}`, msg);
+          }
+        },
+        (log) => {
+          console.log(`[WebRTC ${friend.username}] ${log}`);
+        });
     });
   }, [
     client?.ws,

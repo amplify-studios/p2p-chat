@@ -69,7 +69,9 @@ export default function P2PChatPage() {
     createConnection(
       { id: otherUser.userId, username: otherUser.username, pubkey: '' },
       client.ws,
-      user.userId
+      user.userId,
+      undefined,
+      (log) => console.log(`[WebRTC ${otherUser.username}] ${log}`)
     );
   }, [client?.ws, user, otherUser]);
 

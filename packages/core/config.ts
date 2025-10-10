@@ -14,5 +14,5 @@ export const CLIENT_CONFIG = {
       "credential": "$5$df1816c39b84bd66$7223d319f3a30cb3660abcadc079b425ea62512bacd90591ed20bfaaa32445a2"
     }
   ],
-  "signalingUrl": "wss://p2p-signaling-55197d11d9bf.herokuapp.com"
+  "signalingUrl": "ws://192.168.1.25:8080"
 };
