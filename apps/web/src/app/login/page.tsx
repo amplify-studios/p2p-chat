@@ -162,7 +162,7 @@ export default function Login() {
 
       const client = new SignalingClient(decrUser.userId, decrUser.username, decrUser.public);
       initSignalingClient(client);
-      await client.connect(CLIENT_CONFIG.signalingUrl);
+      await client.connect(CLIENT_CONFIG.signalingUrls[0]);
     }
 
     try {
