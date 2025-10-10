@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "cd ../.. && ./scripts/generate-client-config.mjs && cd apps/web && next dev --turbopack",
-    "build": "cd ../.. && ./scripts/generate-client-config.mjs && cd apps/web && next build --turbopack",
+    "dev": "next dev --turbopack",
+    "build": "next build --turbopack",
     "start": "next start",
     "lint": "eslint"
   },
@@ -13,6 +13,8 @@
     "@chat/crypto": "*",
     "@chat/notifications": "*",
     "@chat/sockets": "*",
+    "@emoji-mart/data": "^1.2.1",
+    "@emoji-mart/react": "^1.1.1",
     "@radix-ui/react-label": "^2.1.7",
     "@radix-ui/react-popover": "^1.1.15",
     "@radix-ui/react-radio-group": "^1.3.8",
@@ -20,9 +22,11 @@
     "@radix-ui/react-switch": "^1.2.6",
     "@radix-ui/react-tabs": "^1.1.13",
     "@welldone-software/why-did-you-render": "^10.0.1",
+    "argon2-browser": "^1.18.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cookies-next": "^6.1.0",
+    "emoji-mart": "^5.6.0",
     "framer-motion": "^12.23.22",
     "futoin-hkdf": "^1.5.3",
     "html5-qrcode": "^2.3.8",
@@ -32,12 +36,9 @@
     "next": "^15.5.2",
     "next-themes": "^0.4.6",
     "qrcode.react": "^4.2.0",
-    "react": "19.1.0",
-    "react-dom": "19.1.0",
-    "tailwind-merge": "^3.3.1",
-    "@emoji-mart/data": "^1.2.1",
-    "@emoji-mart/react": "^1.1.1",
-    "emoji-mart": "^5.6.0"
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "tailwind-merge": "^3.3.1"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

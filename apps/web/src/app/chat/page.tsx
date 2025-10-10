@@ -1,7 +1,7 @@
 'use client';
 
 import { Chat, Message } from '@/components/local/Chat';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useDB } from '@/hooks/useDB';
 import Loading from '@/components/local/Loading';
 import { useAuth } from '@/hooks/useAuth';
@@ -9,45 +9,35 @@ import { useSearchParams } from 'next/navigation';
 import { useRooms } from '@/hooks/useRooms';
 import EmptyState from '@/components/local/EmptyState';
 import { MessageType } from '@chat/core';
-import { createPeerConnection, WebRTCConnection } from '@chat/sockets/webrtc';
-import useClient from '@/hooks/useClient';
 import { prepareSendMessagePackage, returnDecryptedMessage } from '@/lib/messaging';
+import {
+  createConnection,
+  getConnection,
+  setOnMessage,
+} from '@/lib/peerStore';
+import useClient from '@/hooks/useClient';
 import { createECDHkey } from '@chat/crypto';
 
-export default function P2PChatPage() {
-  const connectionRef = useRef<WebRTCConnection | null>(null);
-  const msgId = useRef(0);
+let currentMsgId = 0;
 
-  const [ws, setWs] = useState<WebSocket | null>(null);
+export default function P2PChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [connected, setConnected] = useState(false);
 
   const { db, getAllDecr, putEncr } = useDB();
   const { user, key } = useAuth();
+  const { client } = useClient();
   const searchParams = useSearchParams();
   const { rooms } = useRooms();
-  const { client, status } = useClient();
 
   const roomId = useMemo(() => searchParams?.get('id') ?? null, [searchParams]);
   const room = useMemo(() => rooms?.find((r) => r.roomId === roomId) ?? null, [rooms, roomId]);
   const otherUser = useMemo(
     () => room?.keys.find((k) => k.userId !== user?.userId) ?? null,
-    [room, user?.userId],
+    [room, user?.userId]
   );
 
-  const amOfferer = useMemo(() => {
-    if (!user?.userId || !otherUser?.userId) return false;
-    return user.userId < otherUser.userId;
-  }, [user?.userId, otherUser?.userId]);
-
-  const userECDH = useMemo(() => {
-    if (!user?.private) return null;
-    const e = createECDHkey();
-    e.setPrivateKey(Buffer.from(user.private, 'hex'));
-    return e;
-  }, [user?.private]);
-
-  // Load local messages
+  // Load local messages for this room
   useEffect(() => {
     if (!db || !roomId || !key || !user?.userId) return;
 
@@ -58,15 +48,13 @@ export default function P2PChatPage() {
           .filter((m) => m.roomId === roomId)
           .sort((a, b) => a.timestamp - b.timestamp)
           .map(
-            (m, idx) =>
+            (m) =>
               ({
-                id: idx + 1,
+                id: ++currentMsgId,
                 text: m.message,
                 sender: m.senderId === user.userId ? 'me' : 'other',
-              } as Message),
+              } as Message)
           );
-
-        msgId.current = roomMessages.length;
         setMessages(roomMessages);
       } catch (err) {
         console.error('Failed to load messages', err);
@@ -74,144 +62,92 @@ export default function P2PChatPage() {
     })();
   }, [db, roomId, key, user?.userId, getAllDecr]);
 
-  // Connect to signaling server
+  // Ensure connection exists (created in Sidebar or here)
   useEffect(() => {
-    if (!client || status !== 'connected') return;
-    if (client.ws) setWs(client.ws);
-  }, [client, status]);
+    if (!client?.ws || !user || !otherUser) return;
 
-  // Track connection state
+    createConnection(
+      { id: otherUser.userId, username: otherUser.username, pubkey: '' },
+      client.ws,
+      user.userId
+    );
+  }, [client?.ws, user, otherUser]);
+
+  // Get existing connection
+  const connection = useMemo(
+    () => (otherUser ? getConnection(otherUser.userId) : undefined),
+    [otherUser]
+  );
+
+  // Listen for incoming messages
   useEffect(() => {
-    const conn = connectionRef.current;
-    if (!conn || !conn.dataChannel) return;
+    if (!connection || !user || !otherUser || !roomId || !key) return;
 
-    const update = () => setConnected(conn.dataChannel!.readyState === 'open');
-    conn.dataChannel.addEventListener('open', update);
-    conn.dataChannel.addEventListener('close', update);
+    setOnMessage(otherUser.userId, async (encrMsg: string) => {
+      if (!encrMsg) return;
 
-    update();
-
-    return () => {
-      conn.dataChannel?.removeEventListener('open', update);
-      conn.dataChannel?.removeEventListener('close', update);
-    };
-  }, [connectionRef.current?.dataChannel]);
-
-  // WebRTC connection & message handling
-  useEffect(() => {
-    if (!ws || !otherUser?.userId || !user?.userId || !userECDH) return;
-
-    let mounted = true;
-    let retryTimer: ReturnType<typeof setTimeout> | null = null;
-
-    const setupConnection = async () => {
-      if (!mounted) return;
-
+      let parsed: any;
       try {
-        connectionRef.current?.close();
-        connectionRef.current = null;
-
-        const conn = await createPeerConnection({
-          ws,
-          peerId: otherUser.userId,
-          myId: user.userId,
-          onMessage: async (encrMsg) => {
-            if (!mounted || !encrMsg) return;
-
-            let parsed: any;
-            try {
-              parsed = JSON.parse(encrMsg);
-            } catch {
-              return;
-            }
-
-            const msg = returnDecryptedMessage(userECDH, parsed);
-            msgId.current += 1;
-            setMessages((prev) => [...prev, { id: msgId.current, text: msg, sender: 'other' }]);
-
-            if (!key) return;
-            putEncr(
-              'messages',
-              {
-                roomId,
-                senderId: otherUser.userId,
-                message: msg,
-                timestamp: Date.now(),
-              } as MessageType,
-              key,
-            );
-          },
-          onLog: (m) => console.log('[WebRTC]', m),
-        });
-
-        connectionRef.current = conn;
-
-        console.log('WebRTC connection established');
-      } catch (err) {
-        console.error('WebRTC setup failed, retrying in 3s...', err);
-        retryTimer = setTimeout(setupConnection, 3000);
+        parsed = JSON.parse(encrMsg);
+      } catch {
+        console.warn('Invalid message JSON');
+        return;
       }
-    };
 
-    setupConnection();
+      // Decrypt message
+      const userECDH = createECDHkey();
+      if (!user?.private) return;
+      userECDH.setPrivateKey(Buffer.from(user.private, 'hex'));
+      const msg = returnDecryptedMessage(userECDH, parsed);
 
-    return () => {
-      mounted = false;
-      if (retryTimer) clearTimeout(retryTimer!);
-      connectionRef.current?.close();
-      connectionRef.current = null;
-    };
-  }, [ws, user?.userId, otherUser?.userId, key, roomId, amOfferer]);
+      // Update local state
+      setMessages((prev) => [
+        ...prev,
+        { id: ++currentMsgId, text: msg, sender: 'other' },
+      ]);
 
-  // Local message logger
-  const logMessage = useCallback((text: string, sender: 'me' | 'other') => {
-    msgId.current += 1;
-    setMessages((prev) => [...prev, { id: msgId.current, text, sender }]);
-  }, []);
+      // Save locally
+      try {
+        await putEncr(
+          'messages',
+          {
+            roomId,
+            senderId: otherUser.userId,
+            message: msg,
+            timestamp: Date.now(),
+            sent: true,
+          } as MessageType,
+          key
+        );
+      } catch (err) {
+        console.error('Failed to store incoming message', err);
+      }
+    });
+  }, [connection, user, otherUser, roomId, key, putEncr]);
 
-  // Send a message
+  // Track connection status
+  useEffect(() => {
+    if (!connection) {
+      setConnected(false);
+      return;
+    }
+    const interval = setInterval(() => setConnected(connection.isConnected()), 500);
+    return () => clearInterval(interval);
+  }, [connection]);
+
+  // Send message
   const sendMessage = useCallback(
     async (message: string) => {
-      if (!key || !user?.userId || !otherUser) return;
+      if (!connection || !user?.userId || !otherUser || !roomId || !key) return;
 
-      logMessage(message, 'me');
+      // Optimistic local update
+      setMessages((prev) => [...prev, { id: ++currentMsgId, text: message, sender: 'me' }]);
 
       const encrText = prepareSendMessagePackage(otherUser.public, message);
       const text = JSON.stringify(encrText);
 
-      const conn = connectionRef.current;
-      if (!conn) {
-        // Fire-and-forget connection creation
-        (async () => {
-          try {
-            if (!ws) return;
-
-            const newConn = await createPeerConnection({
-              ws,
-              peerId: otherUser.userId,
-              myId: user.userId,
-              onMessage: async (encrMsg) => {
-                let parsed: any;
-                try {
-                  parsed = JSON.parse(encrMsg);
-                } catch {
-                  return;
-                }
-                const msg = returnDecryptedMessage(userECDH!, parsed);
-                msgId.current += 1;
-                setMessages((prev) => [...prev, { id: msgId.current, text: msg, sender: 'other' }]);
-              },
-              onLog: (m) => console.log('[WebRTC]', m),
-            });
-            connectionRef.current = newConn;
-            newConn.send(text);
-          } catch (err) {
-            console.error('Failed to create connection on demand', err);
-          }
-        })();
-      } else {
-        conn.send(text);
-      }
+      const canSendImmediately = connection.isConnected();
+      connection.send(text);
 
       try {
         await putEncr(
@@ -219,16 +155,17 @@ export default function P2PChatPage() {
           {
             roomId,
             senderId: user.userId,
-            message: message,
+            message,
             timestamp: Date.now(),
+            sent: canSendImmediately,
           } as MessageType,
-          key,
+          key
         );
       } catch (err) {
         console.error('Failed to store message locally', err);
       }
     },
-    [key, roomId, user?.userId, otherUser, putEncr, ws, userECDH, amOfferer],
+    [connection, user?.userId, otherUser, roomId, key, putEncr]
   );
 
   if (!db || !rooms || !user) return <Loading />;

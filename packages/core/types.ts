@@ -3,6 +3,7 @@ export interface MessageType {
   senderId: string; // encrypt
   message: string; // encrypt
   read: boolean;
+  sent: boolean;
   timestamp: number;
 }
 

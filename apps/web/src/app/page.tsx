@@ -5,7 +5,7 @@ import Loading from '@/components/local/Loading';
 import { useAuth } from '@/hooks/useAuth';
 import { usePeers } from '@/hooks/usePeers';
 import { useDB } from '@/hooks/useDB';
-import { MessageType } from '@chat/core';
+import { CLIENT_CONFIG, MessageType } from '@chat/core';
 import StatusCard from '@/components/local/StatusCard';
 import useClient from '@/hooks/useClient';
 import EmptyState from '@/components/local/EmptyState';
@@ -56,7 +56,7 @@ export default function Home() {
     <div className="p-6 max-w-4xl mx-auto">
       {/* App Name / Logo */}
       <header className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold text-foreground">P2P Chat</h1>
+        <h1 className="text-3xl font-bold text-foreground">{CLIENT_CONFIG.appName}</h1>
         <div className="text-right">
           <p className="font-medium">{user.username || 'Anonymous'}</p>
           <p className="text-sm text-gray-500">{user.userId}</p>

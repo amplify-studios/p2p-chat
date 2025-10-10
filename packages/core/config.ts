@@ -1,0 +1,18 @@
+export const CLIENT_CONFIG = {
+  "appName": "P2P Chat",
+  "stunServers": {
+    "urls": [
+      "stun:stun.l.google.com:19302",
+      "stun:stun.l.google.com:5349",
+      "stun:stun1.l.google.com:3478"
+    ]
+  },
+  "turnServers": [
+    {
+      "urls": "turn:192.168.1.25:3478",
+      "username": "p2pclient",
+      "credential": "$5$df1816c39b84bd66$7223d319f3a30cb3660abcadc079b425ea62512bacd90591ed20bfaaa32445a2"
+    }
+  ],
+  "signalingUrl": "wss://p2p-signaling-55197d11d9bf.herokuapp.com"
+};

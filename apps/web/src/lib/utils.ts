@@ -1,3 +1,4 @@
+import { RoomType } from '@chat/core';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -46,4 +47,13 @@ export function parseBytes(str: string): Uint8Array {
   });
 
   return new Uint8Array(bytes);
+}
+
+export function findRoomIdByPeer(rooms: RoomType[], peerId: string): string | undefined {
+  for (const room of rooms) {
+    if (room.keys.some((k) => k.userId === peerId)) {
+      return room.roomId;
+    }
+  }
+  return undefined;
 }

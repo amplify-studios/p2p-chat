@@ -88,7 +88,10 @@ export default function Peers() {
                   className="mb-2 flex justify-between items-center p-3 bg-card rounded shadow hover:bg-secondary"
                 >
                   <div>
-                    <p className="font-medium">{f.username || 'Anonymous'}</p>
+                    <div className='flex row gap-2'>
+                      <p className="font-medium">{f.username || 'Anonymous'}</p>
+                      {f.online && <span className='text-green-500'>●</span>}
+                    </div>
                     <p className="text-sm text-gray-500">{f.id}</p>
                   </div>
                   <Popover>
