@@ -13,6 +13,7 @@ import { useToast } from '@/components/local/ToastContext';
 import { Archive, LogOut, QrCode, Server, ShieldBan, TestTube, Trash } from 'lucide-react';
 import { useConfirm } from '@/components/local/ConfirmContext';
 import useClient from '@/hooks/useClient';
+import { sendLocalNotification } from '@chat/notifications';
 
 function SettingsRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -154,11 +155,12 @@ export default function SettingsPage() {
         variant="outline"
         onClick={() => {
           try {
-            fetch("/api/notify", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ title: "Test", body: "Hello world" }),
-            });
+            // fetch("/api/notify", {
+            //   method: "POST",
+            //   headers: { "Content-Type": "application/json" },
+            //   body: JSON.stringify({ title: "Test", body: "Hello world" }),
+            // });
+            sendLocalNotification("Test", "Hello world");
           } catch (err: unknown) {
             alert(err instanceof Error ? err.message : JSON.stringify(err));
           }

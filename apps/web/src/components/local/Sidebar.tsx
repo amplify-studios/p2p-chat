@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode, useEffect, useMemo, useRef, useState } from 'react';
+import { ReactNode, use, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Home, MessageSquareDot, Plus, Settings, Users } from 'lucide-react';
 import { useRooms } from '@/hooks/useRooms';
@@ -21,6 +21,9 @@ import { findRoomIdByPeer } from '@/lib/utils';
 import { usePathname } from 'next/navigation';
 import { createConnection, setOnMessage } from '@/lib/peerStore';
 import { useBlocks } from '@/hooks/useBlocks';
+import NotificationInit from './Notifications';
+// import { NotificationsClient } from '@chat/notifications/notifications-client';
+import { requestNotificationPermission, sendLocalNotification } from '@chat/notifications';
 
 interface SidebarProps {
   children: ReactNode;
@@ -40,16 +43,47 @@ export default function Sidebar({ children }: SidebarProps) {
   const [connected, setConnected] = useState(false);
   const onlineFriends = useMemo(
     () => friends.filter(f => f.online).map(f => ({ id: f.id, username: f.username, pubkey: "" } as PeerInfo)),
-      [friends]
+    [friends]
   );
+
+  // useEffect(() => {
+  //   async function init() {
+  //     const granted = await NotificationsClient.requestPermission();
+  //     if (!granted) return;
+
+  //     await NotificationsClient.registerServiceWorker();
+
+  //     const subscription = await NotificationsClient.subscribe(
+  //       process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!
+  //     );
+
+  //     // Send subscription to server
+  //     await fetch("/api/subscribe", {
+  //       method: "POST",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify(subscription),
+  //     });
+  //   }
+
+  //   init();
+  // }, []);
+
+  useEffect(() => {
+    async () => {
+    const granted = await requestNotificationPermission();
+    if (!granted) return;
+
+    sendLocalNotification("Hello!", "This notification appears only on this device");
+  };
+  });
 
   useEffect(() => {
     if (!client?.ws || !user || !blocks) return;
 
     onlineFriends.forEach(friend => {
-      if(!client.ws) return;
+      if (!client.ws) return;
       const isBlocked = blocks.find(b => b.userId === friend.id);
-      if(isBlocked) return;
+      if (isBlocked) return;
       createConnection(friend, client.ws, user.userId,
         async (encrMsg) => {
           if (!encrMsg || !key) return;
@@ -85,11 +119,11 @@ export default function Sidebar({ children }: SidebarProps) {
 
           // Show notification only if not in the active chat
           if (pathname !== '/chat' || activeRoomId !== roomId) {
-            fetch("/api/notify", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ title: `${peerUsername ?? 'Anonymous'}`, body: msg }),
-            });
+            // fetch("/api/notify", {
+            //   method: "POST",
+            //   headers: { "Content-Type": "application/json" },
+            //   body: JSON.stringify({ title: `${peerUsername ?? 'Anonymous'}`, body: msg }),
+            // });
 
           }
         },
@@ -131,9 +165,8 @@ export default function Sidebar({ children }: SidebarProps) {
               <li key={room.roomId}>
                 <Link
                   href={`/chat?id=${room.roomId}`}
-                  className={`flex items-center gap-2 p-2 rounded hover:bg-secondary ${
-                    room.roomId === activeRoomId ? 'bg-secondary font-semibold' : ''
-                  }`}
+                  className={`flex items-center gap-2 p-2 rounded hover:bg-secondary ${room.roomId === activeRoomId ? 'bg-secondary font-semibold' : ''
+                    }`}
                 >
                   {room.type === 'group' ? <Users size={20} /> : null} {room.name}
                 </Link>
@@ -181,9 +214,8 @@ export default function Sidebar({ children }: SidebarProps) {
               <Link
                 key={room.roomId}
                 href={`/chat?id=${room.roomId}`}
-                className={`flex-shrink-0 px-3 py-2 rounded whitespace-nowrap ${
-                  room.roomId === activeRoomId ? 'bg-secondary font-semibold' : 'hover:bg-secondary'
-                }`}
+                className={`flex-shrink-0 px-3 py-2 rounded whitespace-nowrap ${room.roomId === activeRoomId ? 'bg-secondary font-semibold' : 'hover:bg-secondary'
+                  }`}
               >
                 {room.name}
               </Link>

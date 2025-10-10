@@ -3,7 +3,6 @@ import { Roboto_Mono } from 'next/font/google';
 import './globals.css';
 import Layout from '@/components/local/Layout';
 import { ThemeProvider } from '@/components/theme-provider';
-import NotificationInit from '@/components/local/Notifications';
 
 
 const robotoMono = Roboto_Mono({
@@ -30,7 +29,6 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <NotificationInit />
           <Layout>
             {children}
           </Layout>
