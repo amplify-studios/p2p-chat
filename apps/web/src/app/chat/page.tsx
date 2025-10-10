@@ -62,7 +62,6 @@ export default function P2PChatPage() {
     })();
   }, [db, roomId, key, user?.userId, getAllDecr]);
 
-
   // Get existing connection
   const connection = useMemo(
     () => (otherUser ? getConnection(otherUser.userId) : undefined),
