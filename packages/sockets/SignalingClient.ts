@@ -24,7 +24,7 @@
  *    - These identify the client and authenticate it on the signaling server.
  *
  * 2. **Connect**
- *    - `connect(url)` opens a WebSocket connection to the signaling server.
+ *    - `connect()` opens a WebSocket connection to the signaling server.
  *    - On connection open:
  *      - Sends a `"join"` message with `{ id, username, pubkey }`.
  *      - Marks the client as `joined`.
@@ -178,10 +178,10 @@ export class SignalingClient {
   }
 
   /** Force reconnect */
-  async reconnect(url: string) {
+  async reconnect() {
     this.disconnect();
     await new Promise((r) => setTimeout(r, 500));
-    await this.connect(url);
+    await this.connect();
   }
 
   /** Event handlers */

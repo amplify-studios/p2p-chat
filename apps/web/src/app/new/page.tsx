@@ -16,7 +16,6 @@ import { InviteMessage, AckMessage } from '@chat/sockets';
 import { refreshRooms } from '@/lib/utils';
 import { useToast } from '@/components/local/ToastContext';
 import { CircleMinus, ShieldUser, User, UserPlus } from 'lucide-react';
-import EmptyState from '@/components/local/EmptyState';
 import { getSignalingClient } from '@/lib/signalingClient';
 
 export default function NewRoom() {
@@ -191,8 +190,6 @@ export default function NewRoom() {
         await putEncr('rooms', room, key);
 
         try {
-          const client = await getSignalingClient();
-
           console.log('Participants: ', participants);
           const notifyParticipants = participants.map((participant) => {
             const ack = {
