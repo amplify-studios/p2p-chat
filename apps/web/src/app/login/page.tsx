@@ -17,9 +17,7 @@ import {
   //deriveEncryptionKey,
 } from '@chat/crypto';
 import { useAuth } from '@/hooks/useAuth';
-import { initSignalingClient } from '@/lib/signalingClient';
-import { SignalingClient } from '@chat/sockets';
-import { CLIENT_CONFIG, CredentialsType } from '@chat/core';
+import { CredentialsType } from '@chat/core';
 import { eraseDB, PASSWORD_KEY } from '@/lib/storage';
 import { useConfirm } from '@/components/local/ConfirmContext';
 
@@ -120,15 +118,6 @@ export default function Login() {
       }
 
       setUser(user);
-
-      const client = new SignalingClient(id, username, user.public);
-      initSignalingClient(client);
-      try {
-        await client.connect(CLIENT_CONFIG.signalingUrls[0]);
-      } catch (err: unknown) {
-        console.error(err);
-        setError(err instanceof Error ? err.message : JSON.stringify(err));
-      }
     } else {
       // --- Existing user unlock ---
       const aeskey = generateAESKey(new TextEncoder().encode(hash(password+username)));
@@ -159,10 +148,6 @@ export default function Login() {
       setUsername(decrUser.username);
 
       setUser(decrUser);
-
-      const client = new SignalingClient(decrUser.userId, decrUser.username, decrUser.public);
-      initSignalingClient(client);
-      await client.connect(CLIENT_CONFIG.signalingUrls[0]);
     }
 
     try {

@@ -100,20 +100,22 @@ export type SignalHandler = (msg: any) => void;
 export class SignalingClient {
   public ws: WebSocket | null = null;
   private id: string;
+  public url: string;
   private username: string;
   private pubkey: string;
   private handlers: Record<string, SignalHandler[]> = {};
   private joined = false;
   private reconnectTimeout: NodeJS.Timeout | null = null;
 
-  constructor(id: string, username: string, pubkey: string) {
+  constructor(url: string, id: string, username: string, pubkey: string) {
     this.id = id;
     this.username = username;
     this.pubkey = pubkey;
+    this.url = url;
   }
 
   /** Connect to a signaling server */
-  connect(url: string): Promise<void> {
+  connect(): Promise<void> {
     return new Promise((resolve, reject) => {
       // Already connected
       if (this.ws && this.ws.readyState === WebSocket.OPEN) {
@@ -121,7 +123,7 @@ export class SignalingClient {
         return;
       }
 
-      this.ws = new WebSocket(url);
+      this.ws = new WebSocket(this.url);
 
       this.ws.onopen = () => {
         if (!this.joined) {

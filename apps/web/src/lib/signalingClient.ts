@@ -1,56 +1,75 @@
 import { SignalingClient } from '@chat/sockets';
 import { getDB, PASSWORD_KEY } from './storage';
-import { decryptCredentialsType, EncryptedCredentialsType, generateAESKey } from '@chat/crypto';
+import {
+  decryptCredentialsType,
+  decryptServerSettingsType,
+  EncryptedCredentialsType,
+  generateAESKey,
+} from '@chat/crypto';
 import { CLIENT_CONFIG } from '@chat/core';
 
 let singletonClient: SignalingClient | null = null;
 
-const SERVER_URL = CLIENT_CONFIG.signalingUrls[0];
-
-/**
- * Initialize the singleton manually (optional).
- */
 export function initSignalingClient(client: SignalingClient) {
   if (!singletonClient) singletonClient = client;
   return singletonClient;
 }
 
-/**
- * Returns the singleton signaling client.
- * If not initialized, creates one from stored credentials.
- * Handles reconnects and prevents duplicate joins.
- */
-export async function getSignalingClient(): Promise<SignalingClient> {
-  if (singletonClient) {
-    // If the existing WS is closed, attempt reconnect
-    if (!singletonClient.ws || singletonClient.ws.readyState !== WebSocket.OPEN) {
-      await singletonClient.reconnect(SERVER_URL);
-    }
-    return singletonClient;
-  }
-
-  // Fetch encrypted credentials from DB
+export async function getSignalingClient(): Promise<SignalingClient | null> {
   const db = await getDB();
+
   const encrCreds = (await db.getAll('user')) as EncryptedCredentialsType[];
-  if (!encrCreds || encrCreds.length === 0) {
-    throw new Error('No credentials available in DB');
-  }
+  if (!encrCreds?.length) throw new Error('No credentials found');
 
   const storedPass = sessionStorage.getItem(PASSWORD_KEY);
   if (!storedPass) {
-    throw new Error('Password not found in sessionStorage. User must unlock first.');
+    console.warn('Password not found in sessionStorage');
+    return null;
   }
 
   const aesKey = generateAESKey(new TextEncoder().encode(storedPass));
-  if (!aesKey) throw new Error('Failed to generate AES key from stored password');
-
   const creds = decryptCredentialsType(encrCreds[0], aesKey);
   if (!creds) throw new Error('Failed to decrypt user credentials');
 
-  singletonClient = new SignalingClient(creds.userId, creds.username, creds.public);
+  const encryptedServerSettings = (await db.getAll('serverSettings'))[0];
+  const serverSettings = encryptedServerSettings
+    ? decryptServerSettingsType(encryptedServerSettings, aesKey)
+    : null;
 
-  // Connect and auto-reconnect built into SignalingClient
-  await singletonClient.connect(SERVER_URL);
+  const SERVER_URL =
+    serverSettings?.selectedServers?.[0] || CLIENT_CONFIG.signalingUrls[0];
+
+  // Reuse or re-init client
+  if (singletonClient) {
+    const sameUrl = singletonClient.url === SERVER_URL;
+    const connected = singletonClient.ws?.readyState === WebSocket.OPEN;
+
+    if (connected && sameUrl) return singletonClient;
+
+    try {
+      if (!sameUrl) singletonClient.disconnect();
+      singletonClient = new SignalingClient(
+        SERVER_URL,
+        creds.userId,
+        creds.username,
+        creds.public
+      );
+      await singletonClient.connect();
+      return singletonClient;
+    } catch (err) {
+      console.error('Reconnect failed:', err);
+      return null;
+    }
+  }
+
+  // Fresh client
+  singletonClient = new SignalingClient(
+    SERVER_URL,
+    creds.userId,
+    creds.username,
+    creds.public
+  );
+  await singletonClient.connect();
 
   return singletonClient;
 }

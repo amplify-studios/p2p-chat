@@ -9,6 +9,7 @@ import { useDB } from '@/hooks/useDB';
 import { CLIENT_CONFIG, ServerSettingsType } from '@chat/core';
 import { useAuth } from '@/hooks/useAuth';
 import Loading from '@/components/local/Loading';
+import { getSignalingClient } from '@/lib/signalingClient';
 
 export default function Servers() {
   const { showToast } = useToast();
@@ -183,6 +184,8 @@ export default function Servers() {
           };
           await putEncr('serverSettings', settings, key, 0);
           showToast('Saved server settings', 'success');
+
+          await getSignalingClient();
         }}
       >
         Save Settings
