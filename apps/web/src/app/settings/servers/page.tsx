@@ -1,15 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import { X } from 'lucide-react';
 import { useToast } from '@/components/local/ToastContext';
 import { useDB } from '@/hooks/useDB';
-import { ServerSettingsType } from '@chat/core';
+import { CLIENT_CONFIG, ServerSettingsType } from '@chat/core';
 import { useAuth } from '@/hooks/useAuth';
+import Loading from '@/components/local/Loading';
 
 export default function Servers() {
   const { showToast } = useToast();
@@ -20,51 +19,106 @@ export default function Servers() {
   const [autoSelectAll, setAutoSelectAll] = useState(false);
   const [useUser, setUseUser] = useState(false);
   const [shareFederation, setShareFederation] = useState(false);
-  const [selectedServers, setSelectedServers] = useState<string[]>([]);
+  const [selectedServer, setSelectedServer] = useState<string | null>(null);
   const [userServers, setUserServers] = useState<string[]>([]);
   const [newServer, setNewServer] = useState('');
+  const [servers, setServers] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const availableServers = ['Server A', 'Server B', 'Server C'];
+  // Avoid reloading settings repeatedly
+  const loadedOnce = useRef(false);
 
+  // Initialize defaults
   useEffect(() => {
-    if (!key) return;
+    setServers(CLIENT_CONFIG.signalingUrls);
+    setSelectedServer(CLIENT_CONFIG.signalingUrls[0]);
+  }, []);
+
+  // Load encrypted settings ONCE per key
+  useEffect(() => {
+    if (!key || loadedOnce.current) return;
+    loadedOnce.current = true;
+
     (async () => {
       const settings = (await getAllDecr('serverSettings', key)) as ServerSettingsType[];
       const currentSettings = settings.at(0);
-      if (!currentSettings) return;
+      if (!currentSettings){
+        setLoading(false);
+        return;
+      }
 
       setUseSelect(currentSettings.useSelect);
       setAutoSelectAll(currentSettings.autoSelectAll);
       setUseUser(currentSettings.useUser);
       setShareFederation(currentSettings.shareFederation);
-      setSelectedServers(currentSettings.selectedServers);
-      setUserServers(currentSettings.userServers);
-    })();
-  }, [key]);
 
-  const toggleSelectedServer = (server: string) => {
-    setSelectedServers((prev) =>
-      prev.includes(server) ? prev.filter((s) => s !== server) : [...prev, server],
-    );
+      const merged = Array.from(
+        new Set([...CLIENT_CONFIG.signalingUrls, ...(currentSettings.userServers || [])])
+      );
+      setServers(merged);
+
+      // Only override if saved selection exists
+      const saved = currentSettings.selectedServers?.[0];
+      if (saved && merged.includes(saved)) {
+        setSelectedServer(saved);
+      } else {
+        setSelectedServer(merged[0] || null);
+      }
+
+      setUserServers(currentSettings.userServers || []);
+      setLoading(false);
+    })();
+  }, [key, getAllDecr]);
+
+  const selectServer = (server: string) => {
+    setSelectedServer(server);
   };
 
+  // Validate and add user-defined server
   const addUserServer = () => {
-    if (newServer.trim() && !userServers.includes(newServer.trim())) {
-      setUserServers((prev) => [...prev, newServer.trim()]);
-      setNewServer('');
+    const trimmed = newServer.trim();
+    if (!trimmed) return;
+
+    try {
+      const url = new URL(trimmed);
+      if (!['ws:', 'wss:', 'http:', 'https:'].includes(url.protocol)) {
+        showToast('Invalid protocol: must be ws://, wss://, http://, or https://', 'error');
+        return;
+      }
+    } catch {
+      showToast('Invalid URL format', 'error');
+      return;
     }
+
+    if (userServers.includes(trimmed)) {
+      showToast('Server already added', 'warning');
+      return;
+    }
+
+    setUserServers((prev) => [...prev, trimmed]);
+    setServers((prev) => Array.from(new Set([...prev, trimmed])));
+    setNewServer('');
+    showToast('Added server', 'success');
   };
 
   const removeUserServer = (server: string) => {
     setUserServers((prev) => prev.filter((s) => s !== server));
+    setServers((prev) => {
+      const updated = prev.filter((s) => s !== server);
+      // Reset selection if it was removed
+      setSelectedServer((prevSel) => (prevSel === server ? updated[0] || null : prevSel));
+      return updated;
+    });
   };
 
-  // Handle auto-select behavior
+  // Auto-select first available if autoSelectAll is true
   useEffect(() => {
-    if (autoSelectAll) {
-      setSelectedServers([...availableServers]);
+    if (autoSelectAll && servers.length > 0) {
+      setSelectedServer(servers[0]);
     }
-  }, [autoSelectAll]);
+  }, [autoSelectAll, servers]);
+
+  if(loading) return <Loading />;
 
   return (
     <div className="p-6 max-w-lg mx-auto flex flex-col gap-6">
@@ -72,92 +126,63 @@ export default function Servers() {
 
       {/* Selected servers */}
       <div className="flex flex-col gap-4 border rounded-lg p-4">
-        <div className="flex items-center justify-between">
-          <Label>Use selected servers</Label>
-          <Switch checked={useSelect} onCheckedChange={setUseSelect} />
-        </div>
-
-        {useSelect && (
-          <div className="flex flex-col gap-4">
-            {/* Auto-select toggle */}
-            <div className="flex items-center justify-between">
-              <Label>Automatically select all servers</Label>
-              <Switch checked={autoSelectAll} onCheckedChange={setAutoSelectAll} />
-            </div>
-
-            {/* Manual selection if autoSelectAll is off */}
-            {!autoSelectAll && (
-              <div className="flex flex-col gap-2">
-                {availableServers.map((server) => (
-                  <label key={server} className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={selectedServers.includes(server)}
-                      onChange={() => toggleSelectedServer(server)}
-                    />
-                    {server}
-                  </label>
-                ))}
-              </div>
-            )}
-
-            <div className="flex items-center justify-between mt-4">
-              <span className="font-medium">Share information with federation</span>
-              <Switch checked={shareFederation} onCheckedChange={setShareFederation} />
-            </div>
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-2">
+            {servers.map((server) => (
+              <label key={server} className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="server"
+                  checked={selectedServer === server}
+                  onChange={() => selectServer(server)}
+                />
+                {server}
+              </label>
+            ))}
           </div>
-        )}
+        </div>
       </div>
 
       {/* User-defined servers */}
       <div className="flex flex-col gap-4 border rounded-lg p-4">
-        <div className="flex items-center justify-between">
-          <Label>Use user-defined servers</Label>
-          <Switch checked={useUser} onCheckedChange={setUseUser} />
+        <div className="flex gap-2">
+          <Input
+            type="text"
+            placeholder="Enter server URL"
+            value={newServer}
+            onChange={(e) => setNewServer(e.target.value)}
+          />
+          <Button onClick={addUserServer}>Add</Button>
         </div>
 
-        {useUser && (
-          <>
-            <div className="flex gap-2">
-              <Input
-                type="text"
-                placeholder="Enter server URL"
-                value={newServer}
-                onChange={(e) => setNewServer(e.target.value)}
-              />
-              <Button onClick={addUserServer}>Add</Button>
-            </div>
-
-            <ul className="flex flex-col gap-2">
-              {userServers.map((server) => (
-                <li
-                  key={server}
-                  className="flex items-center justify-between border rounded px-3 py-2"
-                >
-                  <span>{server}</span>
-                  <Button size="icon" variant="ghost" onClick={() => removeUserServer(server)}>
-                    <X className="h-4 w-4" />
-                  </Button>
-                </li>
-              ))}
-            </ul>
-          </>
-        )}
+        <ul className="flex flex-col gap-2">
+          {userServers.map((server) => (
+            <li
+              key={server}
+              className="flex items-center justify-between border rounded px-3 py-2"
+            >
+              <span>{server}</span>
+              <Button size="icon" variant="ghost" onClick={() => removeUserServer(server)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </li>
+          ))}
+        </ul>
       </div>
 
       <Button
         onClick={async () => {
           if (!key) return;
-          const settings = {
+          const settings: ServerSettingsType = {
             useSelect,
             autoSelectAll,
-            selectedServers,
+            selectedServers: selectedServer ? [selectedServer] : [],
             useUser,
             userServers,
             shareFederation,
-          } as ServerSettingsType;
+          };
           await putEncr('serverSettings', settings, key, 0);
-          showToast('Saved server settings');
+          showToast('Saved server settings', 'success');
         }}
       >
         Save Settings
