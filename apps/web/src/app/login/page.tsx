@@ -120,7 +120,7 @@ export default function Login() {
       setUser(user);
     } else {
       // --- Existing user unlock ---
-      const aeskey = generateAESKey(new TextEncoder().encode(hash(password+username)));
+      const aeskey = generateAESKey(new TextEncoder().encode(hash(password)));
 
       //const argonResult = await deriveEncryptionKey(password, aeskey);
       //const key = argonResult.key;
