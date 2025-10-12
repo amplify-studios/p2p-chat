@@ -7,6 +7,7 @@ import { refreshRooms } from '@/lib/utils';
 import { useAuth } from './useAuth';
 import useClient from './useClient';
 import { useRouter } from 'next/navigation';
+import { useRooms } from './useRooms';
 
 export function useInvites() {
   const { db, putEncr, getAllDecr } = useDB();
@@ -14,6 +15,7 @@ export function useInvites() {
   const { user, key } = useAuth();
   const { client } = useClient();
   const router = useRouter();
+  const { rooms } = useRooms();
 
   useEffect(() => {
     if (!db || !key || !client) return;
@@ -62,34 +64,57 @@ export function useInvites() {
 
   const acceptInvite = async (invite: InviteType) => {
     if (!db || !key || !user || !client) return;
+    const existingRoom = rooms.find((r) => r.keys.find((k) => k.userId === invite.from));
 
-    // Generate the room
-    const roomId = generateBase58Id();
+    if (!existingRoom) {
+      // Generate the room
+      const roomId = generateBase58Id();
+  
+      const creds = {
+        userId: invite.from,
+        public: invite.public,
+        username: invite.name,
+      } as CredentialsType;
+  
+      const room: RoomType = {
+        roomId,
+        name: invite.name,
+        type: invite.type,
+        keys: [
+          {
+            userId: user.userId,
+            public: user.public,
+            username: user.username,
+          },
+          creds,
+        ],
+      };
+  
+      // Save room
+      await putEncr('rooms', room, key);
+  
+      await putEncr('credentials', creds, key);
 
-    const creds = {
-      userId: invite.from,
-      public: invite.public,
-      username: invite.name,
-    } as CredentialsType;
+      // Delete the invite
+      await db.delete('invites', invite.inviteId);
+      setInvites((prev) => prev.filter((i) => i.inviteId !== invite.inviteId));
+      refreshRooms();
 
-    const room: RoomType = {
-      roomId,
-      name: invite.name,
-      type: invite.type,
-      keys: [
-        {
-          userId: user.userId,
-          public: user.public,
-          username: user.username,
+      // Send Ack back to inviter
+      const ack = {
+        from: user.userId,
+        to: invite.from,
+        room: {
+          ...room,
+          name: room.type === 'single' ? user.username || user.userId : room.name,
         },
-        creds,
-      ],
-    };
+      } as AckMessage;
+      client.sendAck(invite.from, ack);
+      console.log('ACK sent');
 
-    // Save room
-    await putEncr('rooms', room, key);
-
-    await putEncr('credentials', creds, key);
+      router.push(`/chat?id=${room.roomId}`);
+      return;
+    }
 
     // Delete the invite
     await db.delete('invites', invite.inviteId);
@@ -101,14 +126,16 @@ export function useInvites() {
       from: user.userId,
       to: invite.from,
       room: {
-        ...room,
-        name: room.type === 'single' ? user.username || user.userId : room.name,
+        ...existingRoom,
+        name: existingRoom.type === 'single' ? user.username || user.userId : existingRoom.name,
       },
     } as AckMessage;
     client.sendAck(invite.from, ack);
     console.log('ACK sent');
 
-    router.push(`/chat?id=${roomId}`);
+    router.push(`/chat?id=${existingRoom.roomId}`);
+    console.log('Already in room with this user, redirected to existing room');
+    return;
   };
 
   const declineInvite = async (invite: InviteType) => {
