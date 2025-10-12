@@ -14,6 +14,7 @@ import { useDB } from '@/hooks/useDB';
 import useClient from '@/hooks/useClient';
 import Loading from '@/components/local/Loading';
 import { PeerInfo } from '@chat/sockets';
+import { useRooms } from '@/hooks/useRooms';
 
 export default function Peers() {
   const { user } = useAuth();
@@ -22,6 +23,7 @@ export default function Peers() {
   const { block } = useBlocks();
   const { db } = useDB();
   const { blocks } = useBlocks();
+  const { rooms } = useRooms();
 
   if (loading) {
     return (
@@ -31,12 +33,18 @@ export default function Peers() {
     );
   }
 
-  const checkIfPeerIsBlocked = (peerId: string) => {
+  const handleClick = (peerId: string) => {
     const alreadyBlocked = blocks.find((b) => b.userId === peerId);
     if (alreadyBlocked) {
-      showToast(`This user is in your block list. Unblock first and then try again.`, 'warning');
+      showToast(`This user is in your block list.`, 'info');
       return;
     }
+
+    if (rooms.find((r) => r.keys.find((k) => k.userId === peerId))) {
+      showToast('You already have a room with this user.', 'info');
+      return;
+    }
+    
     window.location.href = `/new?userId=${peerId}`
   }
 
@@ -64,7 +72,7 @@ export default function Peers() {
                     className={`mb-2 flex justify-between items-center p-3 bg-card rounded shadow transition ${
                       isMe ? 'border-2 border-primary' : 'hover:bg-secondary'
                     }`}
-                    onClick={async () => checkIfPeerIsBlocked(p.id)}
+                    onClick={async () => handleClick(p.id)}
                   >
                     <div>
                       <p className="font-medium">
@@ -130,6 +138,17 @@ export default function Peers() {
                             variant="ghost"
                             className="w-full justify-start text-red-500"
                             onClick={() => {
+                              block({ userId: f.id, username: f.username } as CredentialsType);
+                            }}
+                          >
+                            Block
+                          </Button>
+                        </li>
+                        <li>
+                          <Button
+                            variant="ghost"
+                            className="w-full justify-start text-red-500"
+                            onClick={() => {
                               try {
                                 db?.delete('credentials', f.id);
                                 setFriends((prev) => prev.filter((b) => b.id !== f.id));
@@ -140,17 +159,6 @@ export default function Peers() {
                             }}
                           >
                             Remove
-                          </Button>
-                        </li>
-                        <li>
-                          <Button
-                            variant="ghost"
-                            className="w-full justify-start text-red-500"
-                            onClick={() => {
-                              block({ userId: f.id, username: f.username } as CredentialsType);
-                            }}
-                          >
-                            Block
                           </Button>
                         </li>
                       </ul>

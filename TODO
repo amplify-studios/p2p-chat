@@ -1,6 +1,5 @@
 TODO: Group chats
 TODO: Chat sync
-TODO: Notifications system
 TODO: Home page features
 TODO: Server federation
 TODO: Sync between devices
@@ -44,3 +43,4 @@ DONE: Receiving messages
 DONE: config
 DONE: Bulletproof p2p connections
 DONE: Selecting / Defining signaling server/s to use
+DONE: Notifications system

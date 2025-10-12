@@ -17,6 +17,7 @@ import { refreshRooms } from '@/lib/utils';
 import { useToast } from '@/components/local/ToastContext';
 import { CircleMinus, ShieldUser, User, UserPlus } from 'lucide-react';
 import { getSignalingClient } from '@/lib/signalingClient';
+import { useRooms } from '@/hooks/useRooms';
 
 export default function NewRoom() {
   const { user, key } = useAuth();
@@ -26,6 +27,7 @@ export default function NewRoom() {
   const { peers, loading, friends, setFriends } = usePeers();
   const { client } = useClient();
   const { showToast } = useToast();
+  const { rooms } = useRooms();
 
   const [name, setName] = useState('');
   const [type, setType] = useState<'single' | 'group'>('single');
@@ -147,6 +149,12 @@ export default function NewRoom() {
         return;
       }
 
+      if (rooms.find((r) => r.keys.find((k) => k.userId === peer.id))) {
+        showToast('You already have a room with this user.', 'info');
+        setPendingInvite(false);
+        return;
+      }
+
       const invite = {
         from: user.userId,
         name: type === 'single' ? user.username || user.userId : name,
@@ -216,7 +224,13 @@ export default function NewRoom() {
     }
   };
 
-  const handleGenerateQR = async () => {
+  const handleGenerateQR = async (otherUserId: string) => {
+    if (rooms.find((r) => r.keys.find((k) => k.userId === otherUserId))) {
+      showToast('You already have a room with this user.', 'info');
+      setPendingInvite(false);
+      return;
+    }
+
     const roomId = generateBase58Id();
     const roomName = type === 'single' ? user.username || user.userId : name;
 
@@ -383,7 +397,7 @@ export default function NewRoom() {
               {pendingInvite ? 'Invite Pending...' : 'Send Invite'}
             </Button>
 
-            <Button onClick={handleGenerateQR} className="w-full mb-2">
+            <Button onClick={() => handleGenerateQR(otherUserId)} className="w-full mb-2">
               Generate QR Invite
             </Button>
 

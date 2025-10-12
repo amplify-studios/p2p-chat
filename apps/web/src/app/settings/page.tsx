@@ -161,25 +161,6 @@ export default function SettingsPage() {
       >
         <LogOut className="mr-1 h-4 w-4" /> Logout
       </Button>
-
-      <Button
-        className="w-full"
-        variant="outline"
-        onClick={() => {
-          try {
-            // fetch("/api/notify", {
-            //   method: "POST",
-            //   headers: { "Content-Type": "application/json" },
-            //   body: JSON.stringify({ title: "Test", body: "Hello world" }),
-            // });
-            sendLocalNotification("Test", "Hello world");
-          } catch (err: unknown) {
-            alert(err instanceof Error ? err.message : JSON.stringify(err));
-          }
-        }}
-      >
-        <TestTube className="mr-1 h-4 w-4" /> Test
-      </Button>
     </div>
   );
 }
