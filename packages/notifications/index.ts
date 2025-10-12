@@ -67,7 +67,7 @@ export function hasNotifictationPermission(): boolean {
     return Notification.permission === "granted";
 }
 
-export async function requestNotificationPermission(): Promise<boolean> {
+export async function requestNotificationPermission(retry: boolean = false): Promise<boolean> {
     if (!("Notification" in window)) return false;
     if (Notification.permission === "granted") return true;
     const permission = await Notification.requestPermission();
