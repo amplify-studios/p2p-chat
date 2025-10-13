@@ -98,6 +98,9 @@ export function DBProvider({ children }: { children: ReactNode }) {
           throw new Error(`Unknown collection: ${collection}`);
       }
 
+      // NOTE: Check out jakearchibald/idb-keyval
+      // TODO: do this inside a transaction to avoid IDB errors
+
       if (encr) {
         await db.put(collection, encr as EncryptedStorageType, collectionKey);
         return encr;

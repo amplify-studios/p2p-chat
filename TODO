@@ -5,6 +5,9 @@ TODO: Server federation
 TODO: Sync between devices
 TODO: Documentation (code and docs/)
 TODO: Derive the local encryption key from the user’s password using a strong KDF such as Argon2id or scrypt.
+TODO: IDB issues in chromium
+TODO: Signaling server connection issues
+TODO: p2p connections issues
 DONE: tls encryption for signaling server (wss)
 DONE: IndexedDB
 DONE: ECDH crypto methods
