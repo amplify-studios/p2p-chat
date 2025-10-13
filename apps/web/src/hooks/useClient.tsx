@@ -1,14 +1,22 @@
 import { getSignalingClient } from '@/lib/signalingClient';
 import { SignalingClient } from '@chat/sockets';
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode, } from 'react';
 
-export default function useClient() {
+type ClientContextType = {
+  client: SignalingClient | null;
+  status: 'idle' | 'connecting' | 'connected' | 'failed';
+  reconnect: () => void;
+};
+
+const ClientContext = createContext<ClientContextType | undefined>(undefined);
+
+export function ClientProvider({ children }: { children: ReactNode }) {
   const [client, setClient] = useState<SignalingClient | null>(null);
   const [status, setStatus] = useState<'idle' | 'connecting' | 'connected' | 'failed'>('idle');
   const connectingRef = useRef(false);
 
   const connect = useCallback(async () => {
-    if (connectingRef.current) return; // avoid multiple simultaneous attempts
+    if (connectingRef.current) return;
     connectingRef.current = true;
     setStatus('connecting');
 
@@ -31,16 +39,26 @@ export default function useClient() {
     }
   }, []);
 
-  // Initial connection
   useEffect(() => {
     connect();
   }, [connect]);
 
-  // Expose a reconnect method
   const reconnect = useCallback(() => {
     if (status === 'connecting') return;
     connect();
   }, [connect, status]);
 
-  return { client, status, reconnect };
+  return (
+    <ClientContext.Provider value={{ client, status, reconnect }}>
+      {children}
+    </ClientContext.Provider>
+  );
+}
+
+export function useClient() {
+  const context = useContext(ClientContext);
+  if (!context) {
+    throw new Error('useClient must be used within a ClientProvider');
+  }
+  return context;
 }

@@ -16,7 +16,7 @@ import {
   setOnLog,
   setOnMessage,
 } from '@/lib/peerStore';
-import useClient from '@/hooks/useClient';
+import { useClient } from '@/hooks/useClient';
 import { createECDHkey } from '@chat/crypto';
 
 let currentMsgId = 0;

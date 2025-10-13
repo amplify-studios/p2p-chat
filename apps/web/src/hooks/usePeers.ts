@@ -5,7 +5,7 @@ import type { PeerInfo, PeersMessage } from '@chat/sockets';
 import { CredentialsType } from '@chat/core';
 import { useDB } from './useDB';
 import { useAuth } from './useAuth';
-import useClient from './useClient';
+import { useClient } from './useClient';
 
 export interface Friend {
   id: string;

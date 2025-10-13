@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/local/ToastContext';
 import { Archive, LogOut, QrCode, Server, ShieldBan, TestTube, Trash, Bell } from 'lucide-react';
 import { useConfirm } from '@/components/local/ConfirmContext';
-import useClient from '@/hooks/useClient';
+import { useClient } from '@/hooks/useClient';
 import { hasNotifictationPermission, requestNotificationPermission, sendLocalNotification } from '@chat/notifications';
 
 function SettingsRow({ label, children }: { label: string; children: React.ReactNode }) {

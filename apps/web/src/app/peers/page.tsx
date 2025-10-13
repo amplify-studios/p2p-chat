@@ -11,9 +11,9 @@ import { useToast } from '@/components/local/ToastContext';
 import { useBlocks } from '@/hooks/useBlocks';
 import { CredentialsType } from '@chat/core';
 import { useDB } from '@/hooks/useDB';
-import useClient from '@/hooks/useClient';
-import Loading from '@/components/local/Loading';
-import { PeerInfo } from '@chat/sockets';
+// import { useClient } from '@/hooks/useClient';
+// import Loading from '@/components/local/Loading';
+// import { PeerInfo } from '@chat/sockets';
 import { useRooms } from '@/hooks/useRooms';
 
 export default function Peers() {

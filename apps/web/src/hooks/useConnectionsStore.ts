@@ -4,7 +4,7 @@
 import { useEffect } from 'react';
 import { WebRTCConnection } from '@chat/sockets/webrtc';
 import { PeerInfo } from '@chat/sockets';
-import useClient from './useClient';
+import { useClient } from './useClient';
 import { useAuth } from './useAuth';
 
 export interface ConnectionsMap {

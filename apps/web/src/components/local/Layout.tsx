@@ -5,7 +5,8 @@ import { ReactNode, Suspense } from 'react';
 import Sidebar from './Sidebar';
 import { ToastProvider } from './ToastContext';
 import { ConfirmProvider } from './ConfirmContext';
-import { IndexDBProvider } from './IndexDBContext';
+import { ClientProvider } from '@/hooks/useClient';
+import { DBProvider } from '@/hooks/useDB';
 
 export default function Layout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -19,13 +20,15 @@ export default function Layout({ children }: { children: ReactNode }) {
 
   return (
     <Suspense>
-      <IndexDBProvider>
+      <DBProvider>
+      <ClientProvider>
         <ConfirmProvider>
           <ToastProvider>
             <Sidebar>{children}</Sidebar>
           </ToastProvider>
         </ConfirmProvider>
-      </IndexDBProvider>
+        </ClientProvider>
+        </DBProvider>
     </Suspense>
   );
 }
