@@ -6,7 +6,7 @@ import Sidebar from './Sidebar';
 import { ToastProvider } from './ToastContext';
 import { ConfirmProvider } from './ConfirmContext';
 import { ClientProvider } from '@/hooks/useClient';
-import { DBProvider } from '@/hooks/useDB';
+// import { DBProvider } from '@/hooks/useDB';
 
 export default function Layout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -20,7 +20,6 @@ export default function Layout({ children }: { children: ReactNode }) {
 
   return (
     <Suspense>
-      <DBProvider>
       <ClientProvider>
         <ConfirmProvider>
           <ToastProvider>
@@ -28,7 +27,6 @@ export default function Layout({ children }: { children: ReactNode }) {
           </ToastProvider>
         </ConfirmProvider>
         </ClientProvider>
-        </DBProvider>
     </Suspense>
   );
 }

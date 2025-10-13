@@ -3,6 +3,7 @@ import { Roboto_Mono } from 'next/font/google';
 import './globals.css';
 import Layout from '@/components/local/Layout';
 import { ThemeProvider } from '@/components/theme-provider';
+import { DBProvider } from '@/hooks/useDB';
 
 
 const robotoMono = Roboto_Mono({
@@ -29,9 +30,11 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <Layout>
-            {children}
-          </Layout>
+          <DBProvider>
+            <Layout>
+              {children}
+            </Layout>
+          </DBProvider>
         </ThemeProvider>
       </body>
     </html>
