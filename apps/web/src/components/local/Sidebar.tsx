@@ -79,129 +79,123 @@ export default function Sidebar({ children }: SidebarProps) {
     })();
   }, []);
 
-  // useEffect(() => {
-  //   if (!client?.ws || !user || !blocks) return;
-
-  //   onlineFriends.forEach(friend => {
-  //     if (!client.ws) return;
-  //     const isBlocked = blocks.find(b => b.userId === friend.id);
-  //     if (isBlocked) return;
-  //     createConnection(friend, client.ws, user.userId,
-  //       async (encrMsg) => {
-  //         if (!encrMsg || !key) return;
-
-  //         let parsed: any;
-  //         try {
-  //           parsed = JSON.parse(encrMsg);
-  //         } catch {
-  //           return;
-  //         }
-
-  //         const userECDH = createECDHkey();
-  //         if (!user?.private) return;
-  //         userECDH.setPrivateKey(Buffer.from(user.private, 'hex'));
-
-  //         const msg = returnDecryptedMessage(userECDH, parsed);
-  //         const rooms = (await getAllDecr('rooms', key)) as RoomType[];
-  //         const roomId = findRoomIdByPeer(rooms, friend.id);
-  //         const peerUsername = friends.find(f => f.id === friend.id)?.username;
-
-  //         await putEncr(
-  //           'messages',
-  //           {
-  //             roomId,
-  //             senderId: friend.id,
-  //             message: msg,
-  //             timestamp: Date.now(),
-  //             sent: true,
-  //             read: false,
-  //           } as MessageType,
-  //           key,
-  //         );
-
-  //         // Show notification only if not in the active chat
-  //         if (pathname !== '/chat' || activeRoomId !== roomId) {
-  //           sendLocalNotification(`${peerUsername ?? 'Anonymous'}`, msg);
-  //         }
-  //       },
-  //       (log) => {
-  //         console.log(`[WebRTC ${friend.username}] ${log}`);
-  //       });
-  //   });
-  // }, [
-  //   client?.ws,
-  //   user?.userId,
-  //   user?.private,
-  //   onlineFriends,
-  //   key,
-  //   friends,
-  //   activeRoomId,
-  //   pathname,
-  // ]);
-
-  // // Track overall connection status
-  // useEffect(() => {
-  //   setConnected(status === 'connected');
-  // }, [status]);
-
-   // --- 2️⃣ Connection setup for friends ---
-  const handleEncryptedMessage = useCallback(
-    async (friend: PeerInfo, encrMsg: string) => {
-      if (!encrMsg || !key || !user?.private) return;
-
-      let parsed;
-      try {
-        parsed = JSON.parse(encrMsg);
-      } catch {
-        return;
-      }
-
-      const userECDH = createECDHkey();
-      userECDH.setPrivateKey(Buffer.from(user.private, "hex"));
-
-      const msg = returnDecryptedMessage(userECDH, parsed);
-      const rooms = (await getAllDecr("rooms", key)) as RoomType[];
-      const roomId = findRoomIdByPeer(rooms, friend.id);
-      const peerUsername = friends.find((f) => f.id === friend.id)?.username;
-
-      await putEncr(
-        "messages",
-        {
-          roomId,
-          senderId: friend.id,
-          message: msg,
-          timestamp: Date.now(),
-          sent: true,
-          read: false,
-        } as MessageType,
-        key
-      );
-
-      // Show notification only if not in active chat
-      if (pathname !== "/chat" || activeRoomId !== roomId) {
-        sendLocalNotification(`${peerUsername ?? 'Anonymous'}`, msg);
-      }
-    },
-    [key, user?.private, activeRoomId, pathname, friends]
-  );
-
   useEffect(() => {
     if (!client?.ws || !user || !blocks) return;
 
-    onlineFriends.forEach((friend) => {
+    onlineFriends.forEach(friend => {
       if (!client.ws) return;
-      if (blocks.some((b) => b.userId === friend.id)) return;
+      const isBlocked = blocks.find(b => b.userId === friend.id);
+      if (isBlocked) return;
+      createConnection(friend, client.ws, user.userId,
+        async (encrMsg) => {
+          if (!encrMsg || !key) return;
 
-      createConnection(friend, client.ws, user.userId, (msg) => handleEncryptedMessage(friend, msg), (log) =>
-        console.log(`[WebRTC ${friend.username}] ${log}`)
-      );
+          let parsed: any;
+          try {
+            parsed = JSON.parse(encrMsg);
+          } catch {
+            return;
+          }
+
+          const userECDH = createECDHkey();
+          if (!user?.private) return;
+          userECDH.setPrivateKey(Buffer.from(user.private, 'hex'));
+
+          const msg = returnDecryptedMessage(userECDH, parsed);
+          const rooms = (await getAllDecr('rooms', key)) as RoomType[];
+          const roomId = findRoomIdByPeer(rooms, friend.id);
+          const peerUsername = friends.find(f => f.id === friend.id)?.username;
+
+          await putEncr(
+            'messages',
+            {
+              roomId,
+              senderId: friend.id,
+              message: msg,
+              timestamp: Date.now(),
+              sent: true,
+              read: false,
+            } as MessageType,
+            key,
+          );
+
+          // Show notification only if not in the active chat
+          if (pathname !== '/chat' || activeRoomId !== roomId) {
+            sendLocalNotification(`${peerUsername ?? 'Anonymous'}`, msg);
+          }
+        },
+        (log) => {
+          console.log(`[WebRTC ${friend.username}] ${log}`);
+        });
     });
-  }, [client?.ws, user?.userId, blocks, onlineFriends, handleEncryptedMessage]);
+  }, [
+    client?.ws,
+    user?.userId,
+    user?.private,
+    onlineFriends,
+    key,
+    friends,
+    activeRoomId,
+    pathname,
+  ]);
 
-  // --- 3️⃣ Connection status ---
+  // Track overall connection status
   useEffect(() => {
-    setConnected(status === "connected");
+    setConnected(status === 'connected');
   }, [status]);
+
+  // const handleEncryptedMessage = useCallback(
+  //   async (friend: PeerInfo, encrMsg: string) => {
+  //     if (!encrMsg || !key || !user?.private) return;
+
+  //     let parsed;
+  //     try {
+  //       parsed = JSON.parse(encrMsg);
+  //     } catch {
+  //       return;
+  //     }
+
+  //     const userECDH = createECDHkey();
+  //     userECDH.setPrivateKey(Buffer.from(user.private, "hex"));
+
+  //     const msg = returnDecryptedMessage(userECDH, parsed);
+  //     const rooms = (await getAllDecr("rooms", key)) as RoomType[];
+  //     const roomId = findRoomIdByPeer(rooms, friend.id);
+  //     const peerUsername = friends.find((f) => f.id === friend.id)?.username;
+
+  //     await putEncr(
+  //       "messages",
+  //       {
+  //         roomId,
+  //         senderId: friend.id,
+  //         message: msg,
+  //         timestamp: Date.now(),
+  //         sent: true,
+  //         read: false,
+  //       } as MessageType,
+  //       key
+  //     );
+
+  //     // Show notification only if not in active chat
+  //     if (pathname !== "/chat" || activeRoomId !== roomId) {
+  //       sendLocalNotification(`${peerUsername ?? 'Anonymous'}`, msg);
+  //     }
+  //   },
+  //   [key, user?.private, activeRoomId, pathname, friends]
+  // );
+
+  // useEffect(() => {
+  //   if (!client?.ws || !user || !blocks) return;
+
+  //   onlineFriends.forEach((friend) => {
+  //     if (!client.ws) return;
+  //     if (blocks.some((b) => b.userId === friend.id)) return;
+
+  //     createConnection(friend, client.ws, user.userId, (msg) => handleEncryptedMessage(friend, msg), (log) =>
+  //       console.log(`[WebRTC ${friend.username}] ${log}`)
+  //     );
+  //   });
+  // }, [client?.ws, user?.userId, blocks, onlineFriends, handleEncryptedMessage]);
 
   if (!rooms) return <Loading />;
 
