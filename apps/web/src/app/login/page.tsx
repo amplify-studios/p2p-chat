@@ -169,7 +169,7 @@ export default function Login() {
     <div className="flex flex-col items-center justify-center min-h-screen bg-background">
       <div className="bg-card p-8 rounded-lg shadow-md w-full max-w-sm">
         <h1 className="text-2xl font-bold mb-6 text-center text-foreground">
-          {existingUser ? 'Unlock' : 'Login'}
+          {existingUser ? 'Login' : 'Register'}
         </h1>
 
         {error && <p className="text-destructive mb-4">{error}</p>}
