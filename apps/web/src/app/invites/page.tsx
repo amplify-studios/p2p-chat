@@ -24,7 +24,6 @@ export default function Invites() {
       return;
     }
   
-
     acceptInvite(invite);
   }
 

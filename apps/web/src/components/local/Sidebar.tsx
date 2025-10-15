@@ -24,6 +24,7 @@ import { useBlocks } from '@/hooks/useBlocks';
 import NotificationInit from './Notifications';
 // import { NotificationsClient } from '@chat/notifications/notifications-client';
 import { registerServiceWorker, requestNotificationPermission, sendLocalNotification } from '@chat/notifications';
+import { useResend } from '@/hooks/useResend';
 
 interface SidebarProps {
   children: ReactNode;
@@ -36,6 +37,7 @@ export default function Sidebar({ children }: SidebarProps) {
   const { friends } = usePeers();
   const { blocks } = useBlocks();
   useInvites();
+  useResend();
   useAcks({ client });
   const { putEncr, getAllDecr } = useDB();
   const pathname = usePathname();
