@@ -4,13 +4,28 @@ import { useInvites } from '@/hooks/useInvites';
 import { Button } from '@/components/ui/button';
 import EmptyState from '@/components/local/EmptyState';
 import { useAuth } from '@/hooks/useAuth';
+import { InviteType } from '@chat/core';
+import { usePeers } from '@/hooks/usePeers';
+import { useToast } from '@/components/local/ToastContext';
 
 export default function Invites() {
   useAuth();
   const { invites: currentInvites, acceptInvite, declineInvite } = useInvites();
+  const { peers } = usePeers();
+  const { showToast } = useToast();
 
   if (!currentInvites.length) {
     return <EmptyState msg="No pending invites" />;
+  }
+
+  const handleAcceptInvite = (invite: InviteType) => {
+    if(!peers.some((p) => p.id == invite.from)) {
+      showToast(`Peer ${invite.from} is not connected to the server`, "warning");
+      return;
+    }
+  
+
+    acceptInvite(invite);
   }
 
   return (
@@ -29,7 +44,7 @@ export default function Invites() {
             <Button size="sm" variant="outline" onClick={() => declineInvite(invite)}>
               Decline
             </Button>
-            <Button size="sm" onClick={() => acceptInvite(invite)}>
+            <Button size="sm" onClick={() => handleAcceptInvite(invite)}>
               Accept
             </Button>
           </div>
