@@ -7,13 +7,10 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { EllipsisVertical } from 'lucide-react';
-import { useToast } from '@/components/local/ToastContext';
+import { useToast } from '@/contexts/ToastContext';
 import { useBlocks } from '@/hooks/useBlocks';
 import { CredentialsType } from '@chat/core';
-import { useDB } from '@/hooks/useDB';
-// import { useClient } from '@/hooks/useClient';
-// import Loading from '@/components/local/Loading';
-// import { PeerInfo } from '@chat/sockets';
+import { useDB } from '@/contexts/DBContext';
 import { useRooms } from '@/hooks/useRooms';
 
 export default function Peers() {

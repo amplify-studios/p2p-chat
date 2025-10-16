@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import PasswordField from '@/components/local/PasswordField';
-import { useDB } from '@/hooks/useDB';
+import { useDB } from '@/contexts/DBContext';
 import Loading from '@/components/local/Loading';
 import {
   EncryptedCredentialsType,
@@ -19,7 +19,7 @@ import {
 import { useAuth } from '@/hooks/useAuth';
 import { CredentialsType } from '@chat/core';
 import { eraseDB, PASSWORD_KEY } from '@/lib/storage';
-import { useConfirm } from '@/components/local/ConfirmContext';
+import { useConfirm } from '@/contexts/ConfirmContext';
 
 const validateForm = (
   username: string,

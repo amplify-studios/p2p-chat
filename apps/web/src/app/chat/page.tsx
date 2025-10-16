@@ -2,7 +2,7 @@
 
 import { Chat, Message } from '@/components/local/Chat';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useDB } from '@/hooks/useDB';
+import { useDB } from '@/contexts/DBContext';
 import Loading from '@/components/local/Loading';
 import { useAuth } from '@/hooks/useAuth';
 import { useSearchParams } from 'next/navigation';

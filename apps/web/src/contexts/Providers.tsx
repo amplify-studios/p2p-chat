@@ -1,8 +1,8 @@
-import { ClientProvider } from "@/hooks/useClient";
+import { ClientProvider } from "@/contexts/ClientContext";
 import { ReactNode } from "react";
 import { P2PProvider } from "./P2PContext";
-import { ConfirmProvider } from "@/components/local/ConfirmContext";
-import { ToastProvider } from "@/components/local/ToastContext";
+import { ConfirmProvider } from "@/contexts/ConfirmContext";
+import { ToastProvider } from "@/contexts/ToastContext";
 
 export default function Providers({children}: {children: ReactNode}) {
   return (

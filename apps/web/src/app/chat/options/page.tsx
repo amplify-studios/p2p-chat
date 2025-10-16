@@ -1,6 +1,6 @@
 'use client';
 
-import { useDB } from '@/hooks/useDB';
+import { useDB } from '@/contexts/DBContext';
 import Loading from '@/components/local/Loading';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useRooms } from '@/hooks/useRooms';
@@ -10,9 +10,9 @@ import { refreshRooms } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { decryptMessageType } from '@chat/crypto';
 import { useBlocks } from '@/hooks/useBlocks';
-import { useConfirm } from '@/components/local/ConfirmContext';
+import { useConfirm } from '@/contexts/ConfirmContext';
 import { ChevronLeft, LogOut, Trash, User } from 'lucide-react';
-import { useToast } from '@/components/local/ToastContext';
+import { useToast } from '@/contexts/ToastContext';
 
 export default function ChatOptionsPage() {
   const { db, putEncr } = useDB();

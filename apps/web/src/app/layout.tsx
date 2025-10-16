@@ -3,7 +3,7 @@ import { Roboto_Mono } from 'next/font/google';
 import './globals.css';
 import Layout from '@/components/local/Layout';
 import { ThemeProvider } from '@/components/theme-provider';
-import { DBProvider } from '@/hooks/useDB';
+import { DBProvider } from '@/contexts/DBContext';
 
 
 const robotoMono = Roboto_Mono({

@@ -6,7 +6,7 @@ import { Home, MessageSquareDot, Plus, Settings, Users } from 'lucide-react';
 import { useRooms } from '@/hooks/useRooms';
 import Loading from './Loading';
 import SidebarItem from './SidebarItem';
-import { useClient } from '@/hooks/useClient';
+import { useClient } from '@/contexts/ClientContext';
 import { useInvites } from '@/hooks/useInvites';
 import { useAcks } from '@/hooks/useAcks';
 import { CLIENT_CONFIG } from '@chat/core';

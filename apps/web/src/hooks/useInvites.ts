@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
-import { useDB } from '@/hooks/useDB';
+import { useDB } from '@/contexts/DBContext';
 import { generateBase58Id } from '@chat/crypto';
 import { InviteMessage, AckMessage } from '@chat/sockets';
 import { CredentialsType, InviteType, RoomType } from '@chat/core';
 import { refreshRooms } from '@/lib/utils';
 import { useAuth } from './useAuth';
-import { useClient } from './useClient';
+import { useClient } from '@/contexts/ClientContext';
 import { useRouter } from 'next/navigation';
 import { useRooms } from './useRooms';
 

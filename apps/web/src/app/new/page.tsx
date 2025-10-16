@@ -5,18 +5,16 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import Loading from '@/components/local/Loading';
-import ResponsiveQr from '@/components/local/ResponsiveQr';
-import { useDB } from '@/hooks/useDB';
+import { useDB } from '@/contexts/DBContext';
 import { useAuth } from '@/hooks/useAuth';
-import { useClient } from '@/hooks/useClient';
+import { useClient } from '@/contexts/ClientContext';
 import { Friend, usePeers } from '@/hooks/usePeers';
 import { generateBase58Id } from '@chat/crypto';
 import { CredentialsType, decodePayload, encodePayload, RoomType } from '@chat/core';
 import { InviteMessage, AckMessage } from '@chat/sockets';
 import { refreshRooms } from '@/lib/utils';
-import { useToast } from '@/components/local/ToastContext';
+import { useToast } from '@/contexts/ToastContext';
 import { CircleMinus, ShieldUser, User, UserPlus } from 'lucide-react';
-import { getSignalingClient } from '@/lib/signalingClient';
 import { useRooms } from '@/hooks/useRooms';
 
 export default function NewRoom() {
@@ -282,16 +280,17 @@ export default function NewRoom() {
         {error && <p className="text-destructive mb-4">{error}</p>}
 
         <div className="mb-4 flex gap-4">
+        {/*
           <label className="flex items-center gap-2">
-            {/*<input
+                <input
               type="radio"
               name="type"
               value="single"
               checked={type === 'single'}
               onChange={() => setType('single')}
-            />*/}
             Single
           </label>
+            />*/}
           {/*<label className="flex items-center gap-2">
             <input
               type="radio"
@@ -311,7 +310,7 @@ export default function NewRoom() {
           <div>
             <Input
               type="text"
-              placeholder="Other User ID"
+              placeholder="User ID"
               value={otherUserId}
               onChange={(e) => setOtherUserId(e.target.value)}
               className="mb-4"

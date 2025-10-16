@@ -6,7 +6,7 @@ import EmptyState from '@/components/local/EmptyState';
 import { useAuth } from '@/hooks/useAuth';
 import { InviteType } from '@chat/core';
 import { usePeers } from '@/hooks/usePeers';
-import { useToast } from '@/components/local/ToastContext';
+import { useToast } from '@/contexts/ToastContext';
 
 export default function Invites() {
   useAuth();

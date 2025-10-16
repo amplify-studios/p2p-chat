@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { useDB } from '@/hooks/useDB';
+import { useDB } from '@/contexts/DBContext';
 import { BlockType, CredentialsType } from '@chat/core';
 import { useAuth } from './useAuth';
-import { useToast } from '@/components/local/ToastContext';
+import { useToast } from '@/contexts/ToastContext';
 
 export function useBlocks() {
   const { db, getAllDecr, putEncr } = useDB();

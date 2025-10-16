@@ -3,9 +3,9 @@
 import { useEffect, useState } from 'react';
 import type { PeerInfo, PeersMessage } from '@chat/sockets';
 import { CredentialsType } from '@chat/core';
-import { useDB } from './useDB';
+import { useDB } from '@/contexts/DBContext';
 import { useAuth } from './useAuth';
-import { useClient } from './useClient';
+import { useClient } from '@/contexts/ClientContext';
 
 export interface Friend {
   id: string;

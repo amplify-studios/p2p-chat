@@ -12,10 +12,10 @@ import { WebRTCConnection } from '@chat/sockets/webrtc';
 import { PeerInfo } from '@chat/sockets';
 import { createECDHkey } from '@chat/crypto';
 import { returnDecryptedMessage } from '@/lib/messaging';
-import { useDB } from '@/hooks/useDB';
+import { useDB } from '@/contexts/DBContext';
 import { findRoomIdByPeer } from '@/lib/utils';
 import { MessageType } from '@chat/core';
-import { useClient } from '@/hooks/useClient';
+import { useClient } from '@/contexts/ClientContext';
 import { useAuth } from '@/hooks/useAuth';
 import { useBlocks } from '@/hooks/useBlocks';
 

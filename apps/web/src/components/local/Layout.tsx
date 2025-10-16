@@ -3,7 +3,7 @@
 import { usePathname } from 'next/navigation';
 import { ReactNode, Suspense } from 'react';
 import Sidebar from './Sidebar';
-import { ConfirmProvider } from './ConfirmContext';
+import { ConfirmProvider } from '@/contexts/ConfirmContext';
 import Providers from '@/contexts/Providers';
 
 export default function Layout({ children }: { children: ReactNode }) {

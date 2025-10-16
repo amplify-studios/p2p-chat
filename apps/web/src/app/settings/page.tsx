@@ -9,10 +9,10 @@ import { backupDB, eraseDB, PASSWORD_KEY, restoreDB } from '@/lib/storage';
 import { useRouter } from 'next/navigation';
 import { refreshRooms } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
-import { useToast } from '@/components/local/ToastContext';
+import { useToast } from '@/contexts/ToastContext';
 import { Archive, LogOut, QrCode, Server, ShieldBan, TestTube, Trash, Bell } from 'lucide-react';
-import { useConfirm } from '@/components/local/ConfirmContext';
-import { useClient } from '@/hooks/useClient';
+import { useConfirm } from '@/contexts/ConfirmContext';
+import { useClient } from '@/contexts/ClientContext';
 import { hasNotifictationPermission, requestNotificationPermission, sendLocalNotification } from '@chat/notifications';
 
 function SettingsRow({ label, children }: { label: string; children: React.ReactNode }) {

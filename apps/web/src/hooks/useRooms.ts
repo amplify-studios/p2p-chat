@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { RoomType } from '@chat/core';
-import { useDB } from '@/hooks/useDB';
+import { useDB } from '@/contexts/DBContext';
 import { useSearchParams } from 'next/navigation';
 import { useAuth } from './useAuth';
 

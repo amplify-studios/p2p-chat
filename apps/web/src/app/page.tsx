@@ -4,10 +4,10 @@ import { useEffect, useState } from 'react';
 import Loading from '@/components/local/Loading';
 import { useAuth } from '@/hooks/useAuth';
 import { usePeers } from '@/hooks/usePeers';
-import { useDB } from '@/hooks/useDB';
+import { useDB } from '@/contexts/DBContext';
 import { CLIENT_CONFIG, MessageType } from '@chat/core';
 import StatusCard from '@/components/local/StatusCard';
-import { useClient } from '@/hooks/useClient';
+import { useClient } from '@/contexts/ClientContext';
 import EmptyState from '@/components/local/EmptyState';
 import { useInvites } from '@/hooks/useInvites';
 

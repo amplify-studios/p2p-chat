@@ -1,8 +1,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { AckMessage, SignalingClient } from '@chat/sockets';
-import { CredentialsType, RoomType } from '@chat/core';
-import { useDB } from './useDB';
+import { useDB } from '@/contexts/DBContext';
 import { useAuth } from './useAuth';
 import { refreshRooms } from '@/lib/utils';
 

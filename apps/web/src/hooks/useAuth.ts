@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { redirect, useRouter } from 'next/navigation';
-import { useDB } from '@/hooks/useDB';
+import { useDB } from '@/contexts/DBContext';
 import { CredentialsType } from '@chat/core';
 import { decryptCredentialsType, EncryptedCredentialsType, generateAESKey } from '@chat/crypto';
 import { PASSWORD_KEY } from '@/lib/storage';

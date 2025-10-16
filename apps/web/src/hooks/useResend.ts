@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { usePeers } from "./usePeers";
-import { useDB } from "./useDB";
+import { useDB } from "@/contexts/DBContext";
 import { useAuth } from "./useAuth";
 import { MessageType } from "@chat/core";
 import { useRooms } from "./useRooms";
