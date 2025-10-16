@@ -276,16 +276,16 @@ export default function NewRoom() {
 
         <div className="mb-4 flex gap-4">
           <label className="flex items-center gap-2">
-            <input
+            {/*<input
               type="radio"
               name="type"
               value="single"
               checked={type === 'single'}
               onChange={() => setType('single')}
-            />
+            />*/}
             Single
           </label>
-          <label className="flex items-center gap-2">
+          {/*<label className="flex items-center gap-2">
             <input
               type="radio"
               name="type"
@@ -297,7 +297,7 @@ export default function NewRoom() {
               }}
             />
             Group
-          </label>
+          </label>*/}
         </div>
 
         {type === 'group' && (
@@ -397,20 +397,22 @@ export default function NewRoom() {
               {pendingInvite ? 'Invite Pending...' : 'Send Invite'}
             </Button>
 
-            <Button onClick={() => handleGenerateQR(otherUserId)} className="w-full mb-2">
-              Generate QR Invite
-            </Button>
+            {/*
+              <Button onClick={() => handleGenerateQR(otherUserId)} className="w-full mb-2">
+                Generate QR Invite
+              </Button>
 
-            {qrValue && (
-              <div className="flex flex-col items-center mt-4 gap-2">
-                <p className="text-sm text-muted-foreground">Scan to join instantly:</p>
-                <ResponsiveQr qrValue={qrValue} />
+              {qrValue && (
+                <div className="flex flex-col items-center mt-4 gap-2">
+                  <p className="text-sm text-muted-foreground">Scan to join instantly:</p>
+                  <ResponsiveQr qrValue={qrValue} />
 
-                <Button onClick={handleShare} className="mt-2">
-                  Share Invite
-                </Button>
-              </div>
-            )}
+                  <Button onClick={handleShare} className="mt-2">
+                    Share Invite
+                  </Button>
+                </div>
+              )}
+            */}
           </div>
         )}
       </div>

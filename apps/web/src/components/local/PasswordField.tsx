@@ -12,6 +12,7 @@ type PasswordFieldProps = {
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   // whether to show a small strength indicator (simple heuristic)
   showStrength?: boolean;
+  handleEnterKey?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
 };
 
 export default function PasswordField({
@@ -21,6 +22,7 @@ export default function PasswordField({
   className = '',
   onChange,
   showStrength = false,
+  handleEnterKey
 }: PasswordFieldProps) {
   const _id = useId();
   const [visible, setVisible] = useState(false);
@@ -51,6 +53,7 @@ export default function PasswordField({
           placeholder={placeholder}
           className="pr-12" /* room for the toggle button */
           aria-describedby={showStrength ? `${_id}-strength` : undefined}
+          onKeyDown={handleEnterKey}
         />
 
         <Button

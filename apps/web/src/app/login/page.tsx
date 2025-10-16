@@ -61,6 +61,13 @@ export default function Login() {
     return '/';
   };
 
+  const handleEnterKey = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter") {
+      console.log("Enter key pressed");
+      handleLogin();
+    }
+  };
+
   const redirect = sanitizeRedirect(rawRedirect);
 
   useEffect(() => {
@@ -186,6 +193,7 @@ export default function Login() {
             onChange={(e) => setUsername(e.target.value)}
             className="mb-4"
             disabled={isLocked}
+            onKeyDown={handleEnterKey}
           />
         )}
 
@@ -197,6 +205,7 @@ export default function Login() {
           showStrength={!existingUser}
           onChange={(e) => setPassword(e.target.value)}
           className="mb-4"
+          handleEnterKey={handleEnterKey}
         />
 
         <Button onClick={handleLogin} className="w-full" disabled={isLocked}>
