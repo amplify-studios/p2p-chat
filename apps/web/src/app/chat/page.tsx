@@ -19,7 +19,7 @@ let currentMsgId = 0;
 export default function P2PChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [connected, setConnected] = useState(false);
-  const [connection, setConnection] = useState<WebRTCConnection | null>(null);
+  const [connection, setConnection] = useState<WebRTCConnection | undefined>(undefined);
 
   const { db, getAllDecr, putEncr } = useDB();
   const { user, key } = useAuth();
@@ -118,32 +118,26 @@ export default function P2PChatPage() {
       setConnected(false);
       return;
     }
-    const interval = setInterval(() => setConnected(connection.isConnected()), 500);
+    const interval = setInterval(() => {
+      const isConnected = connection.isConnected();
+      setConnected(isConnected);
+    }, 500);
     return () => clearInterval(interval);
   }, [connection]);
 
   // Send message
   const sendMessage = useCallback(
     async (message: string) => {
-      console.log('sendMessage');
-      console.log('connection:', connection);
-      console.log('user:', user);
-      console.log('otherUser:', otherUser);
-      console.log('roomId:', roomId);
-      console.log('key:', key);
       if (!connection || !user?.userId || !otherUser || !roomId || !key) return;
 
-      console.log('Sending message:', message);
       // Optimistic local update
       setMessages((prev) => [...prev, { id: ++currentMsgId, text: message, sender: 'me' }]);
 
       const encrText = prepareSendMessagePackage(otherUser.public, message);
       const text = JSON.stringify(encrText);
 
-      console.log('Encrypted message:', text);
       const canSendImmediately = connection.isConnected();
       connection.send(text);
-      console.log('Message sent');
 
       try {
         await putEncr(
