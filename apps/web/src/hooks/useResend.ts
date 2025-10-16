@@ -5,14 +5,14 @@ import { useAuth } from "./useAuth";
 import { MessageType } from "@chat/core";
 import { useRooms } from "./useRooms";
 import { prepareSendMessagePackage } from "@/lib/messaging";
-import { usePeerConnections } from "@/contexts/PeerContext";
+import { useP2P } from "@/contexts/P2PContext";
 
 export function useResend() {
   const { user, key } = useAuth();
   const { friends } = usePeers();
   const { updateEncr, getAllDecr } = useDB();
   const { rooms } = useRooms();
-  const { getConnection } = usePeerConnections();
+  const { getConnection } = useP2P();
 
   useEffect(() => {
     if (!key || !user) return;

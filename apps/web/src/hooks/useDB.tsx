@@ -164,49 +164,39 @@ export function DBProvider({ children }: { children: ReactNode }) {
     ): Promise<boolean> => {
       if (!db) return false;
 
-      const tx = db.transaction(collection, 'readwrite');
-      const store = tx.objectStore(collection);
-
-      const existing = await store.get(id);
-      if (!existing) return false;
-
-      // decrypt → update → re-encrypt → put
-      let decrypted: any;
       try {
+        const existing = await db.get(collection, id);
+        if (!existing) return false;
+
+        let decrypted: any;
         switch (collection) {
           case 'messages':
             decrypted = decryptMessageType(existing as EncryptedMessageType, key);
-            break;
+          break;
           case 'credentials':
-          case 'user':
+            case 'user':
             decrypted = decryptCredentialsType(existing as EncryptedCredentialsType, key);
-            break;
+          break;
           case 'rooms':
             decrypted = decryptRoomType(existing as EncryptedRoomType, key);
-            break;
+          break;
           case 'invites':
             decrypted = decryptInviteType(existing as EncryptedInviteType, key);
-            break;
+          break;
           case 'blocks':
             decrypted = decryptBlockType(existing as EncryptedBlockType, key);
-            break;
+          break;
           case 'serverSettings':
             decrypted = decryptServerSettingsType(existing as EncryptedServerSettingsType, key);
-            break;
+          break;
           default:
             throw new Error(`Unknown collection: ${collection}`);
         }
 
-        try {
-          await db.delete(collection, id);
+        const updated = updater(decrypted);
 
-          const updated = updater(decrypted);
-          console.log(updated);
-          await putEncr(collection, updated, key, id);
-        } catch (err: unknown) {
-          console.error((err instanceof Error) ? err.message : JSON.stringify(err));
-        }
-        await tx.done;
+        await putEncr(collection, updated, key, id);
+
         return true;
       } catch (err) {
         console.error(`Failed to update record in ${collection}:`, err);

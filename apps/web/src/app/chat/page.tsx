@@ -12,7 +12,7 @@ import { MessageType } from '@chat/core';
 import { prepareSendMessagePackage, returnDecryptedMessage } from '@/lib/messaging';
 import { createECDHkey } from '@chat/crypto';
 import { WebRTCConnection } from '@chat/sockets';
-import { usePeerConnections } from '@/contexts/PeerContext';
+import { useP2P } from '@/contexts/P2PContext';
 
 let currentMsgId = 0;
 
@@ -25,7 +25,7 @@ export default function P2PChatPage() {
   const { user, key } = useAuth();
   const searchParams = useSearchParams();
   const { rooms } = useRooms();
-  const { getConnection, setOnMessage } = usePeerConnections();
+  const { getConnection, setOnMessage } = useP2P();
 
   const roomId = useMemo(() => searchParams?.get('id') ?? null, [searchParams]);
   const room = useMemo(() => rooms?.find((r) => r.roomId === roomId) ?? null, [rooms, roomId]);
@@ -114,7 +114,6 @@ export default function P2PChatPage() {
 
   // Track connection status
   useEffect(() => {
-    console.log(connection);
     if (!connection) {
       setConnected(false);
       return;

@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode, use, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { ReactNode, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { Home, MessageSquareDot, Plus, Settings, Users } from 'lucide-react';
 import { useRooms } from '@/hooks/useRooms';
@@ -8,39 +8,25 @@ import Loading from './Loading';
 import SidebarItem from './SidebarItem';
 import { useClient } from '@/hooks/useClient';
 import { useInvites } from '@/hooks/useInvites';
-import { useAuth } from '@/hooks/useAuth';
 import { useAcks } from '@/hooks/useAcks';
-import { CLIENT_CONFIG, MessageType, RoomType } from '@chat/core';
+import { CLIENT_CONFIG } from '@chat/core';
 import { usePeers } from '@/hooks/usePeers';
 import { PeerInfo } from '@chat/sockets';
-import { returnDecryptedMessage } from '@/lib/messaging';
-import { createECDHkey } from '@chat/crypto';
-import { useDB } from '@/hooks/useDB';
-import { findRoomIdByPeer } from '@/lib/utils';
-import { usePathname } from 'next/navigation';
-import { useBlocks } from '@/hooks/useBlocks';
-import { registerServiceWorker, requestNotificationPermission, sendLocalNotification } from '@chat/notifications';
+import { registerServiceWorker, requestNotificationPermission } from '@chat/notifications';
 import { useResend } from '@/hooks/useResend';
-import { useToast } from './ToastContext';
-import { usePeerConnections } from '@/contexts/PeerContext';
+import { useP2P } from '@/contexts/P2PContext';
 
 interface SidebarProps {
   children: ReactNode;
 }
 
 export default function Sidebar({ children }: SidebarProps) {
-  const { user, key } = useAuth();
   const { client, status } = useClient();
   const { rooms, activeRoomId } = useRooms();
   const { friends } = usePeers();
-  const { blocks } = useBlocks();
   useInvites();
   useResend();
   useAcks({ client });
-  const { putEncr, getAllDecr } = useDB();
-  const pathname = usePathname();
-  const { showToast } = useToast();
-  const { createConnection } = usePeerConnections();
 
   const [connected, setConnected] = useState(false);
   const onlineFriends = useMemo(
@@ -48,157 +34,22 @@ export default function Sidebar({ children }: SidebarProps) {
     [friends]
   );
 
-  // useEffect(() => {
-  //   async function init() {
-  //     const granted = await NotificationsClient.requestPermission();
-  //     if (!granted) return;
-
-  //     await NotificationsClient.registerServiceWorker();
-
-  //     const subscription = await NotificationsClient.subscribe(
-  //       process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!
-  //     );
-
-  //     // Send subscription to server
-  //     await fetch("/api/subscribe", {
-  //       method: "POST",
-  //       headers: { "Content-Type": "application/json" },
-  //       body: JSON.stringify(subscription),
-  //     });
-  //   }
-
-  //   init();
-  // }, []);
-
   useEffect(() => {
     registerServiceWorker();
     (async () => {
-      // const granted = 
       await requestNotificationPermission();
-      // if (!granted) return;
-
-      // sendLocalNotification("Hello!", "This notification appears only on this device");
     })();
   }, []);
 
+  const { connectToPeer } = useP2P();
   useEffect(() => {
-    if (!client?.ws || !user || !blocks) return;
-
-    onlineFriends.forEach(friend => {
-      if (!client.ws) return;
-      const isBlocked = blocks.find(b => b.userId === friend.id);
-      if (isBlocked) return;
-      createConnection(friend, client.ws, user.userId,
-        async (encrMsg) => {
-          if (!encrMsg || !key) return;
-
-          let parsed: any;
-          try {
-            parsed = JSON.parse(encrMsg);
-          } catch {
-            return;
-          }
-
-          const userECDH = createECDHkey();
-          if (!user?.private) return;
-          userECDH.setPrivateKey(Buffer.from(user.private, 'hex'));
-
-          const msg = returnDecryptedMessage(userECDH, parsed);
-          const rooms = (await getAllDecr('rooms', key)) as RoomType[];
-          const roomId = findRoomIdByPeer(rooms, friend.id);
-          const peerUsername = friends.find(f => f.id === friend.id)?.username;
-
-          await putEncr(
-            'messages',
-            {
-              roomId,
-              senderId: friend.id,
-              message: msg,
-              timestamp: Date.now(),
-              sent: true,
-              read: false,
-            } as MessageType,
-            key,
-          );
-
-          // Show notification only if not in the active chat
-          if (pathname !== '/chat' || activeRoomId !== roomId) {
-            sendLocalNotification(`${peerUsername ?? 'Anonymous'}`, msg);
-          }
-        },
-        (log) => {
-          console.log(`[WebRTC ${friend.username}] ${log}`);
-        });
-        console.log("INFO: created connection for friend: ", friend.username);
-    });
-  }, [
-    client?.ws,
-    user?.userId,
-    user?.private,
-    onlineFriends,
-    key,
-    friends,
-    activeRoomId,
-    pathname,
-  ]);
+    onlineFriends.forEach(connectToPeer);
+  }, [onlineFriends]);
 
   // Track overall connection status
   useEffect(() => {
     setConnected(status === 'connected');
   }, [status]);
-
-  // const handleEncryptedMessage = useCallback(
-  //   async (friend: PeerInfo, encrMsg: string) => {
-  //     if (!encrMsg || !key || !user?.private) return;
-
-  //     let parsed;
-  //     try {
-  //       parsed = JSON.parse(encrMsg);
-  //     } catch {
-  //       return;
-  //     }
-
-  //     const userECDH = createECDHkey();
-  //     userECDH.setPrivateKey(Buffer.from(user.private, "hex"));
-
-  //     const msg = returnDecryptedMessage(userECDH, parsed);
-  //     const rooms = (await getAllDecr("rooms", key)) as RoomType[];
-  //     const roomId = findRoomIdByPeer(rooms, friend.id);
-  //     const peerUsername = friends.find((f) => f.id === friend.id)?.username;
-
-  //     await putEncr(
-  //       "messages",
-  //       {
-  //         roomId,
-  //         senderId: friend.id,
-  //         message: msg,
-  //         timestamp: Date.now(),
-  //         sent: true,
-  //         read: false,
-  //       } as MessageType,
-  //       key
-  //     );
-
-  //     // Show notification only if not in active chat
-  //     if (pathname !== "/chat" || activeRoomId !== roomId) {
-  //       sendLocalNotification(`${peerUsername ?? 'Anonymous'}`, msg);
-  //     }
-  //   },
-  //   [key, user?.private, activeRoomId, pathname, friends]
-  // );
-
-  // useEffect(() => {
-  //   if (!client?.ws || !user || !blocks) return;
-
-  //   onlineFriends.forEach((friend) => {
-  //     if (!client.ws) return;
-  //     if (blocks.some((b) => b.userId === friend.id)) return;
-
-  //     createConnection(friend, client.ws, user.userId, (msg) => handleEncryptedMessage(friend, msg), (log) =>
-  //       console.log(`[WebRTC ${friend.username}] ${log}`)
-  //     );
-  //   });
-  // }, [client?.ws, user?.userId, blocks, onlineFriends, handleEncryptedMessage]);
 
   if (!rooms) return <Loading />;
 
