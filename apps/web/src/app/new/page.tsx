@@ -267,6 +267,13 @@ export default function NewRoom() {
     setParticipants((prev) => prev.filter((p) => p.id !== id));
   };
 
+  const handleEnterKey = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter") {
+      console.log("Enter key pressed");
+      handleCreateRoom();
+    }
+  };
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
       <div className="bg-card p-8 rounded-lg shadow-md w-full max-w-md">
@@ -299,6 +306,39 @@ export default function NewRoom() {
             Group
           </label>*/}
         </div>
+
+        {type === 'single' && (
+          <div>
+            <Input
+              type="text"
+              placeholder="Other User ID"
+              value={otherUserId}
+              onChange={(e) => setOtherUserId(e.target.value)}
+              className="mb-4"
+              onKeyDown={handleEnterKey}
+            />
+            <Button onClick={handleCreateRoom} className="w-full mb-2" disabled={pendingInvite}>
+              {pendingInvite ? 'Invite Pending...' : 'Send Invite'}
+            </Button>
+
+            {/*
+              <Button onClick={() => handleGenerateQR(otherUserId)} className="w-full mb-2">
+                Generate QR Invite
+              </Button>
+
+              {qrValue && (
+                <div className="flex flex-col items-center mt-4 gap-2">
+                  <p className="text-sm text-muted-foreground">Scan to join instantly:</p>
+                  <ResponsiveQr qrValue={qrValue} />
+
+                  <Button onClick={handleShare} className="mt-2">
+                    Share Invite
+                  </Button>
+                </div>
+              )}
+            */}
+          </div>
+        )}
 
         {type === 'group' && (
           <div className="space-y-4">
@@ -384,37 +424,6 @@ export default function NewRoom() {
           </div>
         )}
 
-        {type === 'single' && (
-          <div>
-            <Input
-              type="text"
-              placeholder="Other User ID"
-              value={otherUserId}
-              onChange={(e) => setOtherUserId(e.target.value)}
-              className="mb-4"
-            />
-            <Button onClick={handleCreateRoom} className="w-full mb-2" disabled={pendingInvite}>
-              {pendingInvite ? 'Invite Pending...' : 'Send Invite'}
-            </Button>
-
-            {/*
-              <Button onClick={() => handleGenerateQR(otherUserId)} className="w-full mb-2">
-                Generate QR Invite
-              </Button>
-
-              {qrValue && (
-                <div className="flex flex-col items-center mt-4 gap-2">
-                  <p className="text-sm text-muted-foreground">Scan to join instantly:</p>
-                  <ResponsiveQr qrValue={qrValue} />
-
-                  <Button onClick={handleShare} className="mt-2">
-                    Share Invite
-                  </Button>
-                </div>
-              )}
-            */}
-          </div>
-        )}
       </div>
     </div>
   );
