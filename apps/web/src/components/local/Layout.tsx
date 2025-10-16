@@ -3,11 +3,7 @@
 import { usePathname } from 'next/navigation';
 import { ReactNode, Suspense } from 'react';
 import Sidebar from './Sidebar';
-import { ToastProvider } from './ToastContext';
 import { ConfirmProvider } from './ConfirmContext';
-import { ClientProvider } from '@/hooks/useClient';
-import { PeerProvider } from '@/contexts/PeerContext';
-import { P2PProvider } from '@/contexts/P2PContext';
 import Providers from '@/contexts/Providers';
 
 export default function Layout({ children }: { children: ReactNode }) {
