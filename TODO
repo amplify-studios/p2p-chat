@@ -5,6 +5,9 @@ TODO: Server federation
 TODO: Sync between devices
 TODO: Documentation (code and docs/)
 TODO: Derive the local encryption key from the user’s password using a strong KDF such as Argon2id or scrypt.
+TODO: p2p connections issues
+TODO: store and resend ACK
+TODO: restore data not working on mobile
 DONE: tls encryption for signaling server (wss)
 DONE: IndexedDB
 DONE: ECDH crypto methods
@@ -46,4 +49,3 @@ DONE: Selecting / Defining signaling server/s to use
 DONE: Notifications system
 DONE: Signaling server connection issues
 DONE: IDB issues in chromium
-DONE: p2p connections issues

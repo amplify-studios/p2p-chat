@@ -24,6 +24,8 @@ import {
   decryptServerSettingsType,
   EncryptedServerSettingsType,
   encryptServerSettingsType,
+  generateUUID,
+  generateBase58Id,
 } from '@chat/crypto';
 import {
   BlockType,
@@ -44,6 +46,12 @@ type DBContextType = {
     collectionKey?: string | number,
   ) => Promise<EncryptedStorageType | null>;
   getAllDecr: (collection: Collection, key: Uint8Array) => Promise<any[]>;
+  updateEncr: (
+    collection: Collection,
+    key: Uint8Array,
+    id: string | number,
+    updater: (oldData: any) => any
+  ) => Promise<boolean>;
 };
 
 const DBContext = createContext<DBContextType | undefined>(undefined);
@@ -64,6 +72,7 @@ export function DBProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  // ---- Encrypt and store an object ----
   const putEncr = useCallback(
     async (
       collection: Collection,
@@ -76,7 +85,9 @@ export function DBProvider({ children }: { children: ReactNode }) {
       let encr: EncryptedStorageType;
       switch (collection) {
         case 'messages':
-          encr = encryptMessageType(obj as MessageType, key);
+          const msg = obj as MessageType;
+          msg.id = generateBase58Id();
+          encr = encryptMessageType(msg, key);
           break;
         case 'credentials':
         case 'user':
@@ -98,11 +109,8 @@ export function DBProvider({ children }: { children: ReactNode }) {
           throw new Error(`Unknown collection: ${collection}`);
       }
 
-      // NOTE: Check out jakearchibald/idb-keyval
-      // TODO: do this inside a transaction to avoid IDB errors
-
       if (encr) {
-        await db.put(collection, encr as EncryptedStorageType, collectionKey);
+        await db.put(collection, encr, collectionKey);
         return encr;
       }
       return null;
@@ -110,13 +118,14 @@ export function DBProvider({ children }: { children: ReactNode }) {
     [db],
   );
 
+  // ---- Get and decrypt all ----
   const getAllDecr = useCallback(
     async (collection: Collection, key: Uint8Array) => {
       if (!db) return [];
 
       const encrypted = await db.getAll(collection);
-
-      return encrypted.map((e) => {
+      return encrypted
+        .map((e) => {
           try {
             switch (collection) {
               case 'messages':
@@ -145,8 +154,70 @@ export function DBProvider({ children }: { children: ReactNode }) {
     [db],
   );
 
+  // ---- Update and re-encrypt ----
+  const updateEncr = useCallback(
+    async (
+      collection: Collection,
+      key: Uint8Array,
+      id: string | number,
+      updater: (oldData: any) => any
+    ): Promise<boolean> => {
+      if (!db) return false;
+
+      const tx = db.transaction(collection, 'readwrite');
+      const store = tx.objectStore(collection);
+
+      const existing = await store.get(id);
+      if (!existing) return false;
+
+      // decrypt → update → re-encrypt → put
+      let decrypted: any;
+      try {
+        switch (collection) {
+          case 'messages':
+            decrypted = decryptMessageType(existing as EncryptedMessageType, key);
+            break;
+          case 'credentials':
+          case 'user':
+            decrypted = decryptCredentialsType(existing as EncryptedCredentialsType, key);
+            break;
+          case 'rooms':
+            decrypted = decryptRoomType(existing as EncryptedRoomType, key);
+            break;
+          case 'invites':
+            decrypted = decryptInviteType(existing as EncryptedInviteType, key);
+            break;
+          case 'blocks':
+            decrypted = decryptBlockType(existing as EncryptedBlockType, key);
+            break;
+          case 'serverSettings':
+            decrypted = decryptServerSettingsType(existing as EncryptedServerSettingsType, key);
+            break;
+          default:
+            throw new Error(`Unknown collection: ${collection}`);
+        }
+
+        try {
+          await db.delete(collection, id);
+
+          const updated = updater(decrypted);
+          console.log(updated);
+          await putEncr(collection, updated, key, id);
+        } catch (err: unknown) {
+          console.error((err instanceof Error) ? err.message : JSON.stringify(err));
+        }
+        await tx.done;
+        return true;
+      } catch (err) {
+        console.error(`Failed to update record in ${collection}:`, err);
+        return false;
+      }
+    },
+    [db, putEncr],
+  );
+
   return (
-    <DBContext.Provider value={{ db, putEncr, getAllDecr }}>
+    <DBContext.Provider value={{ db, putEncr, getAllDecr, updateEncr }}>
       {children}
     </DBContext.Provider>
   );

@@ -10,26 +10,22 @@ import { useRooms } from '@/hooks/useRooms';
 import EmptyState from '@/components/local/EmptyState';
 import { MessageType } from '@chat/core';
 import { prepareSendMessagePackage, returnDecryptedMessage } from '@/lib/messaging';
-import {
-  createConnection,
-  getConnection,
-  setOnLog,
-  setOnMessage,
-} from '@/lib/peerStore';
-import { useClient } from '@/hooks/useClient';
 import { createECDHkey } from '@chat/crypto';
+import { WebRTCConnection } from '@chat/sockets';
+import { usePeerConnections } from '@/contexts/PeerContext';
 
 let currentMsgId = 0;
 
 export default function P2PChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [connected, setConnected] = useState(false);
+  const [connection, setConnection] = useState<WebRTCConnection | null>(null);
 
   const { db, getAllDecr, putEncr } = useDB();
   const { user, key } = useAuth();
-  const { client } = useClient();
   const searchParams = useSearchParams();
   const { rooms } = useRooms();
+  const { getConnection, setOnMessage } = usePeerConnections();
 
   const roomId = useMemo(() => searchParams?.get('id') ?? null, [searchParams]);
   const room = useMemo(() => rooms?.find((r) => r.roomId === roomId) ?? null, [rooms, roomId]);
@@ -37,6 +33,12 @@ export default function P2PChatPage() {
     () => room?.keys.find((k) => k.userId !== user?.userId) ?? null,
     [room, user?.userId]
   );
+
+  useEffect(() => {
+    if (!otherUser) return;
+    const conn = getConnection(otherUser.userId);
+    setConnection(conn);
+  }, [otherUser, getConnection]);
 
   // Load local messages for this room
   useEffect(() => {
@@ -63,11 +65,6 @@ export default function P2PChatPage() {
     })();
   }, [db, roomId, key, user?.userId, getAllDecr]);
 
-  // Get existing connection
-  const connection = useMemo(
-    () => (otherUser ? getConnection(otherUser.userId) : undefined),
-    [otherUser]
-  );
 
   // Listen for incoming messages
   useEffect(() => {
@@ -117,6 +114,7 @@ export default function P2PChatPage() {
 
   // Track connection status
   useEffect(() => {
+    console.log(connection);
     if (!connection) {
       setConnected(false);
       return;

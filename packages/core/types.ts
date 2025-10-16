@@ -1,4 +1,5 @@
 export interface MessageType {
+  id: string;
   roomId: string; // encrypt
   senderId: string; // encrypt
   message: string; // encrypt

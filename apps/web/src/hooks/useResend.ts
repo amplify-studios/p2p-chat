@@ -4,41 +4,58 @@ import { useDB } from "./useDB";
 import { useAuth } from "./useAuth";
 import { MessageType } from "@chat/core";
 import { useRooms } from "./useRooms";
-import { getConnection } from "@/lib/peerStore";
 import { prepareSendMessagePackage } from "@/lib/messaging";
+import { usePeerConnections } from "@/contexts/PeerContext";
 
 export function useResend() {
   const { user, key } = useAuth();
-  const { friends } = usePeers(); 
-  const { putEncr, getAllDecr } = useDB();
+  const { friends } = usePeers();
+  const { updateEncr, getAllDecr } = useDB();
   const { rooms } = useRooms();
+  const { getConnection } = usePeerConnections();
 
   useEffect(() => {
-    if(!key) return;
+    if (!key || !user) return;
 
-    (async () => {
+    const resendPendingMessages = async () => {
       const allMessages = (await getAllDecr("messages", key)) as MessageType[];
-      const pendingMessages = allMessages.filter((m) => !m.sent);
-      const roomsWithPendingMessages = rooms.filter((r) => pendingMessages.some((m) => m.roomId == r.roomId));
-      const userIds = roomsWithPendingMessages.map((r) => r.keys);
+      const pending = allMessages.filter((m) => !m.sent);
+      if (pending.length === 0) return;
 
-      userIds.forEach((credentials) => {
-        const cred = credentials.filter((c) => c.userId != user?.userId)[0]; // assuming only single rooms exist
+      // Group pending messages by roomId
+      const grouped = new Map<string, MessageType[]>();
+      for (const msg of pending) {
+        if (!grouped.has(msg.roomId)) grouped.set(msg.roomId, []);
+        grouped.get(msg.roomId)!.push(msg);
+      }
 
-        const room = roomsWithPendingMessages.filter((r) => r.keys.some((k) => k.userId == cred.userId))[0]; // assuming only one room for each user
-        const messages = pendingMessages.filter((m) => m.roomId == room.roomId);
+      for (const [roomId, messages] of grouped.entries()) {
+        const room = rooms.find((r) => r.roomId === roomId);
+        if (!room) continue;
 
-        messages.forEach((message) => {
-          const encrText = prepareSendMessagePackage(cred.public, message.message);
-          const text = JSON.stringify(encrText);
+        // Assume 1-to-1 chat, find the other participant
+        const recipient = room.keys.find((k) => k.userId !== user.userId);
+        if (!recipient) continue;
 
-          const conn = getConnection(cred.userId);
-          conn.send(text);
+        const conn = getConnection(recipient.userId);
+        if (!conn || !conn.isConnected()) continue;
 
-          // TODO: update sent to false
-        });
-      });
+        for (const msg of messages) {
+          try {
+            const encrypted = prepareSendMessagePackage(
+              recipient.public,
+              msg.message
+            );
+            conn.send(JSON.stringify(encrypted));
 
-    })()
-  }, [friends.map((f) => f.online)]);
+            await updateEncr("messages", key, msg.id, (decr) => { return { ...decr, sent: true } });
+          } catch (err) {
+            console.error("Failed to resend message:", err);
+          }
+        }
+      }
+    };
+
+    resendPendingMessages();
+  }, [key, user, rooms, friends]);
 }

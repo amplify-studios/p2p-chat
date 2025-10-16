@@ -23,7 +23,7 @@ export type Collection =
 
 interface MyDB extends DBSchema {
   messages: {
-    key: number;
+    key: string;
     value: EncryptedMessageType;
   };
   user: {
@@ -58,7 +58,7 @@ function getDB() {
   if (!dbPromise) {
     dbPromise = openDB<MyDB>(DB_NAME, DB_VERSION, {
       upgrade(db) {
-        db.createObjectStore('messages', { autoIncrement: true });
+        db.createObjectStore('messages', { keyPath: 'id'});
         db.createObjectStore('user', { autoIncrement: true });
         db.createObjectStore('credentials', { keyPath: 'userId' });
         db.createObjectStore('rooms', { keyPath: 'roomId' });

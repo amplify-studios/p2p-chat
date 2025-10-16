@@ -13,18 +13,16 @@ import { useAcks } from '@/hooks/useAcks';
 import { CLIENT_CONFIG, MessageType, RoomType } from '@chat/core';
 import { usePeers } from '@/hooks/usePeers';
 import { PeerInfo } from '@chat/sockets';
-import { usePeerConnections } from '@/hooks/useConnectionsStore';
 import { returnDecryptedMessage } from '@/lib/messaging';
 import { createECDHkey } from '@chat/crypto';
 import { useDB } from '@/hooks/useDB';
 import { findRoomIdByPeer } from '@/lib/utils';
 import { usePathname } from 'next/navigation';
-import { createConnection, setOnMessage } from '@/lib/peerStore';
 import { useBlocks } from '@/hooks/useBlocks';
-import NotificationInit from './Notifications';
-// import { NotificationsClient } from '@chat/notifications/notifications-client';
 import { registerServiceWorker, requestNotificationPermission, sendLocalNotification } from '@chat/notifications';
 import { useResend } from '@/hooks/useResend';
+import { useToast } from './ToastContext';
+import { usePeerConnections } from '@/contexts/PeerContext';
 
 interface SidebarProps {
   children: ReactNode;
@@ -41,6 +39,8 @@ export default function Sidebar({ children }: SidebarProps) {
   useAcks({ client });
   const { putEncr, getAllDecr } = useDB();
   const pathname = usePathname();
+  const { showToast } = useToast();
+  const { createConnection } = usePeerConnections();
 
   const [connected, setConnected] = useState(false);
   const onlineFriends = useMemo(
@@ -129,6 +129,7 @@ export default function Sidebar({ children }: SidebarProps) {
         (log) => {
           console.log(`[WebRTC ${friend.username}] ${log}`);
         });
+        console.log("INFO: created connection for friend: ", friend.username);
     });
   }, [
     client?.ws,
