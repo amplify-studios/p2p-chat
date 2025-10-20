@@ -4,7 +4,7 @@ import { useDB } from "./useDB";
 import { useAuth } from "./useAuth";
 import { MessageType } from "@chat/core";
 import { useRooms } from "./useRooms";
-import { getConnection } from "@/lib/peerStore";
+import { usePeerStore } from "@/lib/peerStore";
 import { prepareSendMessagePackage } from "@/lib/messaging";
 
 export function useResend() {
@@ -12,6 +12,7 @@ export function useResend() {
   const { friends } = usePeers(); 
   const { putEncr, getAllDecr } = useDB();
   const { rooms } = useRooms();
+  const { getConnection } = usePeerStore();
 
   useEffect(() => {
     if(!key) return;
@@ -33,7 +34,9 @@ export function useResend() {
           const text = JSON.stringify(encrText);
 
           const conn = getConnection(cred.userId);
-          conn.send(text);
+          if (conn) {
+            conn.send(text);
+          }
 
           // TODO: update sent to false
         });

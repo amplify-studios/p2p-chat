@@ -6,6 +6,7 @@ import Sidebar from './Sidebar';
 import { ToastProvider } from './ToastContext';
 import { ConfirmProvider } from './ConfirmContext';
 import { ClientProvider } from '@/hooks/useClient';
+import { PeerStoreProvider } from '@/lib/peerStore';
 // import { DBProvider } from '@/hooks/useDB';
 
 export default function Layout({ children }: { children: ReactNode }) {
@@ -23,7 +24,9 @@ export default function Layout({ children }: { children: ReactNode }) {
       <ClientProvider>
         <ConfirmProvider>
           <ToastProvider>
-            <Sidebar>{children}</Sidebar>
+            <PeerStoreProvider>
+              <Sidebar>{children}</Sidebar>
+            </PeerStoreProvider>
           </ToastProvider>
         </ConfirmProvider>
         </ClientProvider>

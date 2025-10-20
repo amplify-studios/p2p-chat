@@ -10,12 +10,7 @@ import { useRooms } from '@/hooks/useRooms';
 import EmptyState from '@/components/local/EmptyState';
 import { MessageType } from '@chat/core';
 import { prepareSendMessagePackage, returnDecryptedMessage } from '@/lib/messaging';
-import {
-  createConnection,
-  getConnection,
-  setOnLog,
-  setOnMessage,
-} from '@/lib/peerStore';
+import { usePeerStore } from '@/lib/peerStore';
 import { useClient } from '@/hooks/useClient';
 import { createECDHkey } from '@chat/crypto';
 
@@ -30,6 +25,8 @@ export default function P2PChatPage() {
   const { client } = useClient();
   const searchParams = useSearchParams();
   const { rooms } = useRooms();
+  const { getConnection, setOnMessage, createConnection } = usePeerStore();
+
 
   const roomId = useMemo(() => searchParams?.get('id') ?? null, [searchParams]);
   const room = useMemo(() => rooms?.find((r) => r.roomId === roomId) ?? null, [rooms, roomId]);
@@ -114,6 +111,88 @@ export default function P2PChatPage() {
       }
     });
   }, [connection, user, otherUser, roomId, key, putEncr]);
+
+  const ensureChatConnection = useCallback(() => {
+    if (!otherUser || !client?.ws || !user?.userId) return;
+
+    const existingConnection = getConnection(otherUser.userId);
+    if (existingConnection && existingConnection.isConnected()) {
+      return existingConnection;
+    }
+
+    if (!existingConnection) {
+      return createConnection(
+        {
+          id: otherUser.userId,
+          username: otherUser.username || 'Unknown',
+          pubkey: otherUser.public || ''
+        },
+
+        client.ws,
+        user.userId,
+        async (encrMsg: string) => {
+          if (!encrMsg) return;
+
+          let parsed: any;
+          try {
+            parsed = JSON.parse(encrMsg);
+          } catch {
+            console.warn('Invalid message JSON');
+            return;
+          }
+
+          // Decrypt message
+          const userECDH = createECDHkey();
+          if (!user?.private) return;
+          const privateKeyBuffer = Buffer.from(user.private, 'hex');
+          userECDH.setPrivateKey(privateKeyBuffer);
+          const msg = returnDecryptedMessage(userECDH, parsed);
+
+          // Update local state
+          setMessages((prev) => [
+            ...prev,
+            { id: ++currentMsgId, text: msg, sender: 'other' },
+          ]);
+
+          // Save locally
+          try {
+            if (key) {
+              await putEncr(
+                'messages',
+                {
+                  roomId,
+                  senderId: otherUser.userId,
+                  message: msg,
+                  timestamp: Date.now(),
+                  sent: true,
+                } as MessageType,
+                key
+              );
+            }
+          } catch (err) {
+            console.error('Failed to store incoming message', err);
+          }
+        },
+        (logMsg: string) => {
+          console.log(`[Chat ${otherUser.username}] ${logMsg}`);
+        }
+      );
+    }
+
+    return existingConnection;
+  }, [otherUser, client?.ws, user?.userId, user?.private, getConnection, createConnection, putEncr, roomId, key]);
+
+
+  useEffect(() => {
+    if (otherUser && client?.ws && user?.userId) {
+      const existingConnection = getConnection(otherUser.userId);
+      if (!existingConnection || !existingConnection.isConnected()) {
+        console.log(`[Chat] Establishing connection to ${otherUser.username}`);
+        ensureChatConnection();
+      }
+    }
+  }, [otherUser, client?.ws, user?.userId, getConnection, ensureChatConnection]);
+
 
   // Track connection status
   useEffect(() => {
