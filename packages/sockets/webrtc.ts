@@ -329,6 +329,12 @@ export class WebRTCConnection {
     }
   }
 
+  public onDataChannelOpen(handler: () => void) {
+    if (this.dataChannel) {
+      this.dataChannel.addEventListener('open', handler);
+    }
+  }
+
   /** ---------------- Retry & Lifecycle ---------------- */
 
   private handleRetry() {

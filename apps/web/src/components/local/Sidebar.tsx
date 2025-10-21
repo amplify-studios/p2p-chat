@@ -28,12 +28,6 @@ export default function Sidebar({ children }: SidebarProps) {
   useResend();
   useAcks({ client });
 
-  const [connected, setConnected] = useState(false);
-  const onlineFriends = useMemo(
-    () => friends.filter(f => f.online).map(f => ({ id: f.id, username: f.username, pubkey: "" } as PeerInfo)),
-    [friends]
-  );
-
   useEffect(() => {
     registerServiceWorker();
     (async () => {
@@ -41,10 +35,22 @@ export default function Sidebar({ children }: SidebarProps) {
     })();
   }, []);
 
-  const { connectToPeer } = useP2P();
+  const [connected, setConnected] = useState(false);
+
+  const onlineFriends = useMemo(() => {
+    return friends
+    .filter(f => f.online)
+    .map(f => ({ id: f.id, username: f.username, pubkey: "" } as PeerInfo));
+  }, [friends]);
+
+  const { isReady, connectToPeer } = useP2P();
+
   useEffect(() => {
-    onlineFriends.forEach(connectToPeer);
-  }, [onlineFriends]);
+    if (!isReady) return;
+    onlineFriends.forEach(async (friend) => {
+      await connectToPeer(friend);
+    });
+  }, [isReady, onlineFriends, connectToPeer]);
 
   // Track overall connection status
   useEffect(() => {

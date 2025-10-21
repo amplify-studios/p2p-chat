@@ -25,7 +25,7 @@ export default function P2PChatPage() {
   const { user, key } = useAuth();
   const searchParams = useSearchParams();
   const { rooms } = useRooms();
-  const { getConnection, setOnMessage } = useP2P();
+  const { getConnection, setOnMessage, connectToPeer } = useP2P();
 
   const roomId = useMemo(() => searchParams?.get('id') ?? null, [searchParams]);
   const room = useMemo(() => rooms?.find((r) => r.roomId === roomId) ?? null, [rooms, roomId]);
@@ -128,34 +128,78 @@ export default function P2PChatPage() {
   // Send message
   const sendMessage = useCallback(
     async (message: string) => {
-      if (!connection || !user?.userId || !otherUser || !roomId || !key) return;
+      if (!user?.userId || !otherUser?.userId || !roomId || !key) {
+        console.warn("[sendMessage] Missing required data, aborting send");
+        return;
+      }
 
-      // Optimistic local update
-      setMessages((prev) => [...prev, { id: ++currentMsgId, text: message, sender: 'me' }]);
+      // Ensure a connection exists and is ready
+      let conn = connection;
+      if (!conn) {
+        console.log("[sendMessage] Connection missing, creating one...");
+        try {
+          conn = await connectToPeer({
+            id: otherUser.userId,
+            pubkey: otherUser.public,
+            username: otherUser.username,
+          });
+          if (!conn) {
+            console.warn("[sendMessage] Failed to create connection");
+            return;
+          }
+          setConnection(conn);
+        } catch (err) {
+          console.error("[sendMessage] Error creating connection", err);
+          return;
+        }
+      }
+
+      // Optimistic UI update
+      setMessages((prev) => [
+        ...prev,
+        { id: ++currentMsgId, text: message, sender: "me" },
+      ]);
 
       const encrText = prepareSendMessagePackage(otherUser.public, message);
-      const text = JSON.stringify(encrText);
+      const payload = JSON.stringify(encrText);
 
-      const canSendImmediately = connection.isConnected();
-      connection.send(text);
+      // Ensure the connection is ready to send
+      const trySend = async () => {
+        if (conn?.isConnected()) {
+          console.log("[sendMessage] Sending message...");
+          conn.send(payload);
+        } else {
+          console.log("[sendMessage] Connection not yet ready, waiting...");
+          // Wait for connection to stabilize (Chromium fix)
+          await new Promise((resolve) => setTimeout(resolve, 300));
+          if (conn?.isConnected()) {
+            conn.send(payload);
+          } else {
+            console.warn("[sendMessage] Connection failed to become ready");
+          }
+        }
+      };
 
+      await trySend();
+
+      // Always save locally, even if message isn’t sent yet
       try {
         await putEncr(
-          'messages',
+          "messages",
           {
             roomId,
             senderId: user.userId,
             message,
             timestamp: Date.now(),
-            sent: canSendImmediately,
+            sent: conn?.isConnected() ?? false,
           } as MessageType,
           key
         );
       } catch (err) {
-        console.error('Failed to store message locally', err);
+        console.error("[sendMessage] Failed to store message locally", err);
       }
     },
-    [connection, user?.userId, otherUser, roomId, key, putEncr]
+    [connection, connectToPeer, user, otherUser, roomId, key, putEncr]
   );
 
   if (!db || !rooms || !user) return <Loading />;
