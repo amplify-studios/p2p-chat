@@ -5,6 +5,10 @@ import { returnDecryptedMessage } from '@/lib/messaging';
 import { findRoomIdByPeer } from '@/lib/utils';
 import { MessageType, Type } from '@chat/core';
 import { Collection } from './storage';
+import { usePathname } from 'next/navigation';
+import { useRooms } from '@/hooks/useRooms';
+import { sendLocalNotification } from '@chat/notifications';
+
 
 type MessageCallback = (msg: string) => void;
 type LogCallback = (msg: string) => void;
@@ -80,6 +84,8 @@ export class P2PManager {
       myId,
       async (encrMsg) => {
         try {
+          const pathname = usePathname();
+          const { activeRoomId } = useRooms();
           const parsed = JSON.parse(encrMsg);
           const ecdh = createECDHkey();
           const msg = returnDecryptedMessage(ecdh, parsed);
@@ -91,6 +97,11 @@ export class P2PManager {
             { roomId, senderId: peer.id, message: msg, timestamp: Date.now(), sent: true, read: false } as MessageType,
             key
           );
+          
+          // Show notification only if not in the active chat
+          if (pathname !== '/chat' || activeRoomId !== roomId) {
+            sendLocalNotification(`${peer.username ?? 'Anonymous'}`, msg);
+          }
         } catch (err) {
           console.error('[P2PManager] Failed to handle incoming message', err);
         }
