@@ -1,7 +1,7 @@
 'use client';
 
 import QrScanner from '@/components/local/QrScanner';
-import { useToast } from '@/components/local/ToastContext';
+import { useToast } from '@/contexts/ToastContext';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 
