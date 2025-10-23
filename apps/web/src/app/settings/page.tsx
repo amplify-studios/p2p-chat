@@ -85,7 +85,7 @@ export default function SettingsPage() {
       sessionStorage.clear();
       showToast('Database restored successfully!', 'success');
     } catch (err) {
-      console.error(err);
+      alert(err);
       showToast('Restoring database failed', 'error');
     } finally {
       setRestoreLoading(false);
