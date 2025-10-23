@@ -94,7 +94,7 @@
  * - Cleans up all resources on closure or reset.
  */
 
-import { STUN_SERVERS, TURN_SERVERS } from "./stun";
+import { STUN_SERVERS, TURN_SERVERS } from './stun';
 
 export interface WebRTCOptions {
   ws: WebSocket;
@@ -136,24 +136,34 @@ export class WebRTCConnection {
     this.pc = new RTCPeerConnection({ iceServers });
 
     this.setupPeerConnection();
-    this.ws.addEventListener("message", this.onWsMessage);
+    this.ws.addEventListener('message', this.onWsMessage);
     this.initiateOffer(); // Every peer tries to initiate, but only one wins
   }
 
   /** ---------------- Getters / Setters ---------------- */
 
-  public getDataChannel = () => { return this.dataChannel; }
+  public getDataChannel = () => {
+    return this.dataChannel;
+  };
 
   public isConnected(): boolean {
     return this.dataChannel?.readyState === 'open';
   }
 
-  public setOnMessage(handler?: (msg: string) => void) { this.onMessage = handler }
-  public setOnLog(handler?: (msg: string) => void) { this.onLog= handler }
+  public setOnMessage(handler?: (msg: string) => void) {
+    this.onMessage = handler;
+  }
+  public setOnLog(handler?: (msg: string) => void) {
+    this.onLog = handler;
+  }
 
   /** ---------------- Core setup ---------------- */
 
-  private log = (msg: string) => { try { this.onLog?.(msg); } catch { } };
+  private log = (msg: string) => {
+    try {
+      this.onLog?.(msg);
+    } catch {}
+  };
 
   private setupPeerConnection() {
     this.pc.onicecandidate = (e) => {
@@ -163,38 +173,43 @@ export class WebRTCConnection {
 
     this.pc.ondatachannel = (e) => {
       this.dataChannel = e.channel;
-      this.setupDataChannel(this.dataChannel, "receiver");
+      this.setupDataChannel(this.dataChannel, 'receiver');
     };
 
     this.pc.oniceconnectionstatechange = () => {
       this.log(`ICE connection state: ${this.pc.iceConnectionState}`);
-      if (this.pc.iceConnectionState === "failed") this.handleRetry();
+      if (this.pc.iceConnectionState === 'failed') this.handleRetry();
     };
   }
 
   private setupDataChannel(channel: RTCDataChannel, role: string) {
-    channel.onopen = () => { this.log(`Data channel open (${role})`); this.flushOutgoing(); };
+    channel.onopen = () => {
+      this.log(`Data channel open (${role})`);
+      this.flushOutgoing();
+    };
     channel.onmessage = (e) => this.onMessage?.(e.data);
     channel.onclose = () => this.log(`Data channel closed (${role})`);
     channel.onerror = (e) => this.log(`DataChannel error (${role}): ${e}`);
   }
 
   private createDataChannel() {
-    if (this.dataChannel) return; 
+    if (this.dataChannel) return;
     try {
-      this.dataChannel = this.pc.createDataChannel("chat");
-      this.setupDataChannel(this.dataChannel, "creator");
+      this.dataChannel = this.pc.createDataChannel('chat');
+      this.setupDataChannel(this.dataChannel, 'creator');
     } catch (e) {
-      this.log("Failed to create data channel: " + e);
+      this.log('Failed to create data channel: ' + e);
     }
   }
 
   /** ---------------- Reset/Re-initialization ---------------- */
 
   private async resetConnection() {
-    this.log("Resetting RTCPeerConnection for a new negotiation...");
-    try { this.pc.close(); } catch {}
-    this.dataChannel = null; 
+    this.log('Resetting RTCPeerConnection for a new negotiation...');
+    try {
+      this.pc.close();
+    } catch {}
+    this.dataChannel = null;
     this.makingOffer = false;
     this.ignoreOffer = false;
     this.isSettingRemote = false;
@@ -211,19 +226,23 @@ export class WebRTCConnection {
   /** ---------------- WebSocket handling ---------------- */
 
   private onWsMessage = (event: MessageEvent) => {
-    try { this.handleSignal(JSON.parse(event.data)); } catch { }
+    try {
+      this.handleSignal(JSON.parse(event.data));
+    } catch {}
   };
 
   private sendSignal(payload: any) {
     try {
-      this.ws.send(JSON.stringify({
-        type: "signal",
-        target: this.peerId,
-        from: this.myId,
-        payload,
-      }));
+      this.ws.send(
+        JSON.stringify({
+          type: 'signal',
+          target: this.peerId,
+          from: this.myId,
+          payload,
+        }),
+      );
     } catch (err) {
-      this.log("Failed to send signal: " + err);
+      this.log('Failed to send signal: ' + err);
     }
   }
 
@@ -231,56 +250,66 @@ export class WebRTCConnection {
 
   private async initiateOffer() {
     try {
-      this.sendSignal({ type: "reset" });
-      this.log("Sent explicit reset signal to peer.");
-      
-      this.createDataChannel(); 
-      
+      this.sendSignal({ type: 'reset' });
+      this.log('Sent explicit reset signal to peer.');
+
+      this.createDataChannel();
+
       this.makingOffer = true;
       const offer = await this.pc.createOffer();
       await this.pc.setLocalDescription(offer);
       this.sendSignal(offer);
-      this.log("Sent offer to peer");
+      this.log('Sent offer to peer');
     } catch (err) {
-      this.log("Offer failed: " + err);
+      this.log('Offer failed: ' + err);
     } finally {
       this.makingOffer = false;
     }
   }
 
   private async handleSignal(msg: any) {
-    if (msg.type !== "signal" || msg.from !== this.peerId) return;
+    if (msg.type !== 'signal' || msg.from !== this.peerId) return;
     const payload = msg.payload;
     if (!payload) return;
 
-    if (payload.type === "reset") {
-        this.log("Received explicit reset signal from peer. Forcing local connection reset.");
-        await this.resetConnection();
+    if (payload.type === 'reset') {
+      this.log('Received explicit reset signal from peer. Forcing local connection reset.');
+      await this.resetConnection();
     }
 
     // ICE candidate
     if (payload.candidate) {
       if (this.pc.remoteDescription) {
-        try { await this.pc.addIceCandidate(payload.candidate); }
-        catch (err) { this.log("Failed to add ICE candidate: " + err); }
+        try {
+          await this.pc.addIceCandidate(payload.candidate);
+        } catch (err) {
+          this.log('Failed to add ICE candidate: ' + err);
+        }
       } else this.pendingCandidates.push(payload.candidate);
       return;
     }
 
     // Offer
-    if (payload.type === "offer") {
-      if (this.pc.signalingState === "closed" || this.pc.iceConnectionState === "failed" || this.pc.iceConnectionState === "disconnected") {
-          this.log(`Connection state is ${this.pc.signalingState}/${this.pc.iceConnectionState}. Resetting for new offer.`);
-          await this.resetConnection();
+    if (payload.type === 'offer') {
+      if (
+        this.pc.signalingState === 'closed' ||
+        this.pc.iceConnectionState === 'failed' ||
+        this.pc.iceConnectionState === 'disconnected'
+      ) {
+        this.log(
+          `Connection state is ${this.pc.signalingState}/${this.pc.iceConnectionState}. Resetting for new offer.`,
+        );
+        await this.resetConnection();
       }
 
-      const offerCollision = this.makingOffer || this.pc.signalingState !== "stable";
+      const offerCollision = this.makingOffer || this.pc.signalingState !== 'stable';
       this.ignoreOffer = offerCollision && this.myId > this.peerId;
       if (this.ignoreOffer) return;
 
       try {
         this.isSettingRemote = true;
-        if (this.pc.signalingState !== "stable") await this.pc.setLocalDescription({ type: "rollback" });
+        if (this.pc.signalingState !== 'stable')
+          await this.pc.setLocalDescription({ type: 'rollback' });
         await this.pc.setRemoteDescription(payload);
         this.isSettingRemote = false;
 
@@ -291,19 +320,23 @@ export class WebRTCConnection {
         while (this.pendingCandidates.length)
           await this.pc.addIceCandidate(this.pendingCandidates.shift()!);
 
-        this.log("Sent answer to peer");
-      } catch (err) { this.log("Error handling offer: " + err); }
+        this.log('Sent answer to peer');
+      } catch (err) {
+        this.log('Error handling offer: ' + err);
+      }
       return;
     }
 
     // Answer
-    if (payload.type === "answer") {
+    if (payload.type === 'answer') {
       try {
         await this.pc.setRemoteDescription(payload);
         while (this.pendingCandidates.length)
           await this.pc.addIceCandidate(this.pendingCandidates.shift()!);
-        this.log("Set remote description for answer");
-      } catch (err) { this.log("Error handling answer: " + err); }
+        this.log('Set remote description for answer');
+      } catch (err) {
+        this.log('Error handling answer: ' + err);
+      }
       return;
     }
   }
@@ -311,21 +344,29 @@ export class WebRTCConnection {
   /** ---------------- Data sending ---------------- */
 
   private flushOutgoing() {
-    if (this.dataChannel && this.dataChannel.readyState === "open") {
+    if (this.dataChannel && this.dataChannel.readyState === 'open') {
       while (this.outgoingQueue.length) {
         const m = this.outgoingQueue.shift()!;
-        try { this.dataChannel.send(m); }
-        catch { this.outgoingQueue.push(m); }
+        try {
+          this.dataChannel.send(m);
+        } catch {
+          this.outgoingQueue.push(m);
+        }
       }
     }
   }
 
   public send(msg: string) {
-    if (!this.dataChannel || this.dataChannel.readyState !== "open")
+    if (!this.dataChannel || this.dataChannel.readyState !== 'open') {
       this.outgoingQueue.push(msg);
-    else {
-      try { this.dataChannel.send(msg); }
-      catch { this.outgoingQueue.push(msg); }
+      console.log('outgoingQueue', msg);
+    } else {
+      try {
+        this.dataChannel.send(msg);
+        console.log('dataChannel.send', msg);
+      } catch {
+        this.outgoingQueue.push(msg);
+      }
     }
   }
 
@@ -342,15 +383,23 @@ export class WebRTCConnection {
       this.retryCount++;
       setTimeout(() => this.initiateOffer(), 100 + Math.random() * 500);
     } else {
-      this.log("Max retries reached, connection failed permanently.");
-      try { this.pc.close(); } catch {}
+      this.log('Max retries reached, connection failed permanently.');
+      try {
+        this.pc.close();
+      } catch {}
     }
   }
 
   public close() {
-    try { this.ws.removeEventListener("message", this.onWsMessage); } catch { }
-    try { this.pc.close(); } catch { }
-    try { this.dataChannel?.close(); } catch { }
-    this.log("Connection closed");
+    try {
+      this.ws.removeEventListener('message', this.onWsMessage);
+    } catch {}
+    try {
+      this.pc.close();
+    } catch {}
+    try {
+      this.dataChannel?.close();
+    } catch {}
+    this.log('Connection closed');
   }
 }

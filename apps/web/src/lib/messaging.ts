@@ -10,6 +10,7 @@ export function prepareSendMessagePackage(
   const secret = computeSecret(ephemeralKeyPair, otherUserPublicKey);
   // const key = getAESKeyThroughSharedSecret(secret);
   // const data = AESencrypt(key.key, message);
+  console.log('[prepareSendMessagePackage] message', message);
   const key = generateAESKey(secret);
   const data = AESencrypt(key, message);
   return {

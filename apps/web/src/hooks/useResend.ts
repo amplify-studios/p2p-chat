@@ -41,6 +41,7 @@ export function useResend() {
         if (!conn || !conn.isConnected()) continue;
 
         for (const msg of messages) {
+          if (!msg.id) continue;
           try {
             const encrypted = prepareSendMessagePackage(recipient.public, msg.message);
             conn.send(JSON.stringify(encrypted));

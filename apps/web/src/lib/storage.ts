@@ -9,7 +9,7 @@ import {
 import { openDB, DBSchema, IDBPDatabase } from 'idb';
 
 const DB_NAME = 'my-database';
-const DB_VERSION = 8;
+const DB_VERSION = 9;
 export const PASSWORD_KEY = 'vergina'; // FIXME: randomize based on the userId
 
 export type Collection =
@@ -25,6 +25,7 @@ interface MyDB extends DBSchema {
   messages: {
     key: string;
     value: EncryptedMessageType;
+    indexes: { key: string };
   };
   user: {
     key: number;
@@ -58,7 +59,8 @@ function getDB() {
   if (!dbPromise) {
     dbPromise = openDB<MyDB>(DB_NAME, DB_VERSION, {
       upgrade(db) {
-        db.createObjectStore('messages', { keyPath: 'id'});
+        const messagesStore = db.createObjectStore('messages', { keyPath: 'id' });
+        messagesStore.createIndex('key', 'id', { unique: true });
         db.createObjectStore('user', { autoIncrement: true });
         db.createObjectStore('credentials', { keyPath: 'userId' });
         db.createObjectStore('rooms', { keyPath: 'roomId' });

@@ -50,7 +50,7 @@ type DBContextType = {
     collection: Collection,
     key: Uint8Array,
     id: string | number,
-    updater: (oldData: any) => any
+    updater: (oldData: any) => any,
   ) => Promise<boolean>;
 };
 
@@ -64,6 +64,10 @@ export function DBProvider({ children }: { children: ReactNode }) {
 
     (async () => {
       const database = await getDB();
+      database.onerror = (event) => {
+        console.error('DB error: ', event);
+      };
+
       if (!cancelled) setDb(database);
     })();
 
@@ -86,7 +90,7 @@ export function DBProvider({ children }: { children: ReactNode }) {
       switch (collection) {
         case 'messages':
           const msg = obj as MessageType;
-          msg.id = generateBase58Id();
+          if (!msg.id || msg.id == '') msg.id = generateBase58Id();
           encr = encryptMessageType(msg, key);
           break;
         case 'credentials':
@@ -110,9 +114,14 @@ export function DBProvider({ children }: { children: ReactNode }) {
       }
 
       if (encr) {
-        await db.put(collection, encr, collectionKey);
+        if (String(collection) == 'messages') {
+          await db.put(collection, encr);
+        } else {
+          await db.put(collection, encr, collectionKey);
+        }
         return encr;
       }
+
       return null;
     },
     [db],
@@ -160,41 +169,71 @@ export function DBProvider({ children }: { children: ReactNode }) {
       collection: Collection,
       key: Uint8Array,
       id: string | number,
-      updater: (oldData: any) => any
+      updater: (oldData: any) => any,
     ): Promise<boolean> => {
+      console.log('updateEncr', collection, key, id, updater, db);
       if (!db) return false;
 
       try {
-        const existing = await db.get(collection, id);
+        // const all = await db.getAll(collection);
+        // const existing = all.find((item: any) => item.id === id);
+
+        // await db
+        //   .getFromIndex(collection, 'id', id)
+        //   .then((e) => (existing = e))
+        //   .catch((err) => console.log('err', err))
+        //   .finally(() => {
+        //     if (existing == undefined) {
+        //       console.log('no existing');
+        //       return false;
+        //     }
+        //   });\
+        // const existing = await db.getFromIndex(collection, 'key', id);
+        // (collection, id);
+        //
+        let existing: any;
+        console.log('existing', existing);
+        switch (collection) {
+          case 'messages':
+            console.log('existing messages', existing);
+            existing = await db.getFromIndex('messages', 'key', String(id));
+            console.log('existing messages 2', existing);
+            break;
+          default:
+            existing = await db.get(collection, id);
+        }
+
+        console.log('existing', existing);
         if (!existing) return false;
 
         let decrypted: any;
         switch (collection) {
           case 'messages':
             decrypted = decryptMessageType(existing as EncryptedMessageType, key);
-          break;
+            console.log('decrypted', decrypted);
+            break;
           case 'credentials':
-            case 'user':
+          case 'user':
             decrypted = decryptCredentialsType(existing as EncryptedCredentialsType, key);
-          break;
+            break;
           case 'rooms':
             decrypted = decryptRoomType(existing as EncryptedRoomType, key);
-          break;
+            break;
           case 'invites':
             decrypted = decryptInviteType(existing as EncryptedInviteType, key);
-          break;
+            break;
           case 'blocks':
             decrypted = decryptBlockType(existing as EncryptedBlockType, key);
-          break;
+            break;
           case 'serverSettings':
             decrypted = decryptServerSettingsType(existing as EncryptedServerSettingsType, key);
-          break;
+            break;
           default:
             throw new Error(`Unknown collection: ${collection}`);
         }
-
         const updated = updater(decrypted);
 
+        console.log('updated', updated);
         await putEncr(collection, updated, key, id);
 
         return true;
