@@ -209,7 +209,7 @@ export default function Login() {
         />
 
         <Button onClick={handleLogin} className="w-full" disabled={isLocked}>
-          {existingUser ? 'Unlock' : 'Login'}
+          {existingUser ? 'Login' : 'Register'}
         </Button>
 
         {existingUser && (
