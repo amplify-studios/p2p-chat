@@ -31,8 +31,6 @@ export const P2PProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const { user, key } = useAuth();
   const { blocks } = useBlocks();
   const { putEncr, getAllDecr } = useDB();
-  const pathname = usePathname();
-  const { activeRoomId } = useRooms();
 
   const connectToPeerWrapper = useCallback(
     async (peer: PeerInfo) => {
