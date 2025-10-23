@@ -26,7 +26,11 @@ export function returnDecryptedMessage(user: crypto.ECDH, messagePackage: Messag
     user,
     new Uint8Array(Buffer.from(messagePackage.ephemeralPublicKey, 'hex')),
   );
+
+  console.log('[returnDecryptedMessage] secret', secret);
+  console.log('[returnDecryptedMessage] messagePackage', messagePackage);
   const key = generateAESKey(secret);
+  console.log('[returnDecryptedMessage] key', key);
   return AESdecrypt(
     key,
     messagePackage.encryptedMessage,

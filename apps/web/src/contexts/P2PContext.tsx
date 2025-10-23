@@ -5,6 +5,8 @@ import { useClient } from './ClientContext';
 import { useAuth } from '@/hooks/useAuth';
 import { useBlocks } from '@/hooks/useBlocks';
 import { useDB } from './DBContext';
+import { usePathname } from 'next/navigation';
+import { useRooms } from '@/hooks/useRooms';
 
 interface P2PContextValue {
   getConnection: (peerId: string) => WebRTCConnection | undefined;
@@ -29,6 +31,9 @@ export const P2PProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const { user, key } = useAuth();
   const { blocks } = useBlocks();
   const { putEncr, getAllDecr } = useDB();
+  const pathname = usePathname();
+  const { activeRoomId } = useRooms();
+
   const connectToPeerWrapper = useCallback(
     async (peer: PeerInfo) => {
       if (!client?.ws || !user || !key) return undefined;
@@ -39,7 +44,11 @@ export const P2PProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         key,
         getAllDecr,
         putEncr,
-        blocks
+        blocks,
+        undefined,
+        pathname,
+        activeRoomId,
+        user
       );
     },
     [client?.ws, user, key, getAllDecr, putEncr, blocks]

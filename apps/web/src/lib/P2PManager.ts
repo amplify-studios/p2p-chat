@@ -3,7 +3,7 @@ import { PeerInfo } from '@chat/sockets';
 import { createECDHkey, EncryptedStorageType } from '@chat/crypto';
 import { returnDecryptedMessage } from '@/lib/messaging';
 import { findRoomIdByPeer } from '@/lib/utils';
-import { MessageType, Type } from '@chat/core';
+import { CredentialsType, MessageType, Type } from '@chat/core';
 import { Collection } from './storage';
 import { usePathname } from 'next/navigation';
 import { useRooms } from '@/hooks/useRooms';
@@ -68,30 +68,42 @@ export class P2PManager {
     getAllDecr: (collection: Collection, key: Uint8Array) => Promise<any[]>,
     putEncr: (collection: Collection, obj: Type, key: Uint8Array, collectionKey?: string | number) => Promise<EncryptedStorageType | null>,
     blocks: { userId: string }[],
-    onDataChannelOpen?: () => void
+    onDataChannelOpen?: () => void,
+    pathname?: string,
+    activeRoomId?: string,
+    user?: CredentialsType
   ): Promise<WebRTCConnection | undefined> {
     if (blocks.find(b => b.userId === peer.id)) return;
-
+    
     let entry = this.connections[peer.id];
     if (entry) {
       if (onDataChannelOpen && entry.isReady) onDataChannelOpen();
       return entry.conn;
     }
-
+    // const pathname = usePathname();
+    // const { activeRoomId } = useRooms();
+    console.log(`[P2PManager] path: ${pathname}, activeRoomId: ${activeRoomId}`);
+    
     const conn = this.createConnection(
       peer,
       ws,
       myId,
       async (encrMsg) => {
         try {
-          const pathname = usePathname();
-          const { activeRoomId } = useRooms();
           const parsed = JSON.parse(encrMsg);
           const ecdh = createECDHkey();
+          
+          if (!user?.private) {
+            console.error('[P2PManager] No private key found');
+            return;
+          } 
+          ecdh.setPrivateKey(Buffer.from(user.private, 'hex'));
+
           const msg = returnDecryptedMessage(ecdh, parsed);
           const rooms = (await getAllDecr('rooms', key)) ?? [];
           const roomId = findRoomIdByPeer(rooms, peer.id);
 
+          console.log(`[P2PManager] path: ${pathname}, roomId: ${roomId}, activeRoomId: ${activeRoomId}`);
           await putEncr(
             'messages',
             { roomId, senderId: peer.id, message: msg, timestamp: Date.now(), sent: true, read: false } as MessageType,
