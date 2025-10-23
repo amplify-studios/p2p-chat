@@ -10,12 +10,14 @@ import { CLIENT_CONFIG, ServerSettingsType } from '@chat/core';
 import { useAuth } from '@/hooks/useAuth';
 import Loading from '@/components/local/Loading';
 import { getSignalingClient } from '@/lib/signalingClient';
+import { generateBase58Id } from '@chat/crypto';
 
 export default function Servers() {
   const { showToast } = useToast();
   const { putEncr, getAllDecr } = useDB();
   const { key } = useAuth();
 
+  const [serverSettingsId, setServerSettingsId] = useState<string>("");
   const [useSelect, setUseSelect] = useState(false);
   const [autoSelectAll, setAutoSelectAll] = useState(false);
   const [useUser, setUseUser] = useState(false);
@@ -31,6 +33,7 @@ export default function Servers() {
 
   // Initialize defaults
   useEffect(() => {
+    setServerSettingsId(generateBase58Id());
     setServers(CLIENT_CONFIG.signalingUrls);
     setSelectedServer(CLIENT_CONFIG.signalingUrls[0]);
   }, []);
@@ -175,6 +178,7 @@ export default function Servers() {
         onClick={async () => {
           if (!key) return;
           const settings: ServerSettingsType = {
+            serverSettingsId,
             useSelect,
             autoSelectAll,
             selectedServers: selectedServer ? [selectedServer] : [],
