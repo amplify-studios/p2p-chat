@@ -36,6 +36,7 @@ export interface BlockType {
 }
 
 export interface ServerSettingsType {
+  serverSettingsId: string;
   useSelect: boolean;
   autoSelectAll: boolean;
   selectedServers: string[]; // encrypt

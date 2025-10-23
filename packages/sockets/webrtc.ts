@@ -357,13 +357,10 @@ export class WebRTCConnection {
   }
 
   public send(msg: string) {
-    if (!this.dataChannel || this.dataChannel.readyState !== 'open') {
-      this.outgoingQueue.push(msg);
-      console.log('outgoingQueue', msg);
-    } else {
+    if (!this.dataChannel || this.dataChannel.readyState !== 'open') this.outgoingQueue.push(msg);
+    else {
       try {
         this.dataChannel.send(msg);
-        console.log('dataChannel.send', msg);
       } catch {
         this.outgoingQueue.push(msg);
       }

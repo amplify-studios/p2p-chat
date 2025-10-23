@@ -33,7 +33,7 @@ export default function P2PChatPage() {
   const room = useMemo(() => rooms?.find((r) => r.roomId === roomId) ?? null, [rooms, roomId]);
   const otherUser = useMemo(
     () => room?.keys.find((k) => k.userId !== user?.userId) ?? null,
-    [room, user?.userId]
+    [room, user?.userId],
   );
   // const pathname = usePathname();
   // const { activeRoomId } = useRooms();
@@ -60,7 +60,7 @@ export default function P2PChatPage() {
                 id: ++currentMsgId,
                 text: m.message,
                 sender: m.senderId === user.userId ? 'me' : 'other',
-              } as Message)
+              }) as Message,
           );
         setMessages(roomMessages);
       } catch (err) {
@@ -68,7 +68,6 @@ export default function P2PChatPage() {
       }
     })();
   }, [db, roomId, key, user?.userId, getAllDecr]);
-
 
   // Listen for incoming messages
   useEffect(() => {
@@ -92,10 +91,7 @@ export default function P2PChatPage() {
       const msg = returnDecryptedMessage(userECDH, parsed);
 
       // Update local state
-      setMessages((prev) => [
-        ...prev,
-        { id: ++currentMsgId, text: msg, sender: 'other' },
-      ]);
+      setMessages((prev) => [...prev, { id: ++currentMsgId, text: msg, sender: 'other' }]);
 
       // Save locally
       try {
@@ -108,7 +104,7 @@ export default function P2PChatPage() {
             timestamp: Date.now(),
             sent: true,
           } as MessageType,
-          key
+          key,
         );
       } catch (err) {
         console.error('Failed to store incoming message', err);
@@ -133,19 +129,26 @@ export default function P2PChatPage() {
           // console.log(`[P2PManager] path: ${pathname}, roomId: ${roomId}, activeRoomId: ${activeRoomId}`);
           await putEncr(
             'messages',
-            { roomId, senderId: otherUser.userId, message: msg, timestamp: Date.now(), sent: true, read: false } as MessageType,
-            key
+            {
+              roomId,
+              senderId: otherUser.userId,
+              message: msg,
+              timestamp: Date.now(),
+              sent: true,
+              read: false,
+            } as MessageType,
+            key,
           );
 
           // Show notification only if not in the active chat
           // if (pathname !== '/chat' || activeRoomId !== roomId) {
-            sendLocalNotification(`${otherUser.username ?? 'Anonymous'}`, msg);
+          sendLocalNotification(`${otherUser.username ?? 'Anonymous'}`, msg);
           // }
         } catch (err) {
           console.error('[P2PManager] Failed to handle incoming message', err);
         }
       });
-    }
+    };
   }, [connection, user, otherUser, roomId, key, putEncr]);
 
   // Track connection status
@@ -165,14 +168,14 @@ export default function P2PChatPage() {
   const sendMessage = useCallback(
     async (message: string) => {
       if (!user?.userId || !otherUser?.userId || !roomId || !key) {
-        console.warn("[sendMessage] Missing required data, aborting send");
+        console.warn('[sendMessage] Missing required data, aborting send');
         return;
       }
 
       // Ensure a connection exists and is ready
       let conn = connection;
       if (!conn) {
-        console.log("[sendMessage] Connection missing, creating one...");
+        console.log('[sendMessage] Connection missing, creating one...');
         try {
           conn = await connectToPeer({
             id: otherUser.userId,
@@ -180,21 +183,18 @@ export default function P2PChatPage() {
             username: otherUser.username,
           });
           if (!conn) {
-            console.warn("[sendMessage] Failed to create connection");
+            console.warn('[sendMessage] Failed to create connection');
             return;
           }
           setConnection(conn);
         } catch (err) {
-          console.error("[sendMessage] Error creating connection", err);
+          console.error('[sendMessage] Error creating connection', err);
           return;
         }
       }
 
       // Optimistic UI update
-      setMessages((prev) => [
-        ...prev,
-        { id: ++currentMsgId, text: message, sender: "me" },
-      ]);
+      setMessages((prev) => [...prev, { id: ++currentMsgId, text: message, sender: 'me' }]);
 
       const encrText = prepareSendMessagePackage(otherUser.public, message);
       const payload = JSON.stringify(encrText);
@@ -202,16 +202,16 @@ export default function P2PChatPage() {
       // Ensure the connection is ready to send
       const trySend = async () => {
         if (conn?.isConnected()) {
-          console.log("[sendMessage] Sending message...");
+          console.log('[sendMessage] Sending message...');
           conn.send(payload);
         } else {
-          console.log("[sendMessage] Connection not yet ready, waiting...");
+          console.log('[sendMessage] Connection not yet ready, waiting...');
           // Wait for connection to stabilize (Chromium fix)
           await new Promise((resolve) => setTimeout(resolve, 300));
           if (conn?.isConnected()) {
             conn.send(payload);
           } else {
-            console.warn("[sendMessage] Connection failed to become ready");
+            console.warn('[sendMessage] Connection failed to become ready');
           }
         }
       };
@@ -221,7 +221,7 @@ export default function P2PChatPage() {
       // Always save locally, even if message isn’t sent yet
       try {
         await putEncr(
-          "messages",
+          'messages',
           {
             roomId,
             senderId: user.userId,
@@ -229,13 +229,13 @@ export default function P2PChatPage() {
             timestamp: Date.now(),
             sent: conn?.isConnected() ?? false,
           } as MessageType,
-          key
+          key,
         );
       } catch (err) {
-        console.error("[sendMessage] Failed to store message locally", err);
+        console.error('[sendMessage] Failed to store message locally', err);
       }
     },
-    [connection, connectToPeer, user, otherUser, roomId, key, putEncr]
+    [connection, connectToPeer, user, otherUser, roomId, key, putEncr],
   );
 
   if (!db || !rooms || !user) return <Loading />;

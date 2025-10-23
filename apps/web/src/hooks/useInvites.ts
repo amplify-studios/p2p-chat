@@ -69,13 +69,13 @@ export function useInvites() {
     if (!existingRoom) {
       // Generate the room
       const roomId = generateBase58Id();
-  
+
       const creds = {
         userId: invite.from,
         public: invite.public,
         username: invite.name,
       } as CredentialsType;
-  
+
       const room: RoomType = {
         roomId,
         name: invite.name,
@@ -89,10 +89,10 @@ export function useInvites() {
           creds,
         ],
       };
-  
+
       // Save room
       await putEncr('rooms', room, key);
-  
+
       await putEncr('credentials', creds, key);
 
       // Delete the invite

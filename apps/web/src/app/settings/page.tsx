@@ -13,7 +13,11 @@ import { useToast } from '@/contexts/ToastContext';
 import { Archive, LogOut, QrCode, Server, ShieldBan, TestTube, Trash, Bell } from 'lucide-react';
 import { useConfirm } from '@/contexts/ConfirmContext';
 import { useClient } from '@/contexts/ClientContext';
-import { hasNotifictationPermission, requestNotificationPermission, sendLocalNotification } from '@chat/notifications';
+import {
+  hasNotifictationPermission,
+  requestNotificationPermission,
+  sendLocalNotification,
+} from '@chat/notifications';
 
 function SettingsRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -139,17 +143,17 @@ export default function SettingsPage() {
         </Button>
       </div>
 
-      {!hasNotifictationPermission() && 
-      <Button
-        className="w-full"
-        variant="outline"
-        onClick={() => {
-          requestNotificationPermission();
-        }}
-      >
-        <Bell className="mr-1 h-4 w-4" /> Grant Notifications Permissions
-      </Button>
-      }
+      {!hasNotifictationPermission() && (
+        <Button
+          className="w-full"
+          variant="outline"
+          onClick={() => {
+            requestNotificationPermission();
+          }}
+        >
+          <Bell className="mr-1 h-4 w-4" /> Grant Notifications Permissions
+        </Button>
+      )}
 
       <Button
         className="w-full"

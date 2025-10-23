@@ -10,12 +10,14 @@ import { CLIENT_CONFIG, ServerSettingsType } from '@chat/core';
 import { useAuth } from '@/hooks/useAuth';
 import Loading from '@/components/local/Loading';
 import { getSignalingClient } from '@/lib/signalingClient';
+import { generateBase58Id } from '@chat/crypto';
 
 export default function Servers() {
   const { showToast } = useToast();
   const { putEncr, getAllDecr } = useDB();
   const { key } = useAuth();
 
+  const [serverSettingsId, setServerSettingsId] = useState<string>('');
   const [useSelect, setUseSelect] = useState(false);
   const [autoSelectAll, setAutoSelectAll] = useState(false);
   const [useUser, setUseUser] = useState(false);
@@ -31,6 +33,7 @@ export default function Servers() {
 
   // Initialize defaults
   useEffect(() => {
+    setServerSettingsId(generateBase58Id());
     setServers(CLIENT_CONFIG.signalingUrls);
     setSelectedServer(CLIENT_CONFIG.signalingUrls[0]);
   }, []);
@@ -43,7 +46,7 @@ export default function Servers() {
     (async () => {
       const settings = (await getAllDecr('serverSettings', key)) as ServerSettingsType[];
       const currentSettings = settings.at(0);
-      if (!currentSettings){
+      if (!currentSettings) {
         setLoading(false);
         return;
       }
@@ -54,7 +57,7 @@ export default function Servers() {
       setShareFederation(currentSettings.shareFederation);
 
       const merged = Array.from(
-        new Set([...CLIENT_CONFIG.signalingUrls, ...(currentSettings.userServers || [])])
+        new Set([...CLIENT_CONFIG.signalingUrls, ...(currentSettings.userServers || [])]),
       );
       setServers(merged);
 
@@ -119,7 +122,7 @@ export default function Servers() {
     }
   }, [autoSelectAll, servers]);
 
-  if(loading) return <Loading />;
+  if (loading) return <Loading />;
 
   return (
     <div className="p-6 max-w-lg mx-auto flex flex-col gap-6">
@@ -137,7 +140,7 @@ export default function Servers() {
                   checked={selectedServer === server}
                   onChange={() => selectServer(server)}
                 />
-                {server} {server == CLIENT_CONFIG.signalingUrls[0] && (<span>(Recommended)</span>)}
+                {server} {server == CLIENT_CONFIG.signalingUrls[0] && <span>(Recommended)</span>}
               </label>
             ))}
           </div>
@@ -158,10 +161,7 @@ export default function Servers() {
 
         <ul className="flex flex-col gap-2">
           {userServers.map((server) => (
-            <li
-              key={server}
-              className="flex items-center justify-between border rounded px-3 py-2"
-            >
+            <li key={server} className="flex items-center justify-between border rounded px-3 py-2">
               <span>{server}</span>
               <Button size="icon" variant="ghost" onClick={() => removeUserServer(server)}>
                 <X className="h-4 w-4" />
@@ -175,6 +175,7 @@ export default function Servers() {
         onClick={async () => {
           if (!key) return;
           const settings: ServerSettingsType = {
+            serverSettingsId,
             useSelect,
             autoSelectAll,
             selectedServers: selectedServer ? [selectedServer] : [],

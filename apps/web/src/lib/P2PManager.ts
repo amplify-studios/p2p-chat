@@ -33,7 +33,7 @@ export class P2PManager {
     ws: WebSocket,
     myId: string,
     onMessage?: MessageCallback,
-    onLog?: LogCallback
+    onLog?: LogCallback,
   ): WebRTCConnection {
     let entry = this.connections[peer.id];
     if (entry) {
@@ -54,7 +54,7 @@ export class P2PManager {
   }
 
   setOnMessage(id: string, onMessage: MessageCallback) {
-    if(!this.connections[id]) return;
+    if (!this.connections[id]) return;
     this.connections[id].conn.setOnMessage(onMessage);
   }
 
@@ -64,12 +64,17 @@ export class P2PManager {
     myId: string,
     key: Uint8Array,
     getAllDecr: (collection: Collection, key: Uint8Array) => Promise<any[]>,
-    putEncr: (collection: Collection, obj: Type, key: Uint8Array, collectionKey?: string | number) => Promise<EncryptedStorageType | null>,
+    putEncr: (
+      collection: Collection,
+      obj: Type,
+      key: Uint8Array,
+      collectionKey?: string | number,
+    ) => Promise<EncryptedStorageType | null>,
     blocks: { userId: string }[],
     onDataChannelOpen?: () => void,
-    user? : CredentialsType
+    user?: CredentialsType,
   ): Promise<WebRTCConnection | undefined> {
-    if (blocks.find(b => b.userId === peer.id)) return;
+    if (blocks.find((b) => b.userId === peer.id)) return;
 
     let entry = this.connections[peer.id];
     if (entry) {
@@ -84,7 +89,7 @@ export class P2PManager {
         try {
           const parsed = JSON.parse(encrMsg);
           const ecdh = createECDHkey();
-          if(!user?.private) return;
+          if (!user?.private) return;
           ecdh.setPrivateKey(Buffer.from(user.private, 'hex'));
           const msg = returnDecryptedMessage(ecdh, parsed);
           const rooms = (await getAllDecr('rooms', key)) ?? [];
@@ -92,16 +97,23 @@ export class P2PManager {
 
           await putEncr(
             'messages',
-            { roomId, senderId: peer.id, message: msg, timestamp: Date.now(), sent: true, read: false } as MessageType,
-            key
+            {
+              roomId,
+              senderId: peer.id,
+              message: msg,
+              timestamp: Date.now(),
+              sent: true,
+              read: false,
+            } as MessageType,
+            key,
           );
-          
-            sendLocalNotification(`${peer.username ?? 'Anonymous'}`, msg);
+
+          sendLocalNotification(`${peer.username ?? 'Anonymous'}`, msg);
         } catch (err) {
           console.error('[P2PManager] Failed to handle incoming message', err);
         }
       },
-      (log) => console.log(`[WebRTC] ${log}`)
+      (log) => console.log(`[WebRTC] ${log}`),
     );
 
     if (onDataChannelOpen) {
@@ -137,7 +149,7 @@ export class P2PManager {
   }
 
   closeAll() {
-    Object.values(this.connections).forEach(e => e.conn.close());
+    Object.values(this.connections).forEach((e) => e.conn.close());
     this.connections = {};
   }
 }

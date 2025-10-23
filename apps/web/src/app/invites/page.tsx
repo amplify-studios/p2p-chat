@@ -19,13 +19,13 @@ export default function Invites() {
   }
 
   const handleAcceptInvite = (invite: InviteType) => {
-    if(!peers.some((p) => p.id == invite.from)) {
-      showToast(`Peer ${invite.from} is not connected to the server`, "warning");
+    if (!peers.some((p) => p.id == invite.from)) {
+      showToast(`Peer ${invite.from} is not connected to the server`, 'warning');
       return;
     }
-  
+
     acceptInvite(invite);
-  }
+  };
 
   return (
     <div className="p-4 max-w-lg mx-auto">

@@ -39,8 +39,8 @@ export default function Sidebar({ children }: SidebarProps) {
 
   const onlineFriends = useMemo(() => {
     return friends
-    .filter(f => f.online)
-    .map(f => ({ id: f.id, username: f.username, pubkey: "" } as PeerInfo));
+      .filter((f) => f.online)
+      .map((f) => ({ id: f.id, username: f.username, pubkey: '' }) as PeerInfo);
   }, [friends]);
 
   const { isReady, connectToPeer } = useP2P();
@@ -75,8 +75,9 @@ export default function Sidebar({ children }: SidebarProps) {
               <li key={room.roomId}>
                 <Link
                   href={`/chat?id=${room.roomId}`}
-                  className={`flex items-center gap-2 p-2 rounded hover:bg-secondary ${room.roomId === activeRoomId ? 'bg-secondary font-semibold' : ''
-                    }`}
+                  className={`flex items-center gap-2 p-2 rounded hover:bg-secondary ${
+                    room.roomId === activeRoomId ? 'bg-secondary font-semibold' : ''
+                  }`}
                 >
                   {room.type === 'group' ? <Users size={20} /> : null} {room.name}
                 </Link>
@@ -124,8 +125,9 @@ export default function Sidebar({ children }: SidebarProps) {
               <Link
                 key={room.roomId}
                 href={`/chat?id=${room.roomId}`}
-                className={`flex-shrink-0 px-3 py-2 rounded whitespace-nowrap ${room.roomId === activeRoomId ? 'bg-secondary font-semibold' : 'hover:bg-secondary'
-                  }`}
+                className={`flex-shrink-0 px-3 py-2 rounded whitespace-nowrap ${
+                  room.roomId === activeRoomId ? 'bg-secondary font-semibold' : 'hover:bg-secondary'
+                }`}
               >
                 {room.name}
               </Link>
@@ -135,8 +137,18 @@ export default function Sidebar({ children }: SidebarProps) {
 
           <div className="flex gap-2 ml-2">
             <SidebarItem href="/" type="small" icon={<Home size={16} />} />
-            <SidebarItem href="/invites" type="small" icon={<MessageSquareDot size={16} />} disabled={!connected} />
-            <SidebarItem href="/peers" type="small" icon={<Users size={16} />} disabled={!connected} />
+            <SidebarItem
+              href="/invites"
+              type="small"
+              icon={<MessageSquareDot size={16} />}
+              disabled={!connected}
+            />
+            <SidebarItem
+              href="/peers"
+              type="small"
+              icon={<Users size={16} />}
+              disabled={!connected}
+            />
             <SidebarItem href="/settings" type="small" icon={<Settings size={16} />} />
           </div>
         </nav>

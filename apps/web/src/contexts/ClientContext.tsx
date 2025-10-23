@@ -1,6 +1,14 @@
 import { getSignalingClient } from '@/lib/signalingClient';
 import { SignalingClient } from '@chat/sockets';
-import { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode, } from 'react';
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+  ReactNode,
+} from 'react';
 
 type ClientContextType = {
   client: SignalingClient | null;

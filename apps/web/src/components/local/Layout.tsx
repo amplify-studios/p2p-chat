@@ -19,7 +19,7 @@ export default function Layout({ children }: { children: ReactNode }) {
   return (
     <Suspense>
       <Providers>
-      <Sidebar>{children}</Sidebar>
+        <Sidebar>{children}</Sidebar>
       </Providers>
     </Suspense>
   );

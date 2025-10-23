@@ -44,10 +44,10 @@ export const P2PProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         putEncr,
         blocks,
         undefined,
-        user
+        user,
       );
     },
-    [client?.ws, user, key, getAllDecr, putEncr, blocks]
+    [client?.ws, user, key, getAllDecr, putEncr, blocks],
   );
   return (
     <P2PContext.Provider

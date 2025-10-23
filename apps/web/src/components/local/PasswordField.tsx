@@ -22,7 +22,7 @@ export default function PasswordField({
   className = '',
   onChange,
   showStrength = false,
-  handleEnterKey
+  handleEnterKey,
 }: PasswordFieldProps) {
   const _id = useId();
   const [visible, setVisible] = useState(false);

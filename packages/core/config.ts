@@ -1,21 +1,19 @@
 export const CLIENT_CONFIG = {
-  "appName": "P2P Chat",
-  "stunServers": {
-    "urls": [
-      "stun:stun.l.google.com:19302",
-      "stun:stun.l.google.com:5349",
-      "stun:stun1.l.google.com:3478"
-    ]
+  appName: 'P2P Chat',
+  stunServers: {
+    urls: [
+      'stun:stun.l.google.com:19302',
+      'stun:stun.l.google.com:5349',
+      'stun:stun1.l.google.com:3478',
+    ],
   },
-  "turnServers": [
+  turnServers: [
     {
-      "urls": "turn:turn.kdesp73.org",
-      "username": "p2pclient",
-      "credential": "$5$e91c1c5cdd015723$7b675df9a28828c157a8ef69677cea440f7792f71c15ce73c1ec6100372a64c8"
-    }
+      urls: 'turn:turn.kdesp73.org',
+      username: 'p2pclient',
+      credential:
+        '$5$e91c1c5cdd015723$7b675df9a28828c157a8ef69677cea440f7792f71c15ce73c1ec6100372a64c8',
+    },
   ],
-  "signalingUrls": [
-    "wss://signaling.kdesp73.org",
-    "wss://p2p-signaling-55197d11d9bf.herokuapp.com"
-  ]
+  signalingUrls: ['wss://signaling.kdesp73.org', 'wss://p2p-signaling-55197d11d9bf.herokuapp.com'],
 };

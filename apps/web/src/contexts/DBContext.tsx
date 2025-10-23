@@ -210,7 +210,6 @@ export function DBProvider({ children }: { children: ReactNode }) {
         switch (collection) {
           case 'messages':
             decrypted = decryptMessageType(existing as EncryptedMessageType, key);
-            console.log('decrypted', decrypted);
             break;
           case 'credentials':
           case 'user':

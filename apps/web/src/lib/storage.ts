@@ -66,7 +66,7 @@ function getDB() {
         db.createObjectStore('rooms', { keyPath: 'roomId' });
         db.createObjectStore('invites', { keyPath: 'inviteId' });
         db.createObjectStore('blocks', { autoIncrement: true });
-        db.createObjectStore('serverSettings', { autoIncrement: false });
+        db.createObjectStore('serverSettings', { keyPath: 'serverSettingsId' });
       },
     });
   }
