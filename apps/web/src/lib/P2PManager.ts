@@ -3,12 +3,9 @@ import { PeerInfo } from '@chat/sockets';
 import { createECDHkey, EncryptedStorageType } from '@chat/crypto';
 import { returnDecryptedMessage } from '@/lib/messaging';
 import { findRoomIdByPeer } from '@/lib/utils';
-import { MessageType, Type } from '@chat/core';
+import { CredentialsType, MessageType, Type } from '@chat/core';
 import { Collection } from './storage';
-import { usePathname } from 'next/navigation';
-import { useRooms } from '@/hooks/useRooms';
 import { sendLocalNotification } from '@chat/notifications';
-
 
 type MessageCallback = (msg: string) => void;
 type LogCallback = (msg: string) => void;
@@ -57,6 +54,7 @@ export class P2PManager {
   }
 
   setOnMessage(id: string, onMessage: MessageCallback) {
+    if(!this.connections[id]) return;
     this.connections[id].conn.setOnMessage(onMessage);
   }
 
@@ -68,7 +66,8 @@ export class P2PManager {
     getAllDecr: (collection: Collection, key: Uint8Array) => Promise<any[]>,
     putEncr: (collection: Collection, obj: Type, key: Uint8Array, collectionKey?: string | number) => Promise<EncryptedStorageType | null>,
     blocks: { userId: string }[],
-    onDataChannelOpen?: () => void
+    onDataChannelOpen?: () => void,
+    user? : CredentialsType
   ): Promise<WebRTCConnection | undefined> {
     if (blocks.find(b => b.userId === peer.id)) return;
 
@@ -77,17 +76,16 @@ export class P2PManager {
       if (onDataChannelOpen && entry.isReady) onDataChannelOpen();
       return entry.conn;
     }
-
     const conn = this.createConnection(
       peer,
       ws,
       myId,
       async (encrMsg) => {
         try {
-          const pathname = usePathname();
-          const { activeRoomId } = useRooms();
           const parsed = JSON.parse(encrMsg);
           const ecdh = createECDHkey();
+          if(!user?.private) return;
+          ecdh.setPrivateKey(Buffer.from(user.private, 'hex'));
           const msg = returnDecryptedMessage(ecdh, parsed);
           const rooms = (await getAllDecr('rooms', key)) ?? [];
           const roomId = findRoomIdByPeer(rooms, peer.id);
@@ -98,10 +96,7 @@ export class P2PManager {
             key
           );
           
-          // Show notification only if not in the active chat
-          if (pathname !== '/chat' || activeRoomId !== roomId) {
             sendLocalNotification(`${peer.username ?? 'Anonymous'}`, msg);
-          }
         } catch (err) {
           console.error('[P2PManager] Failed to handle incoming message', err);
         }
