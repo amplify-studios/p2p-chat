@@ -36,8 +36,7 @@ export async function getSignalingClient(): Promise<SignalingClient | null> {
     ? decryptServerSettingsType(encryptedServerSettings, aesKey)
     : null;
 
-  const SERVER_URL =
-    serverSettings?.selectedServers?.[0] || CLIENT_CONFIG.signalingUrls[0];
+  const SERVER_URL = serverSettings?.selectedServers?.[0] || CLIENT_CONFIG.signalingUrls[0];
 
   // Reuse or re-init client
   if (singletonClient) {
@@ -48,12 +47,7 @@ export async function getSignalingClient(): Promise<SignalingClient | null> {
 
     try {
       if (!sameUrl) singletonClient.disconnect();
-      singletonClient = new SignalingClient(
-        SERVER_URL,
-        creds.userId,
-        creds.username,
-        creds.public
-      );
+      singletonClient = new SignalingClient(SERVER_URL, creds.userId, creds.username, creds.public);
       await singletonClient.connect();
       return singletonClient;
     } catch (err) {
@@ -63,12 +57,7 @@ export async function getSignalingClient(): Promise<SignalingClient | null> {
   }
 
   // Fresh client
-  singletonClient = new SignalingClient(
-    SERVER_URL,
-    creds.userId,
-    creds.username,
-    creds.public
-  );
+  singletonClient = new SignalingClient(SERVER_URL, creds.userId, creds.username, creds.public);
   await singletonClient.connect();
 
   return singletonClient;

@@ -62,8 +62,8 @@ export default function Login() {
   };
 
   const handleEnterKey = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === "Enter") {
-      console.log("Enter key pressed");
+    if (event.key === 'Enter') {
+      console.log('Enter key pressed');
       handleLogin();
     }
   };

@@ -41,17 +41,17 @@ export default function Home() {
     {
       value: invites.length,
       description: 'Pending Invites',
-      href: "/invites"
+      href: '/invites',
     },
     {
       value: peersLoading ? 'Loading...' : peers.length,
       description: 'Peers Online',
-      href: "/peers"
+      href: '/peers',
     },
     {
       value: friends.filter((f) => peers.some((p) => p.id === f.id)).length,
       description: 'Friends Online',
-      href: "/peers"
+      href: '/peers',
     },
   ];
 

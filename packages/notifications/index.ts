@@ -52,26 +52,26 @@
  */
 
 export async function registerServiceWorker(): Promise<ServiceWorkerRegistration | null> {
-    if (!("serviceWorker" in navigator)) return null;
-    try {
-        const reg = await navigator.serviceWorker.register("/sw.js");
-        return reg;
-    } catch (err) {
-        console.error("Failed to register service worker:", err);
-        return null;
-    }
+  if (!('serviceWorker' in navigator)) return null;
+  try {
+    const reg = await navigator.serviceWorker.register('/sw.js');
+    return reg;
+  } catch (err) {
+    console.error('Failed to register service worker:', err);
+    return null;
+  }
 }
 
 export function hasNotifictationPermission(): boolean {
-    if (!("Notification" in window)) return false;
-    return Notification.permission === "granted";
+  if (!('Notification' in window)) return false;
+  return Notification.permission === 'granted';
 }
 
 export async function requestNotificationPermission(retry: boolean = false): Promise<boolean> {
-    if (!("Notification" in window)) return false;
-    if (Notification.permission === "granted") return true;
-    const permission = await Notification.requestPermission();
-    return permission === "granted";
+  if (!('Notification' in window)) return false;
+  if (Notification.permission === 'granted') return true;
+  const permission = await Notification.requestPermission();
+  return permission === 'granted';
 }
 
 /**
@@ -79,22 +79,22 @@ export async function requestNotificationPermission(retry: boolean = false): Pro
  * Uses `registration.showNotification()` when needed.
  */
 export async function sendLocalNotification(title: string, body: string) {
-    if (!("Notification" in window)) return;
-    if (Notification.permission !== "granted") {
-        console.warn("Notification permission not granted");
-        return;
-    }
+  if (!('Notification' in window)) return;
+  if (Notification.permission !== 'granted') {
+    console.warn('Notification permission not granted');
+    return;
+  }
 
-    // Prefer Service Worker API on mobile
-    const reg = await navigator.serviceWorker.getRegistration();
-    if (reg && reg.showNotification) {
-        reg.showNotification(title, {
-            body,
-            icon: "/icon.png", // optional
-        });
-        return;
-    }
+  // Prefer Service Worker API on mobile
+  const reg = await navigator.serviceWorker.getRegistration();
+  if (reg && reg.showNotification) {
+    reg.showNotification(title, {
+      body,
+      icon: '/icon.png', // optional
+    });
+    return;
+  }
 
-    // Fallback for desktop browsers
-    new Notification(title, { body, icon: "/icon.png" });
+  // Fallback for desktop browsers
+  new Notification(title, { body, icon: '/icon.png' });
 }

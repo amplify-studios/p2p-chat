@@ -266,8 +266,8 @@ export default function NewRoom() {
   };
 
   const handleEnterKey = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === "Enter") {
-      console.log("Enter key pressed");
+    if (event.key === 'Enter') {
+      console.log('Enter key pressed');
       handleCreateRoom();
     }
   };
@@ -280,7 +280,7 @@ export default function NewRoom() {
         {error && <p className="text-destructive mb-4">{error}</p>}
 
         <div className="mb-4 flex gap-4">
-        {/*
+          {/*
           <label className="flex items-center gap-2">
                 <input
               type="radio"
@@ -422,7 +422,6 @@ export default function NewRoom() {
             </div>
           </div>
         )}
-
       </div>
     </div>
   );

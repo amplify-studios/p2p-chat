@@ -1,11 +1,11 @@
-import { useEffect } from "react";
-import { usePeers } from "./usePeers";
-import { useDB } from "@/contexts/DBContext";
-import { useAuth } from "./useAuth";
-import { MessageType } from "@chat/core";
-import { useRooms } from "./useRooms";
-import { prepareSendMessagePackage } from "@/lib/messaging";
-import { useP2P } from "@/contexts/P2PContext";
+import { useEffect } from 'react';
+import { usePeers } from './usePeers';
+import { useDB } from '@/contexts/DBContext';
+import { useAuth } from './useAuth';
+import { MessageType } from '@chat/core';
+import { useRooms } from './useRooms';
+import { prepareSendMessagePackage } from '@/lib/messaging';
+import { useP2P } from '@/contexts/P2PContext';
 
 export function useResend() {
   const { user, key } = useAuth();
@@ -18,7 +18,7 @@ export function useResend() {
     if (!key || !user) return;
 
     const resendPendingMessages = async () => {
-      const allMessages = (await getAllDecr("messages", key)) as MessageType[];
+      const allMessages = (await getAllDecr('messages', key)) as MessageType[];
       const pending = allMessages.filter((m) => !m.sent);
       if (pending.length === 0) return;
 
@@ -42,15 +42,14 @@ export function useResend() {
 
         for (const msg of messages) {
           try {
-            const encrypted = prepareSendMessagePackage(
-              recipient.public,
-              msg.message
-            );
+            const encrypted = prepareSendMessagePackage(recipient.public, msg.message);
             conn.send(JSON.stringify(encrypted));
 
-            await updateEncr("messages", key, msg.id, (decr) => { return { ...decr, sent: true } });
+            await updateEncr('messages', key, msg.id, (decr) => {
+              return { ...decr, sent: true };
+            });
           } catch (err) {
-            console.error("Failed to resend message:", err);
+            console.error('Failed to resend message:', err);
           }
         }
       }

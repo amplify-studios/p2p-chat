@@ -141,7 +141,7 @@ export function Chat({
       {/* --- Floating Scroll Button --- */}
       {!isAtBottom && (
         <Button
-          variant={"secondary"}
+          variant={'secondary'}
           onClick={scrollToBottom}
           className="absolute bottom-20 right-6 p-2 rounded-full shadow-lg"
         >

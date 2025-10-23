@@ -6,17 +6,17 @@
 
 - [Specification v1.2](#specification-v12)
   - [Encryption](#encryption)
-  - [Operations](#operations) 
-    - [1. User Connection](#1-user-connection) 
-    - [2. Messaging](#2-messaging) 
-      - [Sending](#sending) 
-      - [Sending - Pseudocode](#sending---pseudocode) 
-      - [Receiving](#receiving) 
-      - [Receiving - Pseudocode](#receiving---pseudocode) 
-    - [3. Local Storage](#3-local-storage) 
-    - [4. Authentication](#4-authentication) 
+  - [Operations](#operations)
+    - [1. User Connection](#1-user-connection)
+    - [2. Messaging](#2-messaging)
+      - [Sending](#sending)
+      - [Sending - Pseudocode](#sending---pseudocode)
+      - [Receiving](#receiving)
+      - [Receiving - Pseudocode](#receiving---pseudocode)
+    - [3. Local Storage](#3-local-storage)
+    - [4. Authentication](#4-authentication)
     - [5. Registration](#5-registration)
-  <!--toc:end-->
+    <!--toc:end-->
 
 ---
 

@@ -50,7 +50,7 @@ type DBContextType = {
     collection: Collection,
     key: Uint8Array,
     id: string | number,
-    updater: (oldData: any) => any
+    updater: (oldData: any) => any,
   ) => Promise<boolean>;
 };
 
@@ -160,7 +160,7 @@ export function DBProvider({ children }: { children: ReactNode }) {
       collection: Collection,
       key: Uint8Array,
       id: string | number,
-      updater: (oldData: any) => any
+      updater: (oldData: any) => any,
     ): Promise<boolean> => {
       if (!db) return false;
 
@@ -172,23 +172,23 @@ export function DBProvider({ children }: { children: ReactNode }) {
         switch (collection) {
           case 'messages':
             decrypted = decryptMessageType(existing as EncryptedMessageType, key);
-          break;
+            break;
           case 'credentials':
-            case 'user':
+          case 'user':
             decrypted = decryptCredentialsType(existing as EncryptedCredentialsType, key);
-          break;
+            break;
           case 'rooms':
             decrypted = decryptRoomType(existing as EncryptedRoomType, key);
-          break;
+            break;
           case 'invites':
             decrypted = decryptInviteType(existing as EncryptedInviteType, key);
-          break;
+            break;
           case 'blocks':
             decrypted = decryptBlockType(existing as EncryptedBlockType, key);
-          break;
+            break;
           case 'serverSettings':
             decrypted = decryptServerSettingsType(existing as EncryptedServerSettingsType, key);
-          break;
+            break;
           default:
             throw new Error(`Unknown collection: ${collection}`);
         }

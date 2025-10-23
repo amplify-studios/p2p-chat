@@ -37,6 +37,7 @@ Messages and calls are encrypted end-to-end. Only the intended recipient(s) can 
 ### 6. Your Responsibilities
 
 Since communication is peer-to-peer, you are responsible for:
+
 - Ensuring you only connect with trusted contacts
 - Keeping your device and encryption keys secure
 
