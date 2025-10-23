@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useDB } from '@/contexts/DBContext';
 import Loading from '@/components/local/Loading';
 import { useAuth } from '@/hooks/useAuth';
-import { useSearchParams } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { useRooms } from '@/hooks/useRooms';
 import EmptyState from '@/components/local/EmptyState';
 import { MessageType } from '@chat/core';
@@ -13,6 +13,8 @@ import { prepareSendMessagePackage, returnDecryptedMessage } from '@/lib/messagi
 import { createECDHkey } from '@chat/crypto';
 import { WebRTCConnection } from '@chat/sockets';
 import { useP2P } from '@/contexts/P2PContext';
+import { findRoomIdByPeer } from '@/lib/utils';
+import { sendLocalNotification } from '@chat/notifications';
 
 let currentMsgId = 0;
 
@@ -33,6 +35,8 @@ export default function P2PChatPage() {
     () => room?.keys.find((k) => k.userId !== user?.userId) ?? null,
     [room, user?.userId]
   );
+  // const pathname = usePathname();
+  // const { activeRoomId } = useRooms();
 
   useEffect(() => {
     if (!otherUser) return;
@@ -110,6 +114,38 @@ export default function P2PChatPage() {
         console.error('Failed to store incoming message', err);
       }
     });
+    return () => {
+      setOnMessage(otherUser.userId, async (encrMsg: string) => {
+        try {
+          const parsed = JSON.parse(encrMsg);
+          const ecdh = createECDHkey();
+
+          if (!user?.private) {
+            console.error('[P2PManager] No private key found');
+            return;
+          }
+          ecdh.setPrivateKey(Buffer.from(user.private, 'hex'));
+
+          const msg = returnDecryptedMessage(ecdh, parsed);
+          const rooms = (await getAllDecr('rooms', key)) ?? [];
+          const roomId = findRoomIdByPeer(rooms, otherUser.userId);
+
+          // console.log(`[P2PManager] path: ${pathname}, roomId: ${roomId}, activeRoomId: ${activeRoomId}`);
+          await putEncr(
+            'messages',
+            { roomId, senderId: otherUser.userId, message: msg, timestamp: Date.now(), sent: true, read: false } as MessageType,
+            key
+          );
+
+          // Show notification only if not in the active chat
+          // if (pathname !== '/chat' || activeRoomId !== roomId) {
+            sendLocalNotification(`${otherUser.username ?? 'Anonymous'}`, msg);
+          // }
+        } catch (err) {
+          console.error('[P2PManager] Failed to handle incoming message', err);
+        }
+      });
+    }
   }, [connection, user, otherUser, roomId, key, putEncr]);
 
   // Track connection status

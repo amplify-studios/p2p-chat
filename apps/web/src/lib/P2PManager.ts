@@ -69,8 +69,6 @@ export class P2PManager {
     putEncr: (collection: Collection, obj: Type, key: Uint8Array, collectionKey?: string | number) => Promise<EncryptedStorageType | null>,
     blocks: { userId: string }[],
     onDataChannelOpen?: () => void,
-    pathname?: string,
-    activeRoomId?: string,
     user?: CredentialsType
   ): Promise<WebRTCConnection | undefined> {
     if (blocks.find(b => b.userId === peer.id)) return;
@@ -82,7 +80,7 @@ export class P2PManager {
     }
     // const pathname = usePathname();
     // const { activeRoomId } = useRooms();
-    console.log(`[P2PManager] path: ${pathname}, activeRoomId: ${activeRoomId}`);
+    // console.log(`[P2PManager] path: ${pathname}, activeRoomId: ${activeRoomId}`);
     
     const conn = this.createConnection(
       peer,
@@ -103,7 +101,7 @@ export class P2PManager {
           const rooms = (await getAllDecr('rooms', key)) ?? [];
           const roomId = findRoomIdByPeer(rooms, peer.id);
 
-          console.log(`[P2PManager] path: ${pathname}, roomId: ${roomId}, activeRoomId: ${activeRoomId}`);
+          // console.log(`[P2PManager] path: ${pathname}, roomId: ${roomId}, activeRoomId: ${activeRoomId}`);
           await putEncr(
             'messages',
             { roomId, senderId: peer.id, message: msg, timestamp: Date.now(), sent: true, read: false } as MessageType,
@@ -111,9 +109,9 @@ export class P2PManager {
           );
           
           // Show notification only if not in the active chat
-          if (pathname !== '/chat' || activeRoomId !== roomId) {
+          // if (pathname !== '/chat' || activeRoomId !== roomId) {
             sendLocalNotification(`${peer.username ?? 'Anonymous'}`, msg);
-          }
+          // }
         } catch (err) {
           console.error('[P2PManager] Failed to handle incoming message', err);
         }

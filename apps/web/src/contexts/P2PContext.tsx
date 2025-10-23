@@ -46,8 +46,6 @@ export const P2PProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         putEncr,
         blocks,
         undefined,
-        pathname,
-        activeRoomId,
         user
       );
     },
