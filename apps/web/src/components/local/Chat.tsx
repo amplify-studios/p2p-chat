@@ -14,6 +14,7 @@ export interface Message {
   id: number;
   text: string;
   sender: 'me' | 'other';
+  read: boolean;
 }
 
 interface ChatProps {
@@ -23,6 +24,7 @@ interface ChatProps {
   href: string;
   isTyping?: boolean;
   connected: boolean;
+  seen: boolean;
   room: RoomType;
 }
 
@@ -33,6 +35,7 @@ export function Chat({
   href,
   connected = false,
   isTyping = false,
+  seen = false,
   room,
 }: ChatProps) {
   const [input, setInput] = useState('');
@@ -128,6 +131,12 @@ export function Chat({
             </div>
           </div>
         ))}
+
+        {seen && (
+          <div className="flex justify-end">
+            <div className="text-sm text-gray-500 italic mt-1">Seen</div>
+          </div>
+        )}
 
         {isTyping && (
           <div className="flex justify-start">

@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useDB } from '@/contexts/DBContext';
 import Loading from '@/components/local/Loading';
 import { useAuth } from '@/hooks/useAuth';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { useRooms } from '@/hooks/useRooms';
 import EmptyState from '@/components/local/EmptyState';
 import { MessageType } from '@chat/core';
@@ -22,6 +22,7 @@ export default function P2PChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [connected, setConnected] = useState(false);
   const [connection, setConnection] = useState<WebRTCConnection | undefined>(undefined);
+  const [seen, setSeen] = useState(false);
 
   const { db, getAllDecr, putEncr } = useDB();
   const { user, key } = useAuth();
@@ -60,6 +61,7 @@ export default function P2PChatPage() {
                 id: ++currentMsgId,
                 text: m.message,
                 sender: m.senderId === user.userId ? 'me' : 'other',
+                read: m.read,
               }) as Message,
           );
         setMessages(roomMessages);
@@ -84,14 +86,56 @@ export default function P2PChatPage() {
         return;
       }
 
+      if (parsed.type === 'opened') {
+        console.log(`[P2PChat] ${otherUser.username} opened the chat.`);
+
+        try {
+          const allMessages = (await getAllDecr('messages', key)) as MessageType[];
+          const msgsToUpdate = allMessages.filter(
+            (m) => m.roomId === roomId && m.senderId === user.userId && !m.read,
+          );
+          
+          for (const m of msgsToUpdate) {
+            try {
+              await putEncr(
+                'messages',
+                {
+                  ...m,
+                  read: true,
+                } as MessageType,
+                key,
+              );
+            } catch (err) {
+              console.error('[P2PChat] Failed to update message read state', err);
+            }
+          }
+
+          setMessages((prev) => 
+            prev.map((msg) => 
+              msg.sender === 'me' && !msg.read ? { ...msg, read: true } : msg
+            )
+          );
+          setSeen(true);
+          
+        } catch (err) {
+          console.error('[P2PChat] Failed to fetch messages to mark as read', err);
+        }
+        return;
+      }
+
+      if (parsed.type === 'closed') {
+        console.log(`[P2PChat] ${otherUser.username} left the chat.`);
+        return;
+      }
+
       // Decrypt message
       const userECDH = createECDHkey();
       if (!user?.private) return;
       userECDH.setPrivateKey(Buffer.from(user.private, 'hex'));
       const msg = returnDecryptedMessage(userECDH, parsed);
 
-      // Update local state
-      setMessages((prev) => [...prev, { id: ++currentMsgId, text: msg, sender: 'other' }]);
+      setMessages((prev) => [...prev, { id: ++currentMsgId, text: msg, sender: 'other', read: false }]);
+      setSeen(false); 
 
       // Save locally
       try {
@@ -103,17 +147,58 @@ export default function P2PChatPage() {
             message: msg,
             timestamp: Date.now(),
             sent: true,
+            read: false,
           } as MessageType,
           key,
         );
+
+        if (connection.isConnected()) {
+           const payload = JSON.stringify({ type: 'opened', roomId });
+           connection.send(payload);
+        }
       } catch (err) {
         console.error('Failed to store incoming message', err);
       }
     });
+
     return () => {
       setOnMessage(otherUser.userId, async (encrMsg: string) => {
         try {
           const parsed = JSON.parse(encrMsg);
+          
+          if (parsed.type === 'opened') {
+            console.log(`[P2PChat] ${otherUser.username} opened the chat.`);
+
+            try {
+              const allMessages = (await getAllDecr('messages', key)) as MessageType[];
+              const msgsToUpdate = allMessages.filter(
+                (m) => m.roomId === roomId && m.senderId === user.userId && !m.read,
+              );
+              for (const m of msgsToUpdate) {
+                try {
+                  await putEncr(
+                    'messages',
+                    {
+                      ...m,
+                      read: true,
+                    } as MessageType,
+                    key,
+                  );
+                } catch (err) {
+                  console.error('[P2PChat] Failed to update message read state', err);
+                }
+              }
+            } catch (err) {
+              console.error('[P2PChat] Failed to fetch messages to mark as read', err);
+            }
+            return;
+          }
+
+          if (parsed.type === 'closed') {
+            console.log(`[P2PChat] ${otherUser.username} left the chat.`);
+            return;
+          }
+
           const ecdh = createECDHkey();
 
           if (!user?.private) {
@@ -124,18 +209,17 @@ export default function P2PChatPage() {
 
           const msg = returnDecryptedMessage(ecdh, parsed);
           const rooms = (await getAllDecr('rooms', key)) ?? [];
-          const roomId = findRoomIdByPeer(rooms, otherUser.userId);
+          const currentRoomId = findRoomIdByPeer(rooms, otherUser.userId);
 
           // console.log(`[P2PManager] path: ${pathname}, roomId: ${roomId}, activeRoomId: ${activeRoomId}`);
           await putEncr(
             'messages',
             {
-              roomId,
+              roomId: currentRoomId,
               senderId: otherUser.userId,
               message: msg,
               timestamp: Date.now(),
-              sent: true,
-              read: false,
+              sent: true
             } as MessageType,
             key,
           );
@@ -150,6 +234,26 @@ export default function P2PChatPage() {
       });
     };
   }, [connection, user, otherUser, roomId, key, putEncr]);
+
+  // Send seen signal when this user opens the chat
+  useEffect(() => {
+    if (!connection || !roomId || !user || !otherUser) return;
+    
+    console.log(`[P2PChat] ${user.username} opened the chat.`);
+    const isConnected = connection.isConnected(); 
+    const payload = JSON.stringify({ type: 'opened', roomId });
+    if (isConnected) {
+      connection.send(payload);
+    }
+    return () => {
+      console.log(`[P2PChat] ${user.username} left the chat.`);
+      if (connection?.isConnected()) {
+        const exitPayload = JSON.stringify({ type: 'closed', roomId });
+        connection.send(exitPayload);
+      }
+      setSeen(false);
+    };
+  }, [connection, roomId, user, otherUser]);
 
   // Track connection status
   useEffect(() => {
@@ -194,7 +298,8 @@ export default function P2PChatPage() {
       }
 
       // Optimistic UI update
-      setMessages((prev) => [...prev, { id: ++currentMsgId, text: message, sender: 'me' }]);
+      setMessages((prev) => [...prev, { id: ++currentMsgId, text: message, sender: 'me', read: false }]); 
+      setSeen(false);
 
       const encrText = prepareSendMessagePackage(otherUser.public, message);
       const payload = JSON.stringify(encrText);
@@ -228,6 +333,7 @@ export default function P2PChatPage() {
             message,
             timestamp: Date.now(),
             sent: conn?.isConnected() ?? false,
+            read: false,
           } as MessageType,
           key,
         );
@@ -251,6 +357,7 @@ export default function P2PChatPage() {
         onSend={sendMessage}
         room={room}
         connected={connected}
+        seen={seen}
       />
     </div>
   );
