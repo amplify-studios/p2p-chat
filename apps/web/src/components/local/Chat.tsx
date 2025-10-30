@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { EllipsisVertical, Send, User, Users, Smile, ArrowDown } from 'lucide-react';
@@ -48,7 +49,7 @@ export function Chat({
   const sendMessage = () => {
     if (!input.trim()) return;
     onSend(input);
-    setInput('');
+    setInput("");
   };
 
   // Detect if user scrolled up
@@ -96,7 +97,8 @@ export function Chat({
   };
 
   return (
-    <div className="flex flex-col w-full bg-background relative" style={{ height: '94vh' }}>
+    // <div className="flex flex-col w-full bg-background relative " style={{ height: '94vh' }}>
+    <div className="flex flex-col w-full bg-background relative h-[94vh] md:h-screen">
       {/* --- Top Bar --- */}
       <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-3 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/75">
         <div className="flex flex-row items-center gap-2">
@@ -121,7 +123,7 @@ export function Chat({
             className={`flex ${msg.sender === 'me' ? 'justify-end' : 'justify-start'}`}
           >
             <div
-              className={`px-3 py-2 max-w-[70%] break-words ${
+              className={`px-3 py-2 max-w-[70vw] break-words ${
                 msg.sender === 'me'
                   ? 'bg-primary text-white rounded-t-lg rounded-l-lg rounded-br-none'
                   : 'bg-gray-200 dark:bg-gray-700 text-black dark:text-white rounded-t-lg rounded-r-lg rounded-bl-none'
@@ -186,11 +188,19 @@ export function Chat({
         </div>
 
         {/* Text Input */}
-        <Input
+        <Textarea
+          maxLength={500}
           placeholder="Type a message..."
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
+          // onKeyDown={(e) => e.key === 'Enter' && sendMessage()
+          onKeyDown={(e) => {
+          if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault()
+            sendMessage()
+          }
+        }}
+          
         />
 
         {/* Send Button */}
