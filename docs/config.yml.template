@@ -13,5 +13,5 @@ turnServers:
     credential: "pass"
 
 signaling:
-  url: "ws://localhost:8080"
-
+  urls: 
+    - "ws://localhost:8080"
