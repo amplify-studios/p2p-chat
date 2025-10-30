@@ -1,1 +1,1 @@
-apps/web/public/About.md
+../apps/web/public/About.md
