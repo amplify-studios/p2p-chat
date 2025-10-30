@@ -171,28 +171,11 @@ export function DBProvider({ children }: { children: ReactNode }) {
       id: string | number,
       updater: (oldData: any) => any,
     ): Promise<boolean> => {
-      console.log('updateEncr', collection, key, id, updater, db);
+      // console.log('updateEncr', collection, key, id, updater, db);
       if (!db) return false;
 
       try {
-        // const all = await db.getAll(collection);
-        // const existing = all.find((item: any) => item.id === id);
-
-        // await db
-        //   .getFromIndex(collection, 'id', id)
-        //   .then((e) => (existing = e))
-        //   .catch((err) => console.log('err', err))
-        //   .finally(() => {
-        //     if (existing == undefined) {
-        //       console.log('no existing');
-        //       return false;
-        //     }
-        //   });\
-        // const existing = await db.getFromIndex(collection, 'key', id);
-        // (collection, id);
-        //
-        console.log('hellooooooo');
-        console.log('id', id);
+      
         let existing: any;
         console.log('existing', existing);
         switch (collection) {

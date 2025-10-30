@@ -45,7 +45,7 @@ export default function P2PChatPage() {
 
   // Load local messages for this room
   useEffect(() => {
-    if (!db || !roomId || !key || !user?.userId) return;
+    if (!db || !roomId || !key || !user?.userId || !connection) return;
 
     (async () => {
       try {
@@ -70,11 +70,15 @@ export default function P2PChatPage() {
             return { ...decr, read: true };
           });
         });
+        if (connection.isConnected()) {
+          const payload = JSON.stringify({ type: 'opened', roomId });
+          connection.send(payload);
+        }
       } catch (err) {
         console.error('Failed to load messages', err);
       }
     })();
-  }, [db, roomId, key, user?.userId, getAllDecr, updateEncr]);
+  }, [db, roomId, key, user?.userId, getAllDecr, updateEncr, connection]);
 
   // Listen for incoming messages
   useEffect(() => {
@@ -241,26 +245,6 @@ export default function P2PChatPage() {
     };
   }, [connection, user, otherUser, roomId, key, putEncr]);
 
-  // Send seen signal when this user opens the chat
-  useEffect(() => {
-    if (!connection || !roomId || !user || !otherUser) return;
-    
-    console.log(`[P2PChat] ${user.username} opened the chat.`);
-    const isConnected = connection.isConnected(); 
-    const payload = JSON.stringify({ type: 'opened', roomId });
-    if (isConnected) {
-      connection.send(payload);
-    }
-    return () => {
-      console.log(`[P2PChat] ${user.username} left the chat.`);
-      if (connection?.isConnected()) {
-        const exitPayload = JSON.stringify({ type: 'closed', roomId });
-        connection.send(exitPayload);
-      }
-      setSeen(false);
-    };
-  }, [connection, roomId, user, otherUser]);
-
   // Track connection status
   useEffect(() => {
     if (!connection) {
@@ -305,7 +289,7 @@ export default function P2PChatPage() {
 
       // Optimistic UI update
       setMessages((prev) => [...prev, { id: ++currentMsgId, text: message, sender: 'me', read: false }]); 
-      setSeen(false);
+      //setSeen(false);
 
       const encrText = prepareSendMessagePackage(otherUser.public, message);
       const payload = JSON.stringify(encrText);
