@@ -168,7 +168,9 @@ export default function P2PChatPage() {
         return;
       }else if (parsed.type === 'requestSeen') {
         console.log(`[P2PChat] ${otherUser.username} requested seen.`);
-        if (connection.isConnected()) {
+        const allMessages = (await getAllDecr('messages', key)) as MessageType[];
+        const unseenMessages = allMessages.filter((m) => m.roomId === roomId && m.read === false);
+        if (connection.isConnected() && unseenMessages.length == 0) {
           const payload = JSON.stringify({ type: 'opened', roomId });
           connection.send(payload);
         }
@@ -285,7 +287,9 @@ export default function P2PChatPage() {
         return;
       }else if (parsed.type === 'requestSeen') {
         console.log(`[P2PChat] ${otherUser.username} requested seen.`);
-        if (connection.isConnected()) {
+        const allMessages = (await getAllDecr('messages', key)) as MessageType[];
+        const unseenMessages = allMessages.filter((m) => m.roomId === roomId && m.read === false);
+        if (connection.isConnected() && unseenMessages.length == 0) {
           const payload = JSON.stringify({ type: 'opened', roomId });
           connection.send(payload);
         }
