@@ -25,8 +25,15 @@ How do you imagine the future of this technology or community?
 
 ---
 
+## Privacy Policy
+
+Read [here](/privacy-policy)
+
+---
+
 ## Get Involved
 
 Feel free to contribute to this project. Author issues, if any, add missing features or setup a signaling server for others to use!
 
 - [GitHub Repository](https://github.com/amplify-studios/p2p-chat)
+

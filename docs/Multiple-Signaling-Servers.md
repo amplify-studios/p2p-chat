@@ -1,5 +1,7 @@
 # Multiple Signaling Servers
 
+> Notes on the matter. Not implemented
+
 ## 1. Interconnected signaling servers (federation)
 
 - Each signaling server knows about peers registered with the others.
