@@ -69,7 +69,7 @@ export default function Peers() {
                     className={`mb-2 flex justify-between items-center p-3 bg-card rounded shadow transition ${
                       isMe ? 'border-2 border-primary' : 'hover:bg-secondary'
                     }`}
-                    onClick={async () => handleClick(p.id)}
+                    onClick={isMe ? () => {} : async () => handleClick(p.id)}
                   >
                     <div>
                       <p className="font-medium">

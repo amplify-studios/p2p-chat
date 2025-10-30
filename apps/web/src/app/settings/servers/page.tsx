@@ -28,17 +28,14 @@ export default function Servers() {
   const [servers, setServers] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Avoid reloading settings repeatedly
   const loadedOnce = useRef(false);
 
-  // Initialize defaults
   useEffect(() => {
     setServerSettingsId(generateBase58Id());
     setServers(CLIENT_CONFIG.signalingUrls);
     setSelectedServer(CLIENT_CONFIG.signalingUrls[0]);
   }, []);
 
-  // Load encrypted settings ONCE per key
   useEffect(() => {
     if (!key || loadedOnce.current) return;
     loadedOnce.current = true;
@@ -61,7 +58,6 @@ export default function Servers() {
       );
       setServers(merged);
 
-      // Only override if saved selection exists
       const saved = currentSettings.selectedServers?.[0];
       if (saved && merged.includes(saved)) {
         setSelectedServer(saved);
@@ -78,7 +74,6 @@ export default function Servers() {
     setSelectedServer(server);
   };
 
-  // Validate and add user-defined server
   const addUserServer = () => {
     const trimmed = newServer.trim();
     if (!trimmed) return;
@@ -109,13 +104,11 @@ export default function Servers() {
     setUserServers((prev) => prev.filter((s) => s !== server));
     setServers((prev) => {
       const updated = prev.filter((s) => s !== server);
-      // Reset selection if it was removed
       setSelectedServer((prevSel) => (prevSel === server ? updated[0] || null : prevSel));
       return updated;
     });
   };
 
-  // Auto-select first available if autoSelectAll is true
   useEffect(() => {
     if (autoSelectAll && servers.length > 0) {
       setSelectedServer(servers[0]);
@@ -125,7 +118,7 @@ export default function Servers() {
   if (loading) return <Loading />;
 
   return (
-    <div className="p-6 max-w-lg mx-auto flex flex-col gap-6">
+    <div className="p-6 max-w-lg mx-auto flex flex-col gap-6 overflow-x-hidden">
       <h1 className="text-xl font-bold">Server Settings</h1>
 
       {/* Selected servers */}
@@ -133,14 +126,25 @@ export default function Servers() {
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">
             {servers.map((server) => (
-              <label key={server} className="flex items-center gap-2 cursor-pointer">
+              <label
+                key={server}
+                className="flex items-start gap-2 cursor-pointer break-all"
+              >
                 <input
                   type="radio"
                   name="server"
                   checked={selectedServer === server}
                   onChange={() => selectServer(server)}
+                  className="mt-[2px] shrink-0"
                 />
-                {server} {server == CLIENT_CONFIG.signalingUrls[0] && <span>(Recommended)</span>}
+                <div className="flex flex-wrap items-center gap-1 break-all">
+                  <span className="break-all">{server}</span>
+                  {server === CLIENT_CONFIG.signalingUrls[0] && (
+                    <span className="text-sm text-muted-foreground whitespace-nowrap">
+                      (Recommended)
+                    </span>
+                  )}
+                </div>
               </label>
             ))}
           </div>
@@ -161,8 +165,11 @@ export default function Servers() {
 
         <ul className="flex flex-col gap-2">
           {userServers.map((server) => (
-            <li key={server} className="flex items-center justify-between border rounded px-3 py-2">
-              <span>{server}</span>
+            <li
+              key={server}
+              className="flex items-center justify-between border rounded px-3 py-2 break-all"
+            >
+              <span className="break-all">{server}</span>
               <Button size="icon" variant="ghost" onClick={() => removeUserServer(server)}>
                 <X className="h-4 w-4" />
               </Button>
