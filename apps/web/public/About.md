@@ -2,7 +2,7 @@
 
 ## Our Team
 
-We are a small team from Thessaloniki, Greece. ...
+We are a small team from Thessaloniki, Greece. Have a look at our profiles:
 
 - **Konstantinos Despoinidis ([KDesp73](https://github.com/KDesp73))**
 - **Konstantinos Mokas ([creatorkostas](https://github.com/creatorkostas))**
@@ -12,8 +12,7 @@ We are a small team from Thessaloniki, Greece. ...
 
 ## Our Vision
 
-Describe the long-term goals or ideals you’re striving toward.  
-How do you imagine the future of this technology or community?
+We want this application to stand as a true alternative to traditional chat platforms, offering the same seamless, real-time communication experience without compromising user freedom or privacy. Every user should have complete control over their data: the ability to host their own servers, manage their own identity, and communicate securely without relying on centralized intermediaries. Our goal is to make peer-to-peer communication not just private, but effortless — combining decentralization, encryption, and autonomy with the polish and usability people expect from modern messaging apps.
 
 ---
 

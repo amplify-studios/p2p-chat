@@ -25,7 +25,7 @@
 ## Setup your own signaling server
 
 ```bash
-$ curl -sSfL https://TODO | bash
+$ curl -sSfL https://p2pchat.kdesp73.org/fetch-signaling | bash
  
 $ cd p2p-chat-signaling
  
