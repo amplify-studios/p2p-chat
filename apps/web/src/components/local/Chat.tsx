@@ -96,7 +96,8 @@ export function Chat({
   };
 
   return (
-    <div className="flex flex-col w-full bg-background relative" style={{ height: '94vh' }}>
+    // <div className="flex flex-col w-full bg-background relative " style={{ height: '94vh' }}>
+    <div className="flex flex-col w-full bg-background relative h-[94vh] md:h-screen">
       {/* --- Top Bar --- */}
       <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-3 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/75">
         <div className="flex flex-row items-center gap-2">
