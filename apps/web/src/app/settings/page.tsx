@@ -10,7 +10,7 @@ import { useRouter } from 'next/navigation';
 import { refreshRooms } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/contexts/ToastContext';
-import { Archive, LogOut, QrCode, Server, ShieldBan, TestTube, Trash, Bell, CircleQuestionMark } from 'lucide-react';
+import { Archive, LogOut, QrCode, Server, ShieldBan, TestTube, Trash, Bell, CircleQuestionMark, HatGlasses } from 'lucide-react';
 import { useConfirm } from '@/contexts/ConfirmContext';
 import { useClient } from '@/contexts/ClientContext';
 import {
@@ -165,14 +165,22 @@ export default function SettingsPage() {
       >
         <LogOut className="mr-1 h-4 w-4" /> Logout
       </Button>
-      <Button
+      <div className='absolute bottom-4 right-4'>
+        <Button
         variant={"ghost"}
         size={"lg"}
-        onClick={() => router.push("/about")}
-        className='absolute bottom-4 right-4'
-      >
-        <CircleQuestionMark />
-      </Button>
+        onClick={() => router.push("/privacy-policy")}
+        >
+          <HatGlasses />
+        </Button>
+        <Button
+          variant={"ghost"}
+          size={"lg"}
+          onClick={() => router.push("/about")}
+        >
+          <CircleQuestionMark />
+        </Button>
+      </div>
     </div>
   );
 }
