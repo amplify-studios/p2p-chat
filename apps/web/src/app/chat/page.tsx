@@ -64,12 +64,13 @@ export default function P2PChatPage() {
           );
         setMessages(roomMessages);
 
-        const unseenMessages = allMessages.filter((m) => m.roomId === roomId);
+        const unseenMessages = allMessages.filter((m) => m.roomId === roomId && m.read === false);
         unseenMessages.forEach(async (msg) => {
           await updateEncr('messages', key, msg.id, (decr) => {
             return { ...decr, read: true };
           });
         });
+        console.log("connection.isConnected()", connection.isConnected());
         if (connection.isConnected()) {
           const payload = JSON.stringify({ type: 'opened', roomId });
           connection.send(payload);
@@ -134,6 +135,7 @@ export default function P2PChatPage() {
 
       if (parsed.type === 'closed') {
         console.log(`[P2PChat] ${otherUser.username} left the chat.`);
+        setSeen(false);
         return;
       }
 
@@ -242,6 +244,10 @@ export default function P2PChatPage() {
           console.error('[P2PManager] Failed to handle incoming message', err);
         }
       });
+      if (connection.isConnected()) {
+        const payload = JSON.stringify({ type: 'closed', roomId });
+        connection.send(payload);
+      }
     };
   }, [connection, user, otherUser, roomId, key, putEncr]);
 
@@ -323,7 +329,7 @@ export default function P2PChatPage() {
             message,
             timestamp: Date.now(),
             sent: conn?.isConnected() ?? false,
-            read: false,
+            read: true,
           } as MessageType,
           key,
         );
