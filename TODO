@@ -1,6 +1,5 @@
 TODO: Group chats
 TODO: Chat sync
-TODO: Home page features
 TODO: Server federation
 TODO: Sync between devices
 TODO: Documentation (code and docs/)
@@ -49,3 +48,4 @@ DONE: Signaling server connection issues
 DONE: IDB issues in chromium
 DONE: restore data not working on mobile
 DONE: p2p connections issues
+DONE: Home page features
