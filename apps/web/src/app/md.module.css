@@ -1,0 +1,159 @@
+.md {
+    line-height: 1.75;
+    max-width: 80ch;
+    margin: 0 auto;
+}
+
+.md h1 {
+    font-size: 2.25rem; /* text-4xl */
+    font-weight: 700;
+    margin-bottom: 2rem;
+}
+.md h1::before {
+    content: "# ";
+    color: #94a3b8;
+    font-weight: 400;
+}
+
+.md h2 {
+    font-size: 1.875rem; /* text-3xl */
+    font-weight: 600;
+    margin-top: 2rem;
+    margin-bottom: 1.5rem;
+}
+.md h2::before {
+    content: "## ";
+    color: #94a3b8;
+    font-weight: 400;
+}
+
+.md h3 {
+    font-size: 1.5rem; /* text-2xl */
+    font-weight: 500;
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
+}
+.md h3::before {
+    content: "### ";
+    color: #94a3b8;
+    font-weight: 400;
+}
+
+.md h4 {
+    font-size: 1.25rem; /* text-xl */
+    font-weight: 500;
+    margin-top: 1.25rem;
+    margin-bottom: 0.5rem;
+}
+.md h4::before {
+    content: "#### ";
+    color: #94a3b8;
+    font-weight: 400;
+}
+
+.md h5 {
+    font-size: 1.125rem; /* text-lg */
+    font-weight: 500;
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+}
+.md h5::before {
+    content: "##### ";
+    color: #94a3b8;
+    font-weight: 400;
+}
+
+.md h6 {
+    font-size: 1rem; /* text-base */
+    font-weight: 500;
+    margin-top: 0.75rem;
+    margin-bottom: 0.25rem;
+}
+.md h6::before {
+    content: "###### ";
+    color: #94a3b8;
+    font-weight: 400;
+}
+
+.md p {
+    margin-bottom: 1rem;
+}
+
+.md ul {
+    list-style: disc;
+    padding-left: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.md ol {
+    list-style: decimal;
+    padding-left: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.md a {
+    color: #2563eb; /* blue-600 */
+    text-decoration: underline;
+}
+
+.md blockquote {
+    border-left: 4px solid #cbd5e1; /* gray-300 */
+    padding-left: 1rem;
+    font-style: italic;
+    color: #475569; /* slate-600 */
+}
+
+.md code {
+    background-color: #f1f5f9; /* slate-100 */
+    padding: 0.2rem 0.4rem;
+    border-radius: 0.25rem;
+    font-size: 0.875rem;
+}
+
+.md del,
+.md s {
+    text-decoration: line-through;
+    color: #9ca3af; /* slate-400 */
+}
+
+.md table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1.5rem;
+    font-size: 0.95rem;
+    text-align: left;
+}
+
+/* Table cells */
+.md table th,
+.md table td {
+    border: 1px solid; /* border will adapt via border-color variables */
+    padding: 0.5rem 0.75rem;
+}
+
+/* Table headers */
+.md table th {
+    background-color: #e2e8f0; 
+    font-weight: 600;
+    color: #1e293b; /* dark text */
+}
+
+/* Table zebra striping */
+.md table tbody tr:nth-child(even) {
+    background-color: #f8fafc; 
+    color: #1e293b; /* dark text */
+}
+
+/* Hover effect */
+.md table tbody tr:hover {
+    background-color: #e2e8f0; 
+    color: #1e293b; /* dark text */
+}
+
+.md table caption {
+    caption-side: bottom;
+    text-align: center;
+    font-size: 0.875rem;
+    color: #475569; /* slate-600*/
+    margin-top: 0.5rem;
+}

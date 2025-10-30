@@ -9,7 +9,12 @@ import Providers from '@/contexts/Providers';
 export default function Layout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
 
-  if (pathname === '/login')
+  const noSidebarPaths = [
+    "/login",
+    "/intro"
+  ];
+
+  if (noSidebarPaths.some((p) => p === pathname))
     return (
       <Suspense>
         <ConfirmProvider>{children}</ConfirmProvider>

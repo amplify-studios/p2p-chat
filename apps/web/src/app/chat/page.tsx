@@ -24,7 +24,7 @@ export default function P2PChatPage() {
   const [connection, setConnection] = useState<WebRTCConnection | undefined>(undefined);
   const [seen, setSeen] = useState(false);
 
-  const { db, getAllDecr, putEncr } = useDB();
+  const { db, getAllDecr, putEncr, updateEncr } = useDB();
   const { user, key } = useAuth();
   const searchParams = useSearchParams();
   const { rooms } = useRooms();
@@ -36,8 +36,6 @@ export default function P2PChatPage() {
     () => room?.keys.find((k) => k.userId !== user?.userId) ?? null,
     [room, user?.userId],
   );
-  // const pathname = usePathname();
-  // const { activeRoomId } = useRooms();
 
   useEffect(() => {
     if (!otherUser) return;
@@ -65,11 +63,18 @@ export default function P2PChatPage() {
               }) as Message,
           );
         setMessages(roomMessages);
+
+        const unseenMessages = allMessages.filter((m) => m.roomId === roomId);
+        unseenMessages.forEach(async (msg) => {
+          await updateEncr('messages', key, msg.id, (decr) => {
+            return { ...decr, read: true };
+          });
+        });
       } catch (err) {
         console.error('Failed to load messages', err);
       }
     })();
-  }, [db, roomId, key, user?.userId, getAllDecr]);
+  }, [db, roomId, key, user?.userId, getAllDecr, updateEncr]);
 
   // Listen for incoming messages
   useEffect(() => {
@@ -147,14 +152,14 @@ export default function P2PChatPage() {
             message: msg,
             timestamp: Date.now(),
             sent: true,
-            read: false,
+            read: true,
           } as MessageType,
           key,
         );
 
         if (connection.isConnected()) {
-           const payload = JSON.stringify({ type: 'opened', roomId });
-           connection.send(payload);
+          const payload = JSON.stringify({ type: 'opened', roomId });
+          connection.send(payload);
         }
       } catch (err) {
         console.error('Failed to store incoming message', err);
@@ -219,7 +224,8 @@ export default function P2PChatPage() {
               senderId: otherUser.userId,
               message: msg,
               timestamp: Date.now(),
-              sent: true
+              sent: true,
+              read: false,
             } as MessageType,
             key,
           );

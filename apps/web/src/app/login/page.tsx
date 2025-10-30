@@ -14,12 +14,12 @@ import {
   generateAESKey,
   generateBase58Id,
   hash,
-  //deriveEncryptionKey,
 } from '@chat/crypto';
 import { useAuth } from '@/hooks/useAuth';
 import { CredentialsType } from '@chat/core';
 import { eraseDB, PASSWORD_KEY } from '@/lib/storage';
 import { useConfirm } from '@/contexts/ConfirmContext';
+import { Lightbulb } from 'lucide-react';
 
 const validateForm = (
   username: string,
@@ -236,6 +236,13 @@ export default function Login() {
           </p>
         )}
       </div>
+      <Button
+        variant={"secondary"}
+        onClick={() => { router.push("/intro") }}
+        className='absolute bottom-4 right-4'
+      >
+        <Lightbulb /> Learn more
+      </Button>
     </div>
   );
 }

@@ -191,6 +191,8 @@ export function DBProvider({ children }: { children: ReactNode }) {
         // const existing = await db.getFromIndex(collection, 'key', id);
         // (collection, id);
         //
+        console.log('hellooooooo');
+        console.log('id', id);
         let existing: any;
         console.log('existing', existing);
         switch (collection) {
