@@ -10,6 +10,7 @@ import StatusCard from '@/components/local/StatusCard';
 import { useClient } from '@/contexts/ClientContext';
 import EmptyState from '@/components/local/EmptyState';
 import { useInvites } from '@/hooks/useInvites';
+import { Fira_Code } from 'next/font/google';
 
 export default function Home() {
   const { user, key } = useAuth();
@@ -18,15 +19,18 @@ export default function Home() {
   const { invites } = useInvites();
   const { client, status } = useClient();
 
+  const [firstNewMessage, setFirstNewMessage] = useState<MessageType | null>(null);
   const [newMessagesCount, setNewMessagesCount] = useState(0);
 
   useEffect(() => {
     if (!db || !key) return;
     const fetchMessages = async () => {
       const allMessages = (await getAllDecr('messages', key)) as MessageType[];
-      const unread =
-        allMessages?.filter((m: MessageType) => m.senderId != user?.userId && !m.read)?.length || 0;
-      setNewMessagesCount(unread);
+      const unread = allMessages?.filter((m: MessageType) => m.senderId != user?.userId && !m.read);
+      const unreadCount = unread?.length || 0;
+      setNewMessagesCount(unreadCount);
+
+      setFirstNewMessage(unread.at(0) ?? null);
     };
     fetchMessages();
   }, [db, getAllDecr, key, user?.userId]);
@@ -37,6 +41,7 @@ export default function Home() {
     {
       value: newMessagesCount,
       description: 'New Messages',
+      href: firstNewMessage ? `/chat?id=${firstNewMessage?.roomId}` : "#"
     },
     {
       value: invites.length,
