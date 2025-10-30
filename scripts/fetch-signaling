@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+NAME="p2p-chat"
+REPO_URL="https://github.com/amplify-studios/$NAME.git"
+
+git clone --depth=1 "$REPO_URL"
+
+if [ -d "$NAME" ]; then
+  cp -r "$NAME/apps/server" "./$NAME-signaling"
+  rm -rf "$NAME"
+else
+  echo "Error: Failed to clone $REPO_URL"
+  exit 1
+fi
