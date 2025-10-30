@@ -45,7 +45,7 @@ export default function P2PChatPage() {
 
   // Load local messages for this room
   useEffect(() => {
-    if (!db || !roomId || !key || !user?.userId) return;
+    if (!db || !roomId || !key || !user?.userId || !connection) return;
 
     (async () => {
       try {
@@ -70,11 +70,15 @@ export default function P2PChatPage() {
             return { ...decr, read: true };
           });
         });
+        if (connection.isConnected()) {
+          const payload = JSON.stringify({ type: 'opened', roomId });
+          connection.send(payload);
+        }
       } catch (err) {
         console.error('Failed to load messages', err);
       }
     })();
-  }, [db, roomId, key, user?.userId, getAllDecr, updateEncr]);
+  }, [db, roomId, key, user?.userId, getAllDecr, updateEncr, connection]);
 
   // Listen for incoming messages
   useEffect(() => {
