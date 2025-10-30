@@ -1,7 +1,7 @@
 'use client';
 
 import { Chat, Message } from '@/components/local/Chat';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { use, useCallback, useEffect, useMemo, useState } from 'react';
 import { useDB } from '@/contexts/DBContext';
 import Loading from '@/components/local/Loading';
 import { useAuth } from '@/hooks/useAuth';
@@ -23,7 +23,7 @@ export default function P2PChatPage() {
   const [connected, setConnected] = useState(false);
   const [connection, setConnection] = useState<WebRTCConnection | undefined>(undefined);
   const [seen, setSeen] = useState(false);
-
+  const [userLeft, setUserLeft] = useState(false);
   const { db, getAllDecr, putEncr, updateEncr } = useDB();
   const { user, key } = useAuth();
   const searchParams = useSearchParams();
@@ -97,6 +97,7 @@ export default function P2PChatPage() {
       }
 
       if (parsed.type === 'opened') {
+        setUserLeft(false);
         console.log(`[P2PChat] ${otherUser.username} opened the chat.`);
 
         try {
@@ -135,7 +136,7 @@ export default function P2PChatPage() {
 
       if (parsed.type === 'closed') {
         console.log(`[P2PChat] ${otherUser.username} left the chat.`);
-        setSeen(false);
+        setUserLeft(true);
         return;
       }
 
@@ -335,6 +336,10 @@ export default function P2PChatPage() {
         );
       } catch (err) {
         console.error('[sendMessage] Failed to store message locally', err);
+      }
+
+      if (userLeft) {
+        setSeen(false);
       }
     },
     [connection, connectToPeer, user, otherUser, roomId, key, putEncr],
