@@ -342,7 +342,7 @@ export default function P2PChatPage() {
         setSeen(false);
       }
     },
-    [connection, connectToPeer, user, otherUser, roomId, key, putEncr],
+    [connection, connectToPeer, user, otherUser, roomId, key, putEncr, userLeft],
   );
 
   if (!db || !rooms || !user) return <Loading />;
