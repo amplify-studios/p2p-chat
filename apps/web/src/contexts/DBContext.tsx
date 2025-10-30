@@ -177,7 +177,7 @@ export function DBProvider({ children }: { children: ReactNode }) {
       try {
       
         let existing: any;
-        console.log('existing', existing);
+        // console.log('existing', existing);
         switch (collection) {
           case 'messages':
             console.log('existing messages', existing);
@@ -188,7 +188,7 @@ export function DBProvider({ children }: { children: ReactNode }) {
             existing = await db.get(collection, id);
         }
 
-        console.log('existing', existing);
+        // console.log('existing', existing);
         if (!existing) return false;
 
         let decrypted: any;
@@ -217,7 +217,7 @@ export function DBProvider({ children }: { children: ReactNode }) {
         }
         const updated = updater(decrypted);
 
-        console.log('updated', updated);
+        // console.log('updated', updated);
         await putEncr(collection, updated, key, id);
 
         return true;

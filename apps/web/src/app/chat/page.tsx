@@ -1,7 +1,7 @@
 'use client';
 
 import { Chat, Message } from '@/components/local/Chat';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { use, useCallback, useEffect, useMemo, useState } from 'react';
 import { useDB } from '@/contexts/DBContext';
 import Loading from '@/components/local/Loading';
 import { useAuth } from '@/hooks/useAuth';
@@ -23,7 +23,7 @@ export default function P2PChatPage() {
   const [connected, setConnected] = useState(false);
   const [connection, setConnection] = useState<WebRTCConnection | undefined>(undefined);
   const [seen, setSeen] = useState(false);
-
+  const [userLeft, setUserLeft] = useState(false);
   const { db, getAllDecr, putEncr, updateEncr } = useDB();
   const { user, key } = useAuth();
   const searchParams = useSearchParams();
@@ -64,12 +64,13 @@ export default function P2PChatPage() {
           );
         setMessages(roomMessages);
 
-        const unseenMessages = allMessages.filter((m) => m.roomId === roomId);
+        const unseenMessages = allMessages.filter((m) => m.roomId === roomId && m.read === false);
         unseenMessages.forEach(async (msg) => {
           await updateEncr('messages', key, msg.id, (decr) => {
             return { ...decr, read: true };
           });
         });
+        console.log("connection.isConnected()", connection.isConnected());
         if (connection.isConnected()) {
           const payload = JSON.stringify({ type: 'opened', roomId });
           connection.send(payload);
@@ -96,6 +97,7 @@ export default function P2PChatPage() {
       }
 
       if (parsed.type === 'opened') {
+        setUserLeft(false);
         console.log(`[P2PChat] ${otherUser.username} opened the chat.`);
 
         try {
@@ -134,6 +136,7 @@ export default function P2PChatPage() {
 
       if (parsed.type === 'closed') {
         console.log(`[P2PChat] ${otherUser.username} left the chat.`);
+        setUserLeft(true);
         return;
       }
 
@@ -242,6 +245,10 @@ export default function P2PChatPage() {
           console.error('[P2PManager] Failed to handle incoming message', err);
         }
       });
+      if (connection.isConnected()) {
+        const payload = JSON.stringify({ type: 'closed', roomId });
+        connection.send(payload);
+      }
     };
   }, [connection, user, otherUser, roomId, key, putEncr]);
 
@@ -323,12 +330,16 @@ export default function P2PChatPage() {
             message,
             timestamp: Date.now(),
             sent: conn?.isConnected() ?? false,
-            read: false,
+            read: true,
           } as MessageType,
           key,
         );
       } catch (err) {
         console.error('[sendMessage] Failed to store message locally', err);
+      }
+
+      if (userLeft) {
+        setSeen(false);
       }
     },
     [connection, connectToPeer, user, otherUser, roomId, key, putEncr],
