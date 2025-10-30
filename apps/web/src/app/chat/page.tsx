@@ -70,11 +70,11 @@ export default function P2PChatPage() {
             return { ...decr, read: true };
           });
         });
-        console.log("connection.isConnected()", connection.isConnected());
-        if (connection.isConnected()) {
-          const payload = JSON.stringify({ type: 'opened', roomId });
-          connection.send(payload);
-        }
+          console.log("connection.isConnected()", connection.isConnected());
+          if (connection.isConnected()) {
+            const payload = JSON.stringify({ type: 'entered', roomId });
+            connection.send(payload);
+          }
       } catch (err) {
         console.error('Failed to load messages', err);
       }
@@ -97,7 +97,6 @@ export default function P2PChatPage() {
       }
 
       if (parsed.type === 'opened') {
-        setUserLeft(false);
         console.log(`[P2PChat] ${otherUser.username} opened the chat.`);
 
         try {
@@ -132,12 +131,47 @@ export default function P2PChatPage() {
           console.error('[P2PChat] Failed to fetch messages to mark as read', err);
         }
         return;
-      }
-
-      if (parsed.type === 'closed') {
+      } else if (parsed.type === 'closed') {
         console.log(`[P2PChat] ${otherUser.username} left the chat.`);
         setUserLeft(true);
         return;
+      } else if (parsed.type === 'entered') {
+        console.log(`[P2PChat] ${otherUser.username} entered the chat.`);
+        setUserLeft(false);
+        const allMessages = (await getAllDecr('messages', key)) as MessageType[];
+        const roomMessages = allMessages
+          .filter((m) => m.roomId === roomId)
+          .sort((a, b) => a.timestamp - b.timestamp)
+          .map(
+            (m) =>
+              ({
+                id: ++currentMsgId,
+                text: m.message,
+                sender: m.senderId === user.userId ? 'me' : 'other',
+                read: m.read,
+              }) as Message,
+          );
+
+        if (roomMessages[roomMessages.length - 1].sender !== 'me') {
+          console.log("connection.isConnected()", connection.isConnected());
+          if (connection.isConnected()) {
+            const payload = JSON.stringify({ type: 'opened', roomId });
+            connection.send(payload);
+          }
+        }else {
+          console.log("connection.isConnected()", connection.isConnected());
+          if (connection.isConnected()) {
+            const payload = JSON.stringify({ type: 'requestSeen', roomId });
+            connection.send(payload);
+          }
+        }
+        return;
+      }else if (parsed.type === 'requestSeen') {
+        console.log(`[P2PChat] ${otherUser.username} requested seen.`);
+        if (connection.isConnected()) {
+          const payload = JSON.stringify({ type: 'opened', roomId });
+          connection.send(payload);
+        }
       }
 
       // Decrypt message
