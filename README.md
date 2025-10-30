@@ -16,6 +16,12 @@
 
 > Each `apps/*` directory should contain its own `package.json` file with at least the dev, build and start scripts defined
 
+## Turn the site into an application
+
+1. Open it on a chromium-based browser (Chrome, Brave etc)
+2. Press the options and look for the `Add to Home screen` button
+3. This should create an application on your home screen
+
 ## License
 
 [CC BY-NC-SA 4.0](./LICENSE)
