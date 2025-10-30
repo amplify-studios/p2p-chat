@@ -16,12 +16,6 @@
 
 > Each `apps/*` directory should contain its own `package.json` file with at least the dev, build and start scripts defined
 
-## Running dev with SSL
+## License
 
-> CWD: root
-
-```bash
-$ ./scripts/generate-cert
-
-$ node apps/web/server.mjs
-```
+[CC BY-NC-SA 4.0](./LICENSE)
