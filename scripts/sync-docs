@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+TARGET="apps/web/public"
+
+cp docs/Privacy-Policy.md $TARGET
+cp docs/About.md $TARGET
+cp docs/Intro.md $TARGET
+
+echo "Docs synced"
