@@ -15,6 +15,7 @@ import { PeerInfo } from '@chat/sockets';
 import { registerServiceWorker, requestNotificationPermission } from '@chat/notifications';
 import { useResend } from '@/hooks/useResend';
 import { useP2P } from '@/contexts/P2PContext';
+import { useSeen } from '@/hooks/useSeen';
 
 interface SidebarProps {
   children: ReactNode;
@@ -27,16 +28,16 @@ export default function Sidebar({ children }: SidebarProps) {
   useInvites();
   useResend();
   useAcks({ client });
-
+  
   useEffect(() => {
     registerServiceWorker();
     (async () => {
       await requestNotificationPermission();
     })();
   }, []);
-
+  
   const [connected, setConnected] = useState(false);
-
+  
   const onlineFriends = useMemo(() => {
     return friends
       .filter((f) => f.online)
@@ -56,7 +57,9 @@ export default function Sidebar({ children }: SidebarProps) {
   useEffect(() => {
     setConnected(status === 'connected');
   }, [status]);
-
+  
+  useSeen({ connected, rooms, roomId: activeRoomId });
+  
   if (!rooms) return <Loading />;
 
   return (

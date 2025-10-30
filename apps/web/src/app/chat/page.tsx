@@ -235,26 +235,6 @@ export default function P2PChatPage() {
     };
   }, [connection, user, otherUser, roomId, key, putEncr]);
 
-  // Send seen signal when this user opens the chat
-  useEffect(() => {
-    if (!connection || !roomId || !user || !otherUser) return;
-    
-    console.log(`[P2PChat] ${user.username} opened the chat.`);
-    const isConnected = connection.isConnected(); 
-    const payload = JSON.stringify({ type: 'opened', roomId });
-    if (isConnected) {
-      connection.send(payload);
-    }
-    return () => {
-      console.log(`[P2PChat] ${user.username} left the chat.`);
-      if (connection?.isConnected()) {
-        const exitPayload = JSON.stringify({ type: 'closed', roomId });
-        connection.send(exitPayload);
-      }
-      setSeen(false);
-    };
-  }, [connection, roomId, user, otherUser]);
-
   // Track connection status
   useEffect(() => {
     if (!connection) {
@@ -299,7 +279,7 @@ export default function P2PChatPage() {
 
       // Optimistic UI update
       setMessages((prev) => [...prev, { id: ++currentMsgId, text: message, sender: 'me', read: false }]); 
-      setSeen(false);
+      //setSeen(false);
 
       const encrText = prepareSendMessagePackage(otherUser.public, message);
       const payload = JSON.stringify(encrText);
