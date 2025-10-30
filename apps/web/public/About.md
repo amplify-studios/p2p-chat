@@ -17,11 +17,11 @@ How do you imagine the future of this technology or community?
 
 ---
 
-## The Manifesto
+## Our Manifesto
 
 - We believe in **privacy** as a right.
 - We believe in **open collaboration** and **transparency**.  
-- We believe in a world where communication is private, direct, and free from centralized control.
+- We believe in a world where communication is private, direct, and **free from centralized control**.
 
 ---
 
