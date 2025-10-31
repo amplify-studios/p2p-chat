@@ -8,6 +8,7 @@ import { useAuth } from './useAuth';
 import { useClient } from '@/contexts/ClientContext';
 import { useRouter } from 'next/navigation';
 import { useRooms } from './useRooms';
+import { sendLocalNotification } from '@chat/notifications';
 
 export function useInvites() {
   const { db, putEncr, getAllDecr } = useDB();
@@ -36,6 +37,7 @@ export function useInvites() {
         setInvites((prev) => [...prev, newInvite]);
 
         console.log(`Received room invite from ${msg.from} with name ${msg.name}`);
+        sendLocalNotification(`${msg.from ?? 'Anonymous'}`, `Received room invite`);
       };
 
       client.on('invite', handleRoomInvite);
