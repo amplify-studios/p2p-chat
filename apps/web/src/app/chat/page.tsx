@@ -8,7 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useSearchParams } from 'next/navigation';
 import { useRooms } from '@/hooks/useRooms';
 import EmptyState from '@/components/local/EmptyState';
-import { MessageType } from '@chat/core';
+import { MessageType, MessageTypeType } from '@chat/core';
 import { prepareSendMessagePackage, returnDecryptedMessage } from '@/lib/messaging';
 import { createECDHkey } from '@chat/crypto';
 import { WebRTCConnection } from '@chat/sockets';
@@ -58,6 +58,8 @@ export default function P2PChatPage() {
               ({
                 id: ++currentMsgId,
                 text: m.message,
+                type: m.type,
+                filename: m.filename,
                 sender: m.senderId === user.userId ? 'me' : 'other',
                 read: m.read,
               }) as Message,
@@ -147,6 +149,8 @@ export default function P2PChatPage() {
               ({
                 id: ++currentMsgId,
                 text: m.message,
+                type: m.type,
+                filename: m.filename,
                 sender: m.senderId === user.userId ? 'me' : 'other',
                 read: m.read,
               }) as Message,
@@ -181,8 +185,9 @@ export default function P2PChatPage() {
       if (!user?.private) return;
       userECDH.setPrivateKey(Buffer.from(user.private, 'hex'));
       const msg = returnDecryptedMessage(userECDH, parsed);
+      const m = JSON.parse(msg);
 
-      setMessages((prev) => [...prev, { id: ++currentMsgId, text: msg, sender: 'other', read: false }]);
+      setMessages((prev) => [...prev, { id: ++currentMsgId, text: m.content, type: m.type, filename: m.filename, sender: 'other', read: false }]);
       setSeen(false); 
 
       // Save locally
@@ -192,7 +197,9 @@ export default function P2PChatPage() {
           {
             roomId,
             senderId: otherUser.userId,
-            message: msg,
+            message: m.content as string,
+            type: m.type as MessageTypeType,
+            filename: m.filename as string,
             timestamp: Date.now(),
             sent: true,
             read: true,
@@ -266,6 +273,8 @@ export default function P2PChatPage() {
               ({
                 id: ++currentMsgId,
                 text: m.message,
+                type: m.type,
+                filename: m.filename,
                 sender: m.senderId === user.userId ? 'me' : 'other',
                 read: m.read,
               }) as Message,
@@ -304,6 +313,7 @@ export default function P2PChatPage() {
           ecdh.setPrivateKey(Buffer.from(user.private, 'hex'));
 
           const msg = returnDecryptedMessage(ecdh, parsed);
+          const m = JSON.parse(msg);
           const rooms = (await getAllDecr('rooms', key)) ?? [];
           const currentRoomId = findRoomIdByPeer(rooms, otherUser.userId);
 
@@ -313,7 +323,9 @@ export default function P2PChatPage() {
             {
               roomId: currentRoomId,
               senderId: otherUser.userId,
-              message: msg,
+              message: m.content,
+              type: m.type,
+              filename: m.filename,
               timestamp: Date.now(),
               sent: true,
               read: false,
@@ -351,7 +363,7 @@ export default function P2PChatPage() {
 
   // Send message
   const sendMessage = useCallback(
-    async (message: string) => {
+    async (message: string, type: MessageTypeType, filename?: string) => {
       if (!user?.userId || !otherUser?.userId || !roomId || !key) {
         console.warn('[sendMessage] Missing required data, aborting send');
         return;
@@ -379,10 +391,10 @@ export default function P2PChatPage() {
       }
 
       // Optimistic UI update
-      setMessages((prev) => [...prev, { id: ++currentMsgId, text: message, sender: 'me', read: false }]); 
+      setMessages((prev) => [...prev, { id: ++currentMsgId, text: message, type: type, filename: filename, sender: 'me', read: false }]); 
       //setSeen(false);
 
-      const encrText = prepareSendMessagePackage(otherUser.public, message);
+      const encrText = prepareSendMessagePackage(otherUser.public, { content: message, type, filename });
       const payload = JSON.stringify(encrText);
 
       // Ensure the connection is ready to send
@@ -412,6 +424,7 @@ export default function P2PChatPage() {
             roomId,
             senderId: user.userId,
             message,
+            type,
             timestamp: Date.now(),
             sent: conn?.isConnected() ?? false,
             read: true,

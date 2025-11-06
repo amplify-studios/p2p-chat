@@ -1,8 +1,12 @@
+export type MessageTypeType = "text" | "image" | "file" | "audio" | "video"
+
 export interface MessageType {
   id: string;
   roomId: string; // encrypt
   senderId: string; // encrypt
   message: string; // encrypt
+  type: MessageTypeType;
+  filename?: string;
   read: boolean;
   sent: boolean;
   timestamp: number;

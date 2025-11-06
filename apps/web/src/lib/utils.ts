@@ -57,3 +57,24 @@ export function findRoomIdByPeer(rooms: RoomType[], peerId: string): string | un
   }
   return undefined;
 }
+
+/**
+ * Encodes a File or Blob into a Base64 string.
+ * @param file The File or Blob to encode.
+ * @returns A Promise resolving to the Base64 string (without the data: prefix).
+ */
+export async function fileToBase64(file: File | Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      const result = reader.result as string;
+      const base64 = result.split(',')[1]; // remove the "data:*/*;base64," prefix
+      resolve(base64);
+    };
+
+    reader.onerror = (error) => reject(error);
+
+    reader.readAsDataURL(file);
+  });
+}

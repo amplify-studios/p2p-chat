@@ -5,15 +5,21 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { EllipsisVertical, Send, User, Users, Smile, ArrowDown } from 'lucide-react';
+import { EllipsisVertical, Send, User, Users, Smile, ArrowDown, Plus, Image, File } from 'lucide-react';
 import EmptyState from './EmptyState';
-import { RoomType } from '@chat/core/types';
+import { MessageTypeType, RoomType } from '@chat/core/types';
 import Picker from '@emoji-mart/react';
 import data from '@emoji-mart/data';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
+import AssetUploader from './AssetUploader';
+import { fileToBase64 } from '@/lib/utils';
+import RenderBase64 from './RenderBase64';
 
 export interface Message {
   id: number;
   text: string;
+  type: MessageTypeType;
+  filename?: string;
   sender: 'me' | 'other';
   read: boolean;
 }
@@ -21,7 +27,7 @@ export interface Message {
 interface ChatProps {
   title?: string;
   messages: Message[];
-  onSend: (msg: string) => void;
+  onSend: (msg: string, type: MessageTypeType, filename?: string) => void;
   href: string;
   isTyping?: boolean;
   connected: boolean;
@@ -48,9 +54,10 @@ export function Chat({
 
   const sendMessage = () => {
     if (!input.trim()) return;
-    onSend(input);
+    onSend(input, "text");
     setInput("");
   };
+
 
   // Detect if user scrolled up
   const handleScroll = () => {
@@ -96,6 +103,31 @@ export function Chat({
     setIsAtBottom(true);
   };
 
+  async function handleFileUpload(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if(!file) return;
+    try {
+      const encoded = await fileToBase64(file);
+      console.log('Base64 string:', encoded);
+      onSend(
+        encoded,
+        file.type.startsWith("image/")
+          ? "image"
+          : file.type.startsWith("video/")
+            ? "video"
+            : file.type.startsWith("audio/")
+              ? "audio"
+              : "file",
+        file.name
+      );
+
+      event.target.value = "";
+
+    } catch (err) {
+      console.error('Failed to encode file:', err);
+    }
+  }
+
   return (
     // <div className="flex flex-col w-full bg-background relative " style={{ height: '94vh' }}>
     <div className="flex flex-col w-full bg-background relative h-[94vh] md:h-screen">
@@ -117,11 +149,14 @@ export function Chat({
         className="flex-1 overflow-y-auto p-4 space-y-2 bg-gray-50 dark:bg-gray-900"
       >
         {messages.length === 0 && <EmptyState msg="Start the conversation!" />}
-        {messages.map((msg) => (
+        {messages.map((msg) => { 
+          console.log(msg);
+          return (
           <div
             key={msg.id}
             className={`flex ${msg.sender === 'me' ? 'justify-end' : 'justify-start'}`}
           >
+            {msg.type === "text" &&
             <div
               className={`px-3 py-2 max-w-[70vw] break-words ${
                 msg.sender === 'me'
@@ -130,9 +165,12 @@ export function Chat({
               }`}
             >
               {msg.text}
-            </div>
+            </div>}
+
+            {msg.type !== "text" && <RenderBase64 base64={msg.text} type={msg.type} filename={msg.filename}/>}
           </div>
-        ))}
+        )})
+        }
 
         {seen && (
           <div className="flex justify-end">
@@ -162,7 +200,10 @@ export function Chat({
 
       {/* --- Bottom Bar --- */}
       <div className="sticky bottom-0 z-10 flex items-center gap-2 px-4 py-3 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/75">
-        {/* Emoji Button + Picker Popup */}
+        <AssetUploader
+          onImageUpload={handleFileUpload}
+          onFileUpload={handleFileUpload}
+        />
         <div className="relative" ref={emojiRef}>
           <Button
             variant="ghost"

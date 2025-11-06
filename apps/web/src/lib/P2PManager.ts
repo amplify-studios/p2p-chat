@@ -91,7 +91,7 @@ export class P2PManager {
           const ecdh = createECDHkey();
           if (!user?.private) return;
           ecdh.setPrivateKey(Buffer.from(user.private, 'hex'));
-          const msg = returnDecryptedMessage(ecdh, parsed);
+          const msg = JSON.parse(returnDecryptedMessage(ecdh, parsed));
           const rooms = (await getAllDecr('rooms', key)) ?? [];
           const roomId = findRoomIdByPeer(rooms, peer.id);
 
@@ -100,8 +100,10 @@ export class P2PManager {
             {
               roomId,
               senderId: peer.id,
-              message: msg,
+              message: msg.content,
               timestamp: Date.now(),
+              type: msg.type,
+              filename: msg.filename,
               sent: true,
               read: false,
             } as MessageType,

@@ -1,10 +1,10 @@
 import { createECDHkey, computeSecret, AESencrypt, AESdecrypt, generateAESKey } from '@chat/crypto';
-import { MessagePackage } from '@chat/core';
+import { MessagePackage, MessageTypeType } from '@chat/core';
 import crypto from 'crypto';
 
 export function prepareSendMessagePackage(
   otherUserPublicKey: string,
-  message: string,
+  message: { content: string, type: MessageTypeType, filename?: string },
 ): MessagePackage {
   const ephemeralKeyPair = createECDHkey();
   const secret = computeSecret(ephemeralKeyPair, otherUserPublicKey);
@@ -12,12 +12,10 @@ export function prepareSendMessagePackage(
   // const data = AESencrypt(key.key, message);
   console.log('[prepareSendMessagePackage] message', message);
   const key = generateAESKey(secret);
-  const data = AESencrypt(key, message);
+  const data = AESencrypt(key, JSON.stringify(message));
   return {
-    encryptedMessage: data.encryptedMessage,
-    authTag: data.authTag,
+    ...data,
     ephemeralPublicKey: ephemeralKeyPair.getPublicKey().toString('hex'),
-    iv: data.iv,
   };
 }
 
