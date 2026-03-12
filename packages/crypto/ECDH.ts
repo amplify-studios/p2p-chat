@@ -6,9 +6,9 @@ export function createECDHkey(): crypto.ECDH {
   return user;
 }
 
-function normalizeUint8Array(input: any): Uint8Array {
+function normalizeUint8Array(input: string | Uint8Array | { data: number[] }): Uint8Array {
   if (input instanceof Uint8Array) return input;
-  if (input instanceof String) return new Uint8Array(Buffer.from(input, 'hex'));
+  if (typeof input === 'string') return new Uint8Array(Buffer.from(input, 'hex'));
   if (input && Array.isArray(input.data)) return new Uint8Array(input.data);
   throw new Error('Invalid Uint8Array input');
 }
@@ -23,7 +23,8 @@ export function computeSecret(
 }
 
 export function secretMatch(user_secret: Uint8Array, other_secret: Uint8Array): boolean {
-  return user_secret === other_secret;
+  if (user_secret.length !== other_secret.length) return false;
+  return Buffer.from(user_secret).compare(Buffer.from(other_secret)) === 0;
 }
 
 // export function encryptMessage(otherPublicKey: string, message: string): string {}

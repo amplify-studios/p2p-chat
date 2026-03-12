@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { AckMessage, SignalingClient } from '@chat/sockets';
+import type { SignalingMessage } from '@chat/sockets';
 import { useDB } from '@/contexts/DBContext';
 import { useAuth } from './useAuth';
 import { refreshRooms } from '@/lib/utils';
@@ -17,8 +18,9 @@ export function useAcks({ client }: Props) {
   useEffect(() => {
     if (!client || !db || !user || !key) return;
 
-    const handleAck = async (msg: AckMessage) => {
-      const room = msg.room;
+    const handleAck = async (msg: SignalingMessage) => {
+      const ackMsg = msg as unknown as AckMessage;
+      const room = ackMsg.room;
 
       console.log('Received Invite ACK from room: ', room);
 

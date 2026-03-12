@@ -32,6 +32,16 @@ $ cd p2p-chat-signaling
 $ make start
 ```
 
+## Client configuration (TURN / signaling URLs)
+
+To use your own TURN server or signaling URLs, copy the template and generate the client config:
+
+1. Copy `docs/config.yml.template` to `config.yml` in the project root.
+2. Edit `config.yml` and set your TURN and signaling URLs (and credentials).
+3. Run `node scripts/generate-client-config.mjs` to generate `packages/core/config.ts`.
+
+The file `config.yml` is gitignored so credentials are not committed.
+
 ## License
 
 [CC BY-NC-SA 4.0](./LICENSE)

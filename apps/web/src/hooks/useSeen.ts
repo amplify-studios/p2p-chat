@@ -3,13 +3,13 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { useAuth } from "./useAuth";
 import { useP2P } from "@/contexts/P2PContext";
 import { WebRTCConnection } from "@chat/sockets";
-import { CredentialsType } from "@chat/core/types";
+import { CredentialsType, RoomType } from "@chat/core/types";
 
 interface UseSeenProps {
   connected?: boolean;
-  user?: any;
-  otherUser?: any;
-  rooms?: any[];
+  user?: CredentialsType | null;
+  otherUser?: CredentialsType | null;
+  rooms?: RoomType[];
   roomId?: string | null;
 }
 

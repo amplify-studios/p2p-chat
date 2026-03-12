@@ -10,7 +10,6 @@ export function prepareSendMessagePackage(
   const secret = computeSecret(ephemeralKeyPair, otherUserPublicKey);
   // const key = getAESKeyThroughSharedSecret(secret);
   // const data = AESencrypt(key.key, message);
-  console.log('[prepareSendMessagePackage] message', message);
   const key = generateAESKey(secret);
   const data = AESencrypt(key, JSON.stringify(message));
   return {
@@ -26,10 +25,7 @@ export function returnDecryptedMessage(user: crypto.ECDH, messagePackage: Messag
     new Uint8Array(Buffer.from(messagePackage.ephemeralPublicKey, 'hex')),
   );
 
-  console.log('[returnDecryptedMessage] secret', secret);
-  console.log('[returnDecryptedMessage] messagePackage', messagePackage);
   const key = generateAESKey(secret);
-  console.log('[returnDecryptedMessage] key', key);
   return AESdecrypt(
     key,
     messagePackage.encryptedMessage,

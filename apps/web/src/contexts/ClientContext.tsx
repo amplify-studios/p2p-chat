@@ -36,8 +36,14 @@ export function ClientProvider({ children }: { children: ReactNode }) {
         ),
       ]);
 
-      setClient(signalingClient);
-      setStatus('connected');
+      if (signalingClient === null) {
+        setClient(null);
+        setStatus('failed');
+        console.warn('Signaling client unavailable (e.g. no password in session)');
+      } else {
+        setClient(signalingClient);
+        setStatus('connected');
+      }
     } catch (err) {
       console.error('Failed to initialize signaling client:', err);
       setClient(null);

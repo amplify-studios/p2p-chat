@@ -44,7 +44,7 @@ export default function EmojiPicker({ onSelect }: EmojiPickerProps) {
             set="apple"
             title="Pick an emoji"
             data={data}
-            onSelect={(emoji: any) => {
+            onSelect={(emoji: { native: string }) => {
               onSelect(emoji.native);
               setOpen(false);
             }}

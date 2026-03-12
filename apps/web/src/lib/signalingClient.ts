@@ -10,6 +10,10 @@ import { CLIENT_CONFIG } from '@chat/core';
 
 let singletonClient: SignalingClient | null = null;
 
+/**
+ * Sets the global signaling client only if none is set.
+ * Later calls are no-ops: the existing singleton is returned and the argument is ignored.
+ */
 export function initSignalingClient(client: SignalingClient) {
   if (!singletonClient) singletonClient = client;
   return singletonClient;

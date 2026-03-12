@@ -10,7 +10,7 @@ import { openDB, DBSchema, IDBPDatabase } from 'idb';
 
 const DB_NAME = 'my-database';
 const DB_VERSION = 9;
-export const PASSWORD_KEY = 'vergina'; // FIXME: randomize based on the userId
+export const PASSWORD_KEY = 'p2pchat_session_password';
 
 export type Collection =
   | 'messages'

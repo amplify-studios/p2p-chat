@@ -65,6 +65,7 @@ export default function SettingsPage() {
     setEraseLoading(true);
     try {
       await eraseDB();
+      sessionStorage.removeItem(PASSWORD_KEY);
       showToast('Erased all data successfully!', 'success');
 
       if (client) client.disconnect();

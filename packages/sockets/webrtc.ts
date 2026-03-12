@@ -231,7 +231,7 @@ export class WebRTCConnection {
     } catch {}
   };
 
-  private sendSignal(payload: any) {
+  private sendSignal(payload: RTCSessionDescriptionInit | RTCIceCandidateInit | { type: 'reset' } | { candidate: RTCIceCandidateInit }) {
     try {
       this.ws.send(
         JSON.stringify({
@@ -267,9 +267,9 @@ export class WebRTCConnection {
     }
   }
 
-  private async handleSignal(msg: any) {
+  private async handleSignal(msg: { type?: string; from?: string; payload?: unknown }) {
     if (msg.type !== 'signal' || msg.from !== this.peerId) return;
-    const payload = msg.payload;
+    const payload = msg.payload as Record<string, unknown> | undefined;
     if (!payload) return;
 
     if (payload.type === 'reset') {
@@ -281,11 +281,11 @@ export class WebRTCConnection {
     if (payload.candidate) {
       if (this.pc.remoteDescription) {
         try {
-          await this.pc.addIceCandidate(payload.candidate);
+          await this.pc.addIceCandidate(payload.candidate as RTCIceCandidateInit);
         } catch (err) {
           this.log('Failed to add ICE candidate: ' + err);
         }
-      } else this.pendingCandidates.push(payload.candidate);
+      } else this.pendingCandidates.push(payload.candidate as RTCIceCandidateInit);
       return;
     }
 
@@ -310,7 +310,7 @@ export class WebRTCConnection {
         this.isSettingRemote = true;
         if (this.pc.signalingState !== 'stable')
           await this.pc.setLocalDescription({ type: 'rollback' });
-        await this.pc.setRemoteDescription(payload);
+        await this.pc.setRemoteDescription(payload as unknown as RTCSessionDescriptionInit);
         this.isSettingRemote = false;
 
         const answer = await this.pc.createAnswer();
@@ -330,7 +330,7 @@ export class WebRTCConnection {
     // Answer
     if (payload.type === 'answer') {
       try {
-        await this.pc.setRemoteDescription(payload);
+        await this.pc.setRemoteDescription(payload as unknown as RTCSessionDescriptionInit);
         while (this.pendingCandidates.length)
           await this.pc.addIceCandidate(this.pendingCandidates.shift()!);
         this.log('Set remote description for answer');

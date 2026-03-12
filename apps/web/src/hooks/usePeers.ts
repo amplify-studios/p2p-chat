@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import type { PeerInfo, PeersMessage } from '@chat/sockets';
+import type { SignalingMessage } from '@chat/sockets';
 import { CredentialsType } from '@chat/core';
 import { useDB } from '@/contexts/DBContext';
 import { useAuth } from './useAuth';
@@ -33,10 +34,11 @@ export function usePeers() {
 
     const setup = async () => {
       try {
-        const handlePeers = async (msg: PeersMessage) => {
+        const handlePeers = async (msg: SignalingMessage) => {
           if (!isMounted) return;
 
-          const peersList = msg.peers;
+          const peersMsg = msg as unknown as PeersMessage;
+          const peersList = peersMsg.peers;
           if (!Array.isArray(peersList)) {
             console.warn('Received peers is not an array', peersList);
             setPeers([]);

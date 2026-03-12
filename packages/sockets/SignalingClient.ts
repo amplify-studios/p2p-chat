@@ -95,7 +95,10 @@
 
 import { InviteMessage, AckMessage } from './signaling';
 
-export type SignalHandler = (msg: any) => void;
+/** Message received from the server (welcome, invite, offer, answer, candidate, peers, etc.) */
+export type SignalingMessage = Record<string, unknown>;
+
+export type SignalHandler = (msg: SignalingMessage) => void;
 
 export class SignalingClient {
   public ws: WebSocket | null = null;
@@ -195,7 +198,7 @@ export class SignalingClient {
     this.handlers[type] = this.handlers[type].filter((h) => h !== handler);
   }
 
-  private dispatch(type: string, msg: any) {
+  private dispatch(type: string, msg: SignalingMessage) {
     const handlers = this.handlers[type] || [];
     for (const h of handlers) h(msg);
   }
@@ -230,14 +233,14 @@ export class SignalingClient {
   }
 
   onRoomInvite(handler: (invite: InviteMessage) => void) {
-    this.on('invite', (msg) => handler(msg.payload));
+    this.on('invite', (msg) => handler(msg as unknown as InviteMessage));
   }
 
   offRoomInvite(handler: (invite: InviteMessage) => void) {
-    this.off('invite', handler as SignalHandler);
+    this.off('invite', handler as unknown as SignalHandler);
   }
 
-  private send(msg: any) {
+  private send(msg: Record<string, unknown>) {
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify(msg));
     } else {

@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useDB } from '@/contexts/DBContext';
 import { generateBase58Id } from '@chat/crypto';
-import { InviteMessage, AckMessage } from '@chat/sockets';
+import { AckMessage, InviteMessage } from '@chat/sockets';
+import type { SignalingMessage } from '@chat/sockets';
 import { CredentialsType, InviteType, RoomType } from '@chat/core';
 import { refreshRooms } from '@/lib/utils';
 import { useAuth } from './useAuth';
@@ -24,20 +25,21 @@ export function useInvites() {
     let cleanup: (() => void) | undefined;
 
     const setup = async () => {
-      const handleRoomInvite = async (msg: InviteMessage) => {
+      const handleRoomInvite = async (msg: SignalingMessage) => {
+        const inviteMsg = msg as unknown as InviteMessage;
         const newInvite: InviteType = {
-          inviteId: msg.from,
-          from: msg.from,
-          name: msg.name,
-          type: msg.roomType,
-          public: msg.pubkey,
+          inviteId: inviteMsg.from,
+          from: inviteMsg.from,
+          name: inviteMsg.name,
+          type: inviteMsg.roomType,
+          public: inviteMsg.pubkey,
         };
 
         await putEncr('invites', newInvite, key);
         setInvites((prev) => [...prev, newInvite]);
 
-        console.log(`Received room invite from ${msg.from} with name ${msg.name}`);
-        sendLocalNotification(`${msg.from ?? 'Anonymous'}`, `Received room invite`);
+        console.log(`Received room invite from ${inviteMsg.from} with name ${inviteMsg.name}`);
+        sendLocalNotification(`${inviteMsg.from ?? 'Anonymous'}`, `Received room invite`);
       };
 
       client.on('invite', handleRoomInvite);

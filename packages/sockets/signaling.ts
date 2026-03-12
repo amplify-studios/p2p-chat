@@ -61,7 +61,7 @@ export interface SignalMessage extends BaseMessage {
   type: 'signal' | 'offer' | 'answer' | 'candidate';
   from: string;
   target: string;
-  payload: any; // could be RTCSessionDescriptionInit or RTCIceCandidateInit
+  payload: RTCSessionDescriptionInit | RTCIceCandidateInit;
 }
 
 // Peers list message

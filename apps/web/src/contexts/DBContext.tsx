@@ -24,7 +24,6 @@ import {
   decryptServerSettingsType,
   EncryptedServerSettingsType,
   encryptServerSettingsType,
-  generateUUID,
   generateBase58Id,
 } from '@chat/crypto';
 import {
@@ -45,12 +44,12 @@ type DBContextType = {
     key: Uint8Array,
     collectionKey?: string | number,
   ) => Promise<EncryptedStorageType | null>;
-  getAllDecr: (collection: Collection, key: Uint8Array) => Promise<any[]>;
+  getAllDecr: (collection: Collection, key: Uint8Array) => Promise<Type[]>;
   updateEncr: (
     collection: Collection,
     key: Uint8Array,
     id: string | number,
-    updater: (oldData: any) => any,
+    updater: (oldData: Type) => Type,
   ) => Promise<boolean>;
 };
 
@@ -158,7 +157,7 @@ export function DBProvider({ children }: { children: ReactNode }) {
             return null;
           }
         })
-        .filter(Boolean);
+        .filter((x): x is Type => x != null);
     },
     [db],
   );
@@ -169,29 +168,23 @@ export function DBProvider({ children }: { children: ReactNode }) {
       collection: Collection,
       key: Uint8Array,
       id: string | number,
-      updater: (oldData: any) => any,
+      updater: (oldData: Type) => Type,
     ): Promise<boolean> => {
-      // console.log('updateEncr', collection, key, id, updater, db);
       if (!db) return false;
 
       try {
-      
-        let existing: any;
-        // console.log('existing', existing);
+        let existing: EncryptedStorageType | undefined;
         switch (collection) {
           case 'messages':
-            console.log('existing messages', existing);
             existing = await db.getFromIndex('messages', 'key', String(id));
-            console.log('existing messages 2', existing);
             break;
           default:
             existing = await db.get(collection, id);
         }
 
-        // console.log('existing', existing);
         if (!existing) return false;
 
-        let decrypted: any;
+        let decrypted: Type;
         switch (collection) {
           case 'messages':
             decrypted = decryptMessageType(existing as EncryptedMessageType, key);
@@ -217,7 +210,6 @@ export function DBProvider({ children }: { children: ReactNode }) {
         }
         const updated = updater(decrypted);
 
-        // console.log('updated', updated);
         await putEncr(collection, updated, key, id);
 
         return true;

@@ -3,7 +3,7 @@ import { PeerInfo } from '@chat/sockets';
 import { createECDHkey, EncryptedStorageType } from '@chat/crypto';
 import { returnDecryptedMessage } from '@/lib/messaging';
 import { findRoomIdByPeer } from '@/lib/utils';
-import { CredentialsType, MessageType, Type } from '@chat/core';
+import { CredentialsType, MessageType, RoomType, Type } from '@chat/core';
 import { Collection } from './storage';
 import { sendLocalNotification } from '@chat/notifications';
 
@@ -35,7 +35,7 @@ export class P2PManager {
     onMessage?: MessageCallback,
     onLog?: LogCallback,
   ): WebRTCConnection {
-    let entry = this.connections[peer.id];
+    const entry = this.connections[peer.id];
     if (entry) {
       if (onMessage) entry.conn.setOnMessage(onMessage);
       if (onLog) entry.conn.setOnLog(onLog);
@@ -63,7 +63,7 @@ export class P2PManager {
     ws: WebSocket,
     myId: string,
     key: Uint8Array,
-    getAllDecr: (collection: Collection, key: Uint8Array) => Promise<any[]>,
+    getAllDecr: (collection: Collection, key: Uint8Array) => Promise<Type[]>,
     putEncr: (
       collection: Collection,
       obj: Type,
@@ -76,7 +76,7 @@ export class P2PManager {
   ): Promise<WebRTCConnection | undefined> {
     if (blocks.find((b) => b.userId === peer.id)) return;
 
-    let entry = this.connections[peer.id];
+    const entry = this.connections[peer.id];
     if (entry) {
       if (onDataChannelOpen && entry.isReady) onDataChannelOpen();
       return entry.conn;
@@ -93,7 +93,7 @@ export class P2PManager {
           ecdh.setPrivateKey(Buffer.from(user.private, 'hex'));
           const msg = JSON.parse(returnDecryptedMessage(ecdh, parsed));
           const rooms = (await getAllDecr('rooms', key)) ?? [];
-          const roomId = findRoomIdByPeer(rooms, peer.id);
+          const roomId = findRoomIdByPeer(rooms as RoomType[], peer.id);
 
           await putEncr(
             'messages',

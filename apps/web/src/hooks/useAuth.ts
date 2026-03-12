@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { redirect, useRouter } from 'next/navigation';
+import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { useDB } from '@/contexts/DBContext';
 import { CredentialsType } from '@chat/core';
 import { decryptCredentialsType, EncryptedCredentialsType, generateAESKey } from '@chat/crypto';
@@ -24,6 +24,8 @@ export function useAuth() {
   const [key, setKey] = useState<Uint8Array | null>(null);
   const { db } = useDB();
   const router = useRouter();
+  const routerRef = useRef(router);
+  routerRef.current = router;
 
   useEffect(() => {
     if (!db) return;
@@ -38,7 +40,7 @@ export function useAuth() {
         setUser(null);
         setEncryptedUser(null);
         setKey(null);
-        router.push('/login');
+        routerRef.current.push('/login');
         return;
       }
 
@@ -50,7 +52,7 @@ export function useAuth() {
         // Unlock mode: user exists but no password in sessionStorage
         setUser(null);
         setKey(null);
-        redirectToLogin(router);
+        redirectToLogin(routerRef.current);
         return;
       }
 
@@ -58,7 +60,7 @@ export function useAuth() {
       if (!aesKey) {
         setUser(null);
         setKey(null);
-        redirectToLogin(router);
+        redirectToLogin(routerRef.current);
         return;
       }
 
@@ -66,7 +68,7 @@ export function useAuth() {
       if (!decrypted) {
         setUser(null);
         setKey(aesKey);
-        redirectToLogin(router);
+        redirectToLogin(routerRef.current);
         return;
       }
 
@@ -79,7 +81,7 @@ export function useAuth() {
     return () => {
       cancelled = true;
     };
-  }, [db, router]);
+  }, [db]);
 
   return { user, setUser, encryptedUser, key };
 }

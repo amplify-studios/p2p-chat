@@ -1,14 +1,14 @@
 'use client';
 
 import { Chat, Message } from '@/components/local/Chat';
-import { use, useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useDB } from '@/contexts/DBContext';
 import Loading from '@/components/local/Loading';
 import { useAuth } from '@/hooks/useAuth';
 import { useSearchParams } from 'next/navigation';
 import { useRooms } from '@/hooks/useRooms';
 import EmptyState from '@/components/local/EmptyState';
-import { MessageType, MessageTypeType } from '@chat/core';
+import { MessageType, MessageTypeType, type MessagePackage, type RoomType } from '@chat/core';
 import { prepareSendMessagePackage, returnDecryptedMessage } from '@/lib/messaging';
 import { createECDHkey } from '@chat/crypto';
 import { WebRTCConnection } from '@chat/sockets';
@@ -90,9 +90,9 @@ export default function P2PChatPage() {
     setOnMessage(otherUser.userId, async (encrMsg: string) => {
       if (!encrMsg) return;
 
-      let parsed: any;
+      let parsed: Record<string, unknown>;
       try {
-        parsed = JSON.parse(encrMsg);
+        parsed = JSON.parse(encrMsg) as Record<string, unknown>;
       } catch {
         console.warn('Invalid message JSON');
         return;
@@ -184,7 +184,7 @@ export default function P2PChatPage() {
       const userECDH = createECDHkey();
       if (!user?.private) return;
       userECDH.setPrivateKey(Buffer.from(user.private, 'hex'));
-      const msg = returnDecryptedMessage(userECDH, parsed);
+      const msg = returnDecryptedMessage(userECDH, parsed as unknown as MessagePackage);
       const m = JSON.parse(msg);
 
       setMessages((prev) => [...prev, { id: ++currentMsgId, text: m.content, type: m.type, filename: m.filename, sender: 'other', read: false }]);
@@ -315,7 +315,7 @@ export default function P2PChatPage() {
           const msg = returnDecryptedMessage(ecdh, parsed);
           const m = JSON.parse(msg);
           const rooms = (await getAllDecr('rooms', key)) ?? [];
-          const currentRoomId = findRoomIdByPeer(rooms, otherUser.userId);
+          const currentRoomId = findRoomIdByPeer(rooms as RoomType[], otherUser.userId);
 
           // console.log(`[P2PManager] path: ${pathname}, roomId: ${roomId}, activeRoomId: ${activeRoomId}`);
           await putEncr(

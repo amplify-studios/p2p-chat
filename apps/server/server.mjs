@@ -80,9 +80,10 @@ wss.on("connection", (ws) => {
         break;
       }
 
-      case "signal": 
-      case "answer": 
-      case "offer": {
+      case "signal":
+      case "answer":
+      case "offer":
+      case "candidate": {
         const target = clients.get(data.target);
         if (!target || target.ws.readyState !== target.ws.OPEN) {
           ws.send(JSON.stringify({ type: "error", message: "Target not found or disconnected" }));

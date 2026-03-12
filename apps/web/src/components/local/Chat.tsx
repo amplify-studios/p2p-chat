@@ -219,7 +219,7 @@ export function Chat({
             <div className="absolute bottom-full mb-2 left-0 z-50 bg-white dark:bg-gray-800 shadow-lg border rounded-2xl overflow-hidden">
               <Picker
                 data={data}
-                onEmojiSelect={(emoji: any) => {
+                onEmojiSelect={(emoji: { native: string }) => {
                   setInput((prev) => prev + emoji.native);
                 }}
                 theme="light"

@@ -43,7 +43,11 @@ export function useResend() {
         for (const msg of messages) {
           if (!msg.id) continue;
           try {
-            const encrypted = prepareSendMessagePackage(recipient.public, msg.message);
+            const encrypted = prepareSendMessagePackage(recipient.public, {
+              content: msg.message,
+              type: msg.type,
+              filename: msg.filename,
+            });
             conn.send(JSON.stringify(encrypted));
 
             await updateEncr('messages', key, msg.id, (decr) => {
